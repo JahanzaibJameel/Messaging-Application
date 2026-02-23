@@ -6,7 +6,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Spacing } from "@/constants/theme";
 
 interface EmptyStateProps {
-  image: ImageSourcePropType;
+  image?: ImageSourcePropType;
   title: string;
   message?: string;
 }
@@ -16,12 +16,10 @@ export function EmptyState({ image, title, message }: EmptyStateProps) {
 
   return (
     <View style={styles.container}>
-      <Image source={image} style={styles.image} resizeMode="contain" />
+      {image && <Image source={image} style={styles.image} resizeMode="contain" />}
       <ThemedText style={styles.title}>{title}</ThemedText>
       {message ? (
-        <ThemedText style={[styles.message, { color: theme.textSecondary }]}>
-          {message}
-        </ThemedText>
+        <ThemedText style={[styles.message, { color: theme.textSecondary }]}>{message}</ThemedText>
       ) : null}
     </View>
   );

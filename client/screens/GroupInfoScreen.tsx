@@ -37,7 +37,7 @@ export default function GroupInfoScreen({ navigation, route }: GroupInfoScreenPr
   } = useChatStore();
 
   const group = groupChats.find((g) => g.id === groupId);
-  
+
   if (!group) {
     return null;
   }
@@ -54,23 +54,19 @@ export default function GroupInfoScreen({ navigation, route }: GroupInfoScreenPr
   };
 
   const handleLeaveGroup = () => {
-    Alert.alert(
-      "Leave Group",
-      "Are you sure you want to leave this group?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Leave",
-          style: "destructive",
-          onPress: () => {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            leaveGroup(groupId);
-            navigation.goBack();
-            navigation.goBack();
-          },
+    Alert.alert("Leave Group", "Are you sure you want to leave this group?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Leave",
+        style: "destructive",
+        onPress: () => {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          leaveGroup(groupId);
+          navigation.goBack();
+          navigation.goBack();
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleMemberPress = (userId: string) => {
@@ -79,30 +75,26 @@ export default function GroupInfoScreen({ navigation, route }: GroupInfoScreenPr
     const isUserAdmin = group.adminIds.includes(userId);
     const user = getUserById(userId);
 
-    Alert.alert(
-      user?.name || "Member",
-      undefined,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: isUserAdmin ? "Remove Admin" : "Make Admin",
-          onPress: () => {
-            if (isUserAdmin) {
-              removeAdmin(groupId, userId);
-            } else {
-              makeAdmin(groupId, userId);
-            }
-          },
+    Alert.alert(user?.name || "Member", undefined, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: isUserAdmin ? "Remove Admin" : "Make Admin",
+        onPress: () => {
+          if (isUserAdmin) {
+            removeAdmin(groupId, userId);
+          } else {
+            makeAdmin(groupId, userId);
+          }
         },
-        {
-          text: "Remove from Group",
-          style: "destructive",
-          onPress: () => {
-            removeFromGroup(groupId, userId);
-          },
+      },
+      {
+        text: "Remove from Group",
+        style: "destructive",
+        onPress: () => {
+          removeFromGroup(groupId, userId);
         },
-      ]
-    );
+      },
+    ]);
   };
 
   return (
@@ -150,19 +142,17 @@ export default function GroupInfoScreen({ navigation, route }: GroupInfoScreenPr
         </ThemedText>
         <View style={[styles.sectionContent, { backgroundColor: theme.surface }]}>
           {(group.participants || []).map((userId, index) => {
-            const user = userId === "currentUser" 
-              ? { id: "currentUser", name: "You", phone: "", isOnline: true }
-              : getUserById(userId);
+            const user =
+              userId === "currentUser"
+                ? { id: "currentUser", name: "You", phone: "", isOnline: true }
+                : getUserById(userId);
             const isUserAdmin = group.adminIds.includes(userId);
 
             if (!user) return null;
 
             return (
               <React.Fragment key={userId}>
-                <Pressable
-                  onPress={() => handleMemberPress(userId)}
-                  style={styles.participant}
-                >
+                <Pressable onPress={() => handleMemberPress(userId)} style={styles.participant}>
                   <Avatar size="medium" />
                   <View style={styles.participantInfo}>
                     <ThemedText style={styles.participantName}>

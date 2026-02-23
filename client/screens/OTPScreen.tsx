@@ -144,7 +144,9 @@ export default function OTPScreen({ navigation, route }: OTPScreenProps) {
         {otp.map((digit, index) => (
           <TextInput
             key={index}
-            ref={(ref) => (inputRefs.current[index] = ref)}
+            ref={(ref) => {
+              inputRefs.current[index] = ref;
+            }}
             style={[
               styles.otpInput,
               {
@@ -167,9 +169,7 @@ export default function OTPScreen({ navigation, route }: OTPScreenProps) {
 
       <Animated.View entering={FadeIn.delay(400).duration(500)}>
         <Pressable onPress={handleResend} style={styles.resendButton}>
-          <ThemedText style={[styles.resendText, { color: theme.primary }]}>
-            Resend Code
-          </ThemedText>
+          <ThemedText style={[styles.resendText, { color: theme.primary }]}>Resend Code</ThemedText>
         </Pressable>
       </Animated.View>
     </KeyboardAwareScrollViewCompat>

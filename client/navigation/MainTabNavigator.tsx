@@ -9,7 +9,6 @@ import StatusScreen from "@/screens/StatusScreen";
 import CallsScreen from "@/screens/CallsScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
 import { useTheme } from "@/hooks/useTheme";
-import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type MainTabParamList = {
   ChatsTab: undefined;
@@ -22,13 +21,11 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export default function MainTabNavigator() {
   const { theme, isDark } = useTheme();
-  const screenOptions = useScreenOptions();
 
   return (
     <Tab.Navigator
       initialRouteName="ChatsTab"
       screenOptions={{
-        ...screenOptions,
         tabBarActiveTintColor: theme.primary,
         tabBarInactiveTintColor: theme.tabIconDefault,
         tabBarStyle: {
@@ -68,9 +65,7 @@ export default function MainTabNavigator() {
         options={{
           title: "Status",
           headerTitle: "Status",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="circle" size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) => <Feather name="circle" size={size} color={color} />,
         }}
       />
       <Tab.Screen
@@ -79,9 +74,7 @@ export default function MainTabNavigator() {
         options={{
           title: "Calls",
           headerTitle: "Calls",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="phone" size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) => <Feather name="phone" size={size} color={color} />,
         }}
       />
       <Tab.Screen
@@ -90,9 +83,7 @@ export default function MainTabNavigator() {
         options={{
           title: "Settings",
           headerTitle: "Settings",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="settings" size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) => <Feather name="settings" size={size} color={color} />,
         }}
       />
     </Tab.Navigator>

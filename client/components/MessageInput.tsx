@@ -53,11 +53,11 @@ export function MessageInput({ onSend, replyingTo }: MessageInputProps) {
 
   const handleSend = () => {
     if (!hasText) return;
-    
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     sendButtonRotation.value = 0;
     sendButtonRotation.value = withTiming(1, { duration: 300 });
-    
+
     onSend(text.trim());
     setText("");
   };
@@ -68,10 +68,7 @@ export function MessageInput({ onSend, replyingTo }: MessageInputProps) {
         <View style={[styles.replyBar, { backgroundColor: theme.surface }]}>
           <View style={[styles.replyIndicator, { backgroundColor: theme.primary }]} />
           <View style={styles.replyContent}>
-            <Animated.Text
-              style={[styles.replyText, { color: theme.text }]}
-              numberOfLines={1}
-            >
+            <Animated.Text style={[styles.replyText, { color: theme.text }]} numberOfLines={1}>
               {replyingTo.text}
             </Animated.Text>
           </View>
@@ -80,7 +77,7 @@ export function MessageInput({ onSend, replyingTo }: MessageInputProps) {
           </Pressable>
         </View>
       ) : null}
-      
+
       <View style={styles.inputRow}>
         <Pressable style={styles.iconButton}>
           <Feather name="smile" size={24} color={theme.textSecondary} />

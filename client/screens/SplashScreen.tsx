@@ -22,7 +22,7 @@ interface SplashScreenProps {
 export default function SplashScreen({ navigation }: SplashScreenProps) {
   const { theme } = useTheme();
   const { loadPersistedState, isAuthenticated, isLoading } = useChatStore();
-  
+
   const logoScale = useSharedValue(0.8);
   const logoOpacity = useSharedValue(0);
   const textOpacity = useSharedValue(0);
@@ -46,6 +46,7 @@ export default function SplashScreen({ navigation }: SplashScreenProps) {
       }, 1500);
       return () => clearTimeout(timer);
     }
+    return;
   }, [isLoading, isAuthenticated]);
 
   const logoStyle = useAnimatedStyle(() => ({
@@ -67,9 +68,7 @@ export default function SplashScreen({ navigation }: SplashScreenProps) {
         />
       </Animated.View>
       <Animated.View style={textStyle}>
-        <ThemedText style={[styles.appName, { color: theme.primary }]}>
-          ChatApp
-        </ThemedText>
+        <ThemedText style={[styles.appName, { color: theme.primary }]}>ChatApp</ThemedText>
       </Animated.View>
     </View>
   );

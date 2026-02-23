@@ -1,10 +1,6 @@
 import React from "react";
 import { View, StyleSheet, Pressable } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 
 import { Avatar } from "@/components/Avatar";
@@ -55,7 +51,7 @@ export function ChatListItem({ chat, user, onPress }: ChatListItemProps) {
       style={[styles.container, animatedStyle]}
     >
       <Avatar uri={user.avatar} size="medium" showOnline isOnline={user.isOnline} />
-      
+
       <View style={styles.content}>
         <View style={styles.topRow}>
           <ThemedText style={styles.name} numberOfLines={1}>
@@ -72,7 +68,7 @@ export function ChatListItem({ chat, user, onPress }: ChatListItemProps) {
             </ThemedText>
           ) : null}
         </View>
-        
+
         <View style={styles.bottomRow}>
           <ThemedText
             style={[styles.lastMessage, { color: theme.textSecondary }]}

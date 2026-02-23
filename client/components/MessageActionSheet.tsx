@@ -72,7 +72,7 @@ export function MessageActionSheet({
         <Animated.View style={[styles.backdrop, backdropStyle]}>
           <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         </Animated.View>
-        
+
         <Animated.View
           style={[
             styles.sheet,
@@ -82,7 +82,7 @@ export function MessageActionSheet({
           ]}
         >
           <View style={[styles.handle, { backgroundColor: theme.backgroundDefault }]} />
-          
+
           {actions.map((action, index) => (
             <Pressable
               key={action.label}
@@ -100,10 +100,7 @@ export function MessageActionSheet({
                 color={action.destructive ? theme.error : theme.text}
               />
               <ThemedText
-                style={[
-                  styles.actionLabel,
-                  action.destructive && { color: theme.error },
-                ]}
+                style={[styles.actionLabel, action.destructive && { color: theme.error }]}
               >
                 {action.label}
               </ThemedText>

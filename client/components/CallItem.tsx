@@ -1,11 +1,6 @@
-import React from "react";
 import { View, StyleSheet, Pressable } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 
 import { Avatar } from "@/components/Avatar";
 import { ThemedText } from "@/components/ThemedText";
@@ -41,9 +36,7 @@ export function CallItem({ call, user, onPress }: CallItemProps) {
   const getCallIcon = () => {
     const iconName = call.direction === "incoming" ? "phone-incoming" : "phone-outgoing";
     const iconColor =
-      call.status === "missed" || call.status === "declined"
-        ? theme.error
-        : theme.success;
+      call.status === "missed" || call.status === "declined" ? theme.error : theme.success;
     return <Feather name={iconName} size={14} color={iconColor} />;
   };
 
@@ -72,13 +65,10 @@ export function CallItem({ call, user, onPress }: CallItemProps) {
       style={[styles.container, animatedStyle]}
     >
       <Avatar uri={user.avatar} size="medium" />
-            
+
       <View style={styles.content}>
         <ThemedText
-          style={[
-            styles.name,
-            call.status === "missed" && { color: theme.error },
-          ]}
+          style={[styles.name, call.status === "missed" && { color: theme.error }]}
           numberOfLines={1}
         >
           {user.name}

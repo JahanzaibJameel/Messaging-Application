@@ -13,7 +13,7 @@ declare module "http" {
   }
 }
 
-function setupCors(app: express.Application) {
+function setupCors(app: express.Application): void {
   app.use((req, res, next) => {
     const origins = new Set<string>();
 
@@ -30,15 +30,11 @@ function setupCors(app: express.Application) {
     const origin = req.header("origin");
 
     const isLocalhost =
-      origin?.startsWith("http://localhost:") ||
-      origin?.startsWith("http://127.0.0.1:");
+      origin?.startsWith("http://localhost:") || origin?.startsWith("http://127.0.0.1:");
 
     if (origin && (origins.has(origin) || isLocalhost)) {
       res.header("Access-Control-Allow-Origin", origin);
-      res.header(
-        "Access-Control-Allow-Methods",
-        "GET, POST, PUT, DELETE, OPTIONS",
-      );
+      res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
       res.header("Access-Control-Allow-Headers", "Content-Type");
       res.header("Access-Control-Allow-Credentials", "true");
     }
@@ -48,6 +44,7 @@ function setupCors(app: express.Application) {
     }
 
     next();
+    return;
   });
 }
 
@@ -57,7 +54,7 @@ function setupBodyParsing(app: express.Application) {
       verify: (req, _res, buf) => {
         req.rawBody = buf;
       },
-    }),
+    })
   );
 
   app.use(express.urlencoded({ extended: false }));
@@ -107,18 +104,12 @@ function getAppName(): string {
   }
 }
 
-function serveExpoManifest(platform: string, res: Response) {
-  const manifestPath = path.resolve(
-    process.cwd(),
-    "static-build",
-    platform,
-    "manifest.json",
-  );
+function serveExpoManifest(platform: string, res: Response): void {
+  const manifestPath = path.resolve(process.cwd(), "static-build", platform, "manifest.json");
 
   if (!fs.existsSync(manifestPath)) {
-    return res
-      .status(404)
-      .json({ error: `Manifest not found for platform: ${platform}` });
+    res.status(404).json({ error: `Manifest not found for platform: ${platform}` });
+    return;
   }
 
   res.setHeader("expo-protocol-version", "1");
@@ -160,12 +151,7 @@ function serveLandingPage({
 }
 
 function configureExpoAndLanding(app: express.Application) {
-  const templatePath = path.resolve(
-    process.cwd(),
-    "server",
-    "templates",
-    "landing-page.html",
-  );
+  const templatePath = path.resolve(process.cwd(), "server", "templates", "landing-page.html");
   const landingPageTemplate = fs.readFileSync(templatePath, "utf-8");
   const appName = getAppName();
 
@@ -244,6 +230,6 @@ function setupErrorHandler(app: express.Application) {
     },
     () => {
       log(`express server serving on port ${port}`);
-    },
+    }
   );
 })();

@@ -20,11 +20,7 @@ function SkeletonItem() {
   const shimmer = useSharedValue(0);
 
   useEffect(() => {
-    shimmer.value = withRepeat(
-      withTiming(1, { duration: 1000 }),
-      -1,
-      false
-    );
+    shimmer.value = withRepeat(withTiming(1, { duration: 1000 }), -1, false);
   }, []);
 
   const shimmerStyle = useAnimatedStyle(() => ({
@@ -33,29 +29,12 @@ function SkeletonItem() {
 
   return (
     <Animated.View style={[styles.item, shimmerStyle]}>
-      <View
-        style={[styles.avatar, { backgroundColor: theme.backgroundDefault }]}
-      />
+      <View style={[styles.avatar, { backgroundColor: theme.backgroundDefault }]} />
       <View style={styles.content}>
-        <View
-          style={[
-            styles.namePlaceholder,
-            { backgroundColor: theme.backgroundDefault },
-          ]}
-        />
-        <View
-          style={[
-            styles.messagePlaceholder,
-            { backgroundColor: theme.backgroundDefault },
-          ]}
-        />
+        <View style={[styles.namePlaceholder, { backgroundColor: theme.backgroundDefault }]} />
+        <View style={[styles.messagePlaceholder, { backgroundColor: theme.backgroundDefault }]} />
       </View>
-      <View
-        style={[
-          styles.timePlaceholder,
-          { backgroundColor: theme.backgroundDefault },
-        ]}
-      />
+      <View style={[styles.timePlaceholder, { backgroundColor: theme.backgroundDefault }]} />
     </Animated.View>
   );
 }

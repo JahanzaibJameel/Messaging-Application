@@ -24,8 +24,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
   const { theme, isDark } = useTheme();
-  const { currentUser, settings, toggleDarkMode, clearChatHistory, logout } =
-    useChatStore();
+  const { currentUser, settings, toggleDarkMode, clearChatHistory, logout } = useChatStore();
 
   const appVersion = Constants.expoConfig?.version || "1.0.0";
 
@@ -81,9 +80,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
       <View style={[styles.profileSection, { backgroundColor: theme.surface }]}>
         <Avatar size="large" />
         <View style={styles.profileInfo}>
-          <ThemedText style={styles.profileName}>
-            {currentUser?.name || "User"}
-          </ThemedText>
+          <ThemedText style={styles.profileName}>{currentUser?.name || "User"}</ThemedText>
           <ThemedText style={[styles.profilePhone, { color: theme.textSecondary }]}>
             {currentUser?.phone || "+1 234 567 8900"}
           </ThemedText>
@@ -135,16 +132,9 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
 
       {/* About Section */}
       <View style={styles.section}>
-        <ThemedText style={[styles.sectionTitle, { color: theme.textSecondary }]}>
-          About
-        </ThemedText>
+        <ThemedText style={[styles.sectionTitle, { color: theme.textSecondary }]}>About</ThemedText>
         <View style={[styles.sectionContent, { backgroundColor: theme.surface }]}>
-          <SettingsItem
-            icon="info"
-            title="App Version"
-            subtitle={appVersion}
-            showArrow={false}
-          />
+          <SettingsItem icon="info" title="App Version" subtitle={appVersion} showArrow={false} />
         </View>
       </View>
 

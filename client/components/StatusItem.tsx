@@ -1,10 +1,5 @@
-import React from "react";
 import { View, StyleSheet, Pressable } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import Svg, { Circle } from "react-native-svg";
 
 import { Avatar } from "@/components/Avatar";
@@ -69,7 +64,7 @@ export function StatusItem({ status, user, onPress }: StatusItemProps) {
           <Avatar uri={user.avatar} size="medium" />
         </View>
       </View>
-      
+
       <View style={styles.content}>
         <ThemedText style={styles.name} numberOfLines={1}>
           {user.name}

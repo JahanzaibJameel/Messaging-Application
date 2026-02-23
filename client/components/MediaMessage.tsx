@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, Pressable, ActivityIndicator } from "react-native";
 import { Image } from "expo-image";
 import { Feather } from "@expo/vector-icons";
 
@@ -17,18 +17,15 @@ export function MediaMessage({ attachment, isOwn, onPress }: MediaMessageProps) 
   const { theme } = useTheme();
   const [isLoading, setIsLoading] = React.useState(true);
 
-  const aspectRatio = attachment.width && attachment.height
-    ? attachment.width / attachment.height
-    : 4 / 3;
+  const aspectRatio =
+    attachment.width && attachment.height ? attachment.width / attachment.height : 4 / 3;
 
   return (
     <Pressable
       onPress={onPress}
       style={[
         styles.container,
-        isOwn
-          ? { backgroundColor: theme.bubbleSender }
-          : { backgroundColor: theme.bubbleReceiver },
+        isOwn ? { backgroundColor: theme.bubbleSender } : { backgroundColor: theme.bubbleReceiver },
         Shadows.bubble,
       ]}
     >
@@ -41,7 +38,7 @@ export function MediaMessage({ attachment, isOwn, onPress }: MediaMessageProps) 
           onLoadEnd={() => setIsLoading(false)}
           transition={200}
         />
-        
+
         {isLoading ? (
           <View style={styles.loadingOverlay}>
             <ActivityIndicator color={theme.primary} size="large" />
@@ -57,9 +54,7 @@ export function MediaMessage({ attachment, isOwn, onPress }: MediaMessageProps) 
         {attachment.duration ? (
           <View style={styles.durationBadge}>
             <Feather name="play" size={10} color="#FFFFFF" />
-            <View style={styles.durationText}>
-              {formatDuration(attachment.duration)}
-            </View>
+            <Text style={styles.durationText}>{formatDuration(attachment.duration)}</Text>
           </View>
         ) : null}
       </View>

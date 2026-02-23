@@ -8,11 +8,7 @@ export type ErrorBoundaryProps = PropsWithChildren<{
 
 type ErrorBoundaryState = { error: Error | null };
 
-
-export class ErrorBoundary extends Component<
-  ErrorBoundaryProps,
-  ErrorBoundaryState
-> {
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   state: ErrorBoundaryState = { error: null };
 
   static defaultProps: {
@@ -39,10 +35,7 @@ export class ErrorBoundary extends Component<
     const { FallbackComponent } = this.props;
 
     return this.state.error && FallbackComponent ? (
-      <FallbackComponent
-        error={this.state.error}
-        resetError={this.resetError}
-      />
+      <FallbackComponent error={this.state.error} resetError={this.resetError} />
     ) : (
       this.props.children
     );

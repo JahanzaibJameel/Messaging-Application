@@ -7,6 +7,7 @@ import Animated, {
   withTiming,
   withDelay,
   withSequence,
+  SharedValue,
 } from "react-native-reanimated";
 
 import { useTheme } from "@/hooks/useTheme";
@@ -19,14 +20,11 @@ export function TypingIndicator() {
   const dot3 = useSharedValue(0);
 
   useEffect(() => {
-    const animate = (sv: Animated.SharedValue<number>, delay: number) => {
+    const animate = (sv: SharedValue<number>, delay: number) => {
       sv.value = withDelay(
         delay,
         withRepeat(
-          withSequence(
-            withTiming(1, { duration: 300 }),
-            withTiming(0, { duration: 300 })
-          ),
+          withSequence(withTiming(1, { duration: 300 }), withTiming(0, { duration: 300 })),
           -1
         )
       );
@@ -37,7 +35,7 @@ export function TypingIndicator() {
     animate(dot3, 300);
   }, []);
 
-  const createDotStyle = (sv: Animated.SharedValue<number>) =>
+  const createDotStyle = (sv: SharedValue<number>) =>
     useAnimatedStyle(() => ({
       transform: [{ translateY: -sv.value * 4 }],
       opacity: 0.5 + sv.value * 0.5,
@@ -49,22 +47,10 @@ export function TypingIndicator() {
 
   return (
     <View style={[styles.container, { alignSelf: "flex-start" }]}>
-      <View
-        style={[
-          styles.bubble,
-          { backgroundColor: theme.bubbleReceiver },
-          Shadows.bubble,
-        ]}
-      >
-        <Animated.View
-          style={[styles.dot, { backgroundColor: theme.textSecondary }, dot1Style]}
-        />
-        <Animated.View
-          style={[styles.dot, { backgroundColor: theme.textSecondary }, dot2Style]}
-        />
-        <Animated.View
-          style={[styles.dot, { backgroundColor: theme.textSecondary }, dot3Style]}
-        />
+      <View style={[styles.bubble, { backgroundColor: theme.bubbleReceiver }, Shadows.bubble]}>
+        <Animated.View style={[styles.dot, { backgroundColor: theme.textSecondary }, dot1Style]} />
+        <Animated.View style={[styles.dot, { backgroundColor: theme.textSecondary }, dot2Style]} />
+        <Animated.View style={[styles.dot, { backgroundColor: theme.textSecondary }, dot3Style]} />
       </View>
     </View>
   );

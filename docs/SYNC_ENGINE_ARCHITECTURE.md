@@ -64,6 +64,7 @@ interface SyncState {
 ```
 
 **Responsibilities:**
+
 - Maintain local message state
 - Track pending/failed messages
 - Handle optimistic updates
@@ -77,10 +78,10 @@ Coordinates synchronization between local state and remote server:
 class SyncManager {
   // Queue for pending operations
   private pendingQueue: Operation[];
-  
+
   // Sync state
   private lastSyncCursor: string | null;
-  
+
   // Core methods
   async sync(): Promise<void>;
   async pushPendingMessages(): Promise<void>;
@@ -109,6 +110,7 @@ Messages transition through the following states:
 ```
 
 **State Definitions:**
+
 - `SENDING`: Message created locally, pending server acknowledgment
 - `SENT`: Server received the message
 - `DELIVERED`: Message delivered to recipient device
@@ -215,12 +217,12 @@ function resolveConflict(local: Message, remote: Message): Message {
   // Compare vector clocks
   const localClock = local.meta.vectorClock;
   const remoteClock = remote.meta.vectorClock;
-  
+
   // If clocks are concurrent, use timestamp
   if (areConcurrent(localClock, remoteClock)) {
     return local.meta.timestamp > remote.meta.timestamp ? local : remote;
   }
-  
+
   // Otherwise, use the more recent vector clock
   return isGreater(localClock, remoteClock) ? local : remote;
 }
@@ -228,12 +230,12 @@ function resolveConflict(local: Message, remote: Message): Message {
 
 ### Conflict Types
 
-| Conflict Type | Resolution |
-|---------------|------------|
-| Same message edited on two devices | Last-write-wins |
-| Message deleted on one device, edited on another | Delete wins |
-| Read receipt conflicts | Most advanced status wins |
-| Reaction conflicts | Merge both reactions |
+| Conflict Type                                    | Resolution                |
+| ------------------------------------------------ | ------------------------- |
+| Same message edited on two devices               | Last-write-wins           |
+| Message deleted on one device, edited on another | Delete wins               |
+| Read receipt conflicts                           | Most advanced status wins |
+| Reaction conflicts                               | Merge both reactions      |
 
 ## Offline Queue
 
@@ -295,15 +297,15 @@ class WebSocketManager {
   private socket: WebSocket | null;
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 10;
-  
+
   connect(): void {
     this.socket = new WebSocket(WS_URL);
-    
+
     this.socket.onclose = () => {
       this.scheduleReconnect();
     };
   }
-  
+
   private scheduleReconnect(): void {
     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
     setTimeout(() => this.connect(), delay);
@@ -379,15 +381,15 @@ Only sync changes since last sync:
 ```typescript
 async function deltaSync(): Promise<SyncResult> {
   const lastSync = await getLastSyncTimestamp();
-  
+
   const changes = await api.getChanges({
     since: lastSync,
     types: ["messages", "reactions", "statuses"],
   });
-  
+
   await applyChanges(changes);
   await setLastSyncTimestamp(new Date().toISOString());
-  
+
   return { changesApplied: changes.length };
 }
 ```
@@ -401,7 +403,7 @@ End-to-end encryption for message content:
 ```typescript
 interface EncryptedMessage {
   id: string;
-  encryptedContent: string;  // AES-256-GCM
+  encryptedContent: string; // AES-256-GCM
   iv: string;
   authTag: string;
 }
@@ -424,10 +426,10 @@ Signal Protocol for key exchange:
 Sensitive data stored in SecureStore:
 
 ```typescript
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from "expo-secure-store";
 
 async function storeEncryptionKey(key: string): Promise<void> {
-  await SecureStore.setItemAsync('encryption_key', key);
+  await SecureStore.setItemAsync("encryption_key", key);
 }
 ```
 
@@ -447,13 +449,13 @@ enum SyncErrorType {
 
 ### Recovery Strategies
 
-| Error Type | Recovery Strategy |
-|------------|-------------------|
-| Network Error | Exponential backoff retry |
-| Auth Error | Re-authenticate, then retry |
-| Conflict Error | Apply conflict resolution |
-| Storage Error | Clear corrupted data, re-sync |
-| Unknown Error | Log, alert user, retry |
+| Error Type     | Recovery Strategy             |
+| -------------- | ----------------------------- |
+| Network Error  | Exponential backoff retry     |
+| Auth Error     | Re-authenticate, then retry   |
+| Conflict Error | Apply conflict resolution     |
+| Storage Error  | Clear corrupted data, re-sync |
+| Unknown Error  | Log, alert user, retry        |
 
 ## Monitoring & Debugging
 

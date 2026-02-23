@@ -20,7 +20,7 @@ export default function StatusScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
   const { statuses, getUserById, currentUser } = useChatStore();
-  
+
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = useCallback(() => {
@@ -61,7 +61,7 @@ export default function StatusScreen() {
   );
 
   const renderItem = useCallback(
-    ({ item, index }: { item: typeof statuses[0]; index: number }) => {
+    ({ item, index }: { item: (typeof statuses)[0]; index: number }) => {
       const user = getUserById(item.userId);
       if (!user) return null;
 

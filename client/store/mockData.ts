@@ -138,6 +138,7 @@ export const mockChats: Chat[] = [
     lastMessage: mockMessages.find((m) => m.id === "msg7"),
     unreadCount: 0,
     isPinned: true,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString(),
   },
   {
     id: "chat2",
@@ -145,6 +146,7 @@ export const mockChats: Chat[] = [
     participantId: "user2",
     lastMessage: mockMessages.find((m) => m.chatId === "chat2"),
     unreadCount: 1,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 20).toISOString(),
   },
   {
     id: "chat3",
@@ -152,6 +154,7 @@ export const mockChats: Chat[] = [
     participantId: "user3",
     lastMessage: mockMessages.find((m) => m.chatId === "chat3"),
     unreadCount: 0,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 15).toISOString(),
   },
   {
     id: "chat4",
@@ -160,6 +163,7 @@ export const mockChats: Chat[] = [
     lastMessage: mockMessages.find((m) => m.chatId === "chat4"),
     unreadCount: 0,
     isMuted: true,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString(),
   },
 ];
 
@@ -218,6 +222,7 @@ export const mockCalls: Call[] = [
   {
     id: "call1",
     participantId: "user1",
+    participantName: "Alice Johnson",
     type: "video",
     direction: "outgoing",
     status: "answered",
@@ -227,6 +232,7 @@ export const mockCalls: Call[] = [
   {
     id: "call2",
     participantId: "user2",
+    participantName: "Bob Smith",
     type: "audio",
     direction: "incoming",
     status: "missed",
@@ -235,6 +241,7 @@ export const mockCalls: Call[] = [
   {
     id: "call3",
     participantId: "user3",
+    participantName: "Carol Davis",
     type: "audio",
     direction: "outgoing",
     status: "answered",
@@ -244,6 +251,7 @@ export const mockCalls: Call[] = [
   {
     id: "call4",
     participantId: "user4",
+    participantName: "David Wilson",
     type: "video",
     direction: "incoming",
     status: "declined",

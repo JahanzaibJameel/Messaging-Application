@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from "react";
-import { View, StyleSheet, FlatList, Clipboard, Platform, Pressable } from "react-native";
+import { View, StyleSheet, FlatList, Clipboard, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -18,9 +18,13 @@ import { Avatar } from "@/components/Avatar";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing } from "@/constants/theme";
-import { useChatStore } from "@/store/chatStore";
-import { Message, GroupChat } from "@/store/types";
+import { useChatStore, useMessageStore, useUIStore } from "@presentation/stores";
+import { useAuthStore } from "@presentation/stores";
+import type { Message } from "@domain/entities/Message";
+import { MessageEntity } from "@domain/entities/Message";
+import type { GroupChat } from "@domain/entities/Chat";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
+import { getSyncEngine } from "@core/sync";
 
 interface ChatScreenProps {
   navigation: NativeStackNavigationProp<RootStackParamList, "Chat">;
@@ -32,34 +36,24 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const { theme } = useTheme();
-  const {
-    getMessagesForChat,
-    sendMessage,
-    deleteMessage,
-    markChatAsRead,
-    getUserById,
-    getChatById,
-    groupChats,
-    typingUsers,
-    addReaction,
-  } = useChatStore();
+  const { currentUser } = useAuthStore();
+  const { getChatById, markChatAsRead } = useChatStore();
+  const { getMessagesByChatId, addMessage, deleteMessage, setReplyingTo, replyingTo } = useMessageStore();
+  const { showToast } = useUIStore();
 
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
-  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [showActionSheet, setShowActionSheet] = useState(false);
 
-  const messages = getMessagesForChat(chatId);
-  const user = getUserById(participantId);
+  const messages = getMessagesByChatId(chatId);
   const chat = getChatById(chatId);
-  const group = isGroup ? groupChats.find((g) => g.id === chatId) : null;
-  const isTyping = typingUsers[participantId];
+  const group = isGroup && chat?.type === 'group' ? chat as GroupChat : null;
 
   // Reverse messages for inverted FlatList (newest first)
   const reversedMessages = useMemo(() => [...messages].reverse(), [messages]);
 
   React.useEffect(() => {
     markChatAsRead(chatId);
-  }, [chatId]);
+  }, [chatId, markChatAsRead]);
 
   React.useLayoutEffect(() => {
     if (isGroup && group) {
@@ -74,8 +68,11 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
               <ThemedText style={styles.headerTitle} numberOfLines={1}>
                 {group.name}
               </ThemedText>
-              <ThemedText style={[styles.headerSubtitle, { color: theme.textSecondary }]} numberOfLines={1}>
-                {group.participants?.length || 0} participants
+              <ThemedText
+                style={[styles.headerSubtitle, { color: theme.textSecondary }]}
+                numberOfLines={1}
+              >
+                {group.participantIds.length} participants
               </ThemedText>
             </View>
           </Pressable>
@@ -86,32 +83,55 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
           </Pressable>
         ),
       });
-    } else if (user) {
+    } else {
       navigation.setOptions({
         headerTitle: () => (
           <View style={styles.privateHeader}>
-            <Avatar uri={user.avatar} size="small" showOnline isOnline={user.isOnline} />
+            <Avatar size="small" />
             <View style={styles.headerInfo}>
               <ThemedText style={styles.headerTitle} numberOfLines={1}>
-                {user.name}
+                Chat
               </ThemedText>
-              <ThemedText style={[styles.headerSubtitle, { color: theme.textSecondary }]} numberOfLines={1}>
-                {user.isOnline ? "online" : "offline"}
+              <ThemedText
+                style={[styles.headerSubtitle, { color: theme.textSecondary }]}
+                numberOfLines={1}
+              >
+                online
               </ThemedText>
             </View>
           </View>
         ),
       });
     }
-  }, [navigation, user, group, isGroup, theme]);
+  }, [navigation, group, isGroup, theme, chatId]);
 
   const handleSend = useCallback(
     (text: string) => {
-      sendMessage(chatId, text, undefined, replyingTo?.id);
+      if (!currentUser) return;
+
+      const message = MessageEntity.create({
+        chatId,
+        senderId: currentUser.id,
+        type: 'text',
+        text,
+        replyTo: replyingTo?.id,
+      });
+
+      // Queue for sync (offline-first)
+      const syncEngine = getSyncEngine();
+      syncEngine.queueMessage(message);
+
+      // Clear reply
       setReplyingTo(null);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+      showToast({
+        type: 'success',
+        message: 'Message sent',
+        duration: 1500,
+      });
     },
-    [chatId, replyingTo]
+    [chatId, currentUser, replyingTo, setReplyingTo, showToast]
   );
 
   const handleLongPress = useCallback((message: Message) => {
@@ -123,21 +143,26 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
     if (selectedMessage) {
       setReplyingTo(selectedMessage);
     }
-  }, [selectedMessage]);
+    setShowActionSheet(false);
+  }, [selectedMessage, setReplyingTo]);
 
   const handleCopy = useCallback(() => {
     if (selectedMessage?.text) {
       Clipboard.setString(selectedMessage.text);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      showToast({ type: 'success', message: 'Copied to clipboard', duration: 1500 });
     }
-  }, [selectedMessage]);
+    setShowActionSheet(false);
+  }, [selectedMessage, showToast]);
 
   const handleDelete = useCallback(() => {
     if (selectedMessage) {
       deleteMessage(selectedMessage.id);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      showToast({ type: 'success', message: 'Message deleted', duration: 1500 });
     }
-  }, [selectedMessage]);
+    setShowActionSheet(false);
+  }, [selectedMessage, deleteMessage, showToast]);
 
   const getReplyToMessage = useCallback(
     (replyToId?: string) => {
@@ -149,16 +174,10 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
 
   const renderItem = useCallback(
     ({ item }: { item: Message }) => {
-      const isOwn = item.senderId === "currentUser";
-      const sender = isGroup && !isOwn ? getUserById(item.senderId) : null;
-      
+      const isOwn = item.senderId === currentUser?.id;
+
       return (
         <View>
-          {sender && isGroup ? (
-            <ThemedText style={[styles.senderName, { color: theme.primary }]}>
-              {sender.name}
-            </ThemedText>
-          ) : null}
           <ChatBubble
             message={item}
             isOwn={isOwn}
@@ -168,7 +187,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
         </View>
       );
     },
-    [handleLongPress, getReplyToMessage, isGroup, getUserById, theme]
+    [handleLongPress, getReplyToMessage, currentUser?.id]
   );
 
   const renderEmpty = () => (
@@ -182,13 +201,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   );
 
   const renderListHeader = () => {
-    if (isTyping) {
-      return (
-        <Animated.View entering={FadeIn.duration(200)}>
-          <TypingIndicator />
-        </Animated.View>
-      );
-    }
+    // Typing indicator can be added here when implemented
     return null;
   };
 

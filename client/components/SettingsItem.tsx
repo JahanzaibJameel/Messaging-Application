@@ -1,11 +1,7 @@
 import React from "react";
 import { View, StyleSheet, Pressable, Switch } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
@@ -70,7 +66,7 @@ export function SettingsItem({
       >
         <Feather name={icon} size={18} color="#FFFFFF" />
       </View>
-      
+
       <View style={styles.content}>
         <ThemedText style={[styles.title, { color: textColor }]}>{title}</ThemedText>
         {subtitle ? (

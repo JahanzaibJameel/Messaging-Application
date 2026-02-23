@@ -1,6 +1,7 @@
 # WhatsApp-Style Chat App Design Guidelines
 
 ## Brand Identity
+
 **Purpose**: A professional, reliable messaging platform for one-on-one conversations.
 
 **Aesthetic Direction**: **Editorial/Refined** — Clean, purposeful, and familiar. This app should feel instantly recognizable to WhatsApp users while maintaining polish and attention to detail. The design prioritizes readability, clarity, and trust.
@@ -12,12 +13,14 @@
 ## Navigation Architecture
 
 **Root Navigation**: Tab Bar (4 tabs)
+
 - **Chats** (default/active) - Chat list with search
 - **Status** - Story/status feed (UI only)
 - **Calls** - Call history list (UI only)
 - **Settings** - Profile and app preferences
 
 **Authentication Stack** (modal, pre-tabs):
+
 - Splash Screen → Login Screen → OTP Verification Screen
 
 ---
@@ -25,6 +28,7 @@
 ## Screen Specifications
 
 ### 1. Splash Screen
+
 - Full-screen logo centered vertically
 - App name below logo
 - Background: Colors.background
@@ -32,6 +36,7 @@
 - Auto-navigates after 2s
 
 ### 2. Login Screen
+
 - **Header**: None (full-screen form)
 - **Layout**: Scrollable form, centered content
 - **Components**:
@@ -43,6 +48,7 @@
 - **Insets**: Vertical padding = insets.top/bottom + Spacing.xl
 
 ### 3. OTP Verification Screen
+
 - **Header**: Back button (left), transparent
 - **Layout**: Scrollable form, centered
 - **Components**:
@@ -54,6 +60,7 @@
 - **Insets**: Top = headerHeight + Spacing.xl, Bottom = insets.bottom + Spacing.xl
 
 ### 4. Chat List Screen (Chats Tab)
+
 - **Header**: Custom, opaque
   - Title: "Chats" (large/bold)
   - Right button: Search icon
@@ -72,6 +79,7 @@
 - **Insets**: Bottom = tabBarHeight + Spacing.xl
 
 ### 5. One-to-One Chat Screen
+
 - **Header**: Custom, opaque
   - Left: Back button
   - Center: Avatar (32x32) + Name + "online/typing" status
@@ -93,6 +101,7 @@
 - **Insets**: Top = headerHeight + Spacing.md, Bottom = insets.bottom + Spacing.md (input bar handles its own spacing)
 
 ### 6. Status Screen (Status Tab)
+
 - **Header**: Default, title "Status"
 - **Layout**: ScrollView
 - **Components**:
@@ -104,6 +113,7 @@
 - **Insets**: Bottom = tabBarHeight + Spacing.xl
 
 ### 7. Calls Screen (Calls Tab)
+
 - **Header**: Default, title "Calls"
 - **Layout**: FlatList
 - **Components**:
@@ -117,6 +127,7 @@
 - **Insets**: Bottom = tabBarHeight + Spacing.xl
 
 ### 8. Settings Screen (Settings Tab)
+
 - **Header**: Default, title "Settings"
 - **Layout**: ScrollView
 - **Components**:
@@ -132,6 +143,7 @@
 ---
 
 ## Color Palette
+
 **Primary**: #25D366 (WhatsApp teal)
 **Background**: #FFFFFF (light), #0B141A (dark)
 **Surface**: #F0F2F5 (light), #1F2C34 (dark)
@@ -144,8 +156,10 @@
 ---
 
 ## Typography
+
 **Font**: System default (SF Pro on iOS, Roboto on Android)
 **Scale**:
+
 - **Heading**: 28, Bold
 - **Title**: 20, Semibold
 - **Body**: 16, Regular
@@ -155,6 +169,7 @@
 ---
 
 ## Assets to Generate
+
 1. **icon.png** - App icon with teal speech bubble on white/teal gradient
 2. **splash-icon.png** - Larger version of app icon for splash screen
 3. **empty-chats.png** - Illustration for empty chat list (person with phone, soft colors)
@@ -163,6 +178,7 @@
 6. **avatar-placeholder.png** - Default user avatar (gray circle with person silhouette)
 
 **WHERE USED**:
+
 - icon.png: Device home screen
 - splash-icon.png: Splash screen center
 - empty-chats.png: Chat List Screen empty state
@@ -173,6 +189,7 @@
 ---
 
 ## Visual Design Notes
+
 - All chat bubbles have subtle shadow: shadowOffset (0, 1), shadowOpacity 0.08, shadowRadius 2
 - Floating send button shadow: shadowOffset (0, 2), shadowOpacity 0.10, shadowRadius 2
 - Tab bar icons use Feather icons from @expo/vector-icons

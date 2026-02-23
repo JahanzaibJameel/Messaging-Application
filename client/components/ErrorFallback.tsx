@@ -1,13 +1,6 @@
 import React, { useState } from "react";
 import { reloadAppAsync } from "expo";
-import {
-  StyleSheet,
-  View,
-  Pressable,
-  ScrollView,
-  Text,
-  Modal,
-} from "react-native";
+import { StyleSheet, View, Pressable, ScrollView, Text, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
@@ -77,10 +70,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
             },
           ]}
         >
-          <ThemedText
-            type="body"
-            style={[styles.buttonText, { color: theme.buttonText }]}
-          >
+          <ThemedText type="body" style={[styles.buttonText, { color: theme.buttonText }]}>
             Try Again
           </ThemedText>
         </Pressable>
@@ -101,10 +91,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
                 </ThemedText>
                 <Pressable
                   onPress={() => setIsModalVisible(false)}
-                  style={({ pressed }) => [
-                    styles.closeButton,
-                    { opacity: pressed ? 0.6 : 1 },
-                  ]}
+                  style={({ pressed }) => [styles.closeButton, { opacity: pressed ? 0.6 : 1 }]}
                 >
                   <Feather name="x" size={24} color={theme.text} />
                 </Pressable>
@@ -115,12 +102,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
                 contentContainerStyle={styles.modalScrollContent}
                 showsVerticalScrollIndicator
               >
-                <View
-                  style={[
-                    styles.errorContainer,
-                    { backgroundColor: theme.backgroundDefault },
-                  ]}
-                >
+                <View style={[styles.errorContainer, { backgroundColor: theme.backgroundDefault }]}>
                   <Text
                     style={[
                       styles.errorText,

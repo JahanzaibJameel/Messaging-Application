@@ -28,12 +28,7 @@ const springConfig: WithSpringConfig = {
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export function Button({
-  onPress,
-  children,
-  style,
-  disabled = false,
-}: ButtonProps) {
+export function Button({ onPress, children, style, disabled = false }: ButtonProps) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
 
@@ -69,10 +64,7 @@ export function Button({
         animatedStyle,
       ]}
     >
-      <ThemedText
-        type="body"
-        style={[styles.buttonText, { color: theme.buttonText }]}
-      >
+      <ThemedText type="body" style={[styles.buttonText, { color: theme.buttonText }]}>
         {children}
       </ThemedText>
     </AnimatedPressable>

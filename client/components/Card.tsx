@@ -28,10 +28,7 @@ const springConfig: WithSpringConfig = {
   energyThreshold: 0.001,
 };
 
-const getBackgroundColorForElevation = (
-  elevation: number,
-  theme: any,
-): string => {
+const getBackgroundColorForElevation = (elevation: number, theme: any): string => {
   switch (elevation) {
     case 1:
       return theme.backgroundDefault;
@@ -46,14 +43,7 @@ const getBackgroundColorForElevation = (
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export function Card({
-  elevation = 1,
-  title,
-  description,
-  children,
-  onPress,
-  style,
-}: CardProps) {
+export function Card({ elevation = 1, title, description, children, onPress, style }: CardProps) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
 

@@ -1,0 +1,12 @@
+node_modules/
+dist/
+build/
+.expo/
+.next/
+out/
+.cache
+.env.local
+.env.*.local
+*.log
+*.tgz
+.DS_Store

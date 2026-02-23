@@ -27,16 +27,8 @@ export default function RootStackNavigator() {
 
   return (
     <Stack.Navigator screenOptions={screenOptions}>
-      <Stack.Screen
-        name="Splash"
-        component={SplashScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Login"
-        component={LoginScreen}
-        options={{ headerShown: false }}
-      />
+      <Stack.Screen name="Splash" component={SplashScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name="OTP"
         component={OTPScreen}
@@ -45,11 +37,7 @@ export default function RootStackNavigator() {
           headerBackTitle: "Back",
         }}
       />
-      <Stack.Screen
-        name="Main"
-        component={MainTabNavigator}
-        options={{ headerShown: false }}
-      />
+      <Stack.Screen name="Main" component={MainTabNavigator} options={{ headerShown: false }} />
       <Stack.Screen
         name="Chat"
         component={ChatScreen}

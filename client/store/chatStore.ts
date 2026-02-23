@@ -1,6 +1,21 @@
+/**
+ * Global chat application state management using Zustand + MMKV
+ * @module store/useChatStore
+ */
+
 import { create } from "zustand";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { User, Chat, Message, Status, Call, AppSettings, GroupChat, MessageAttachment, SyncState } from "./types";
+import { StorageService } from "@/lib/storage";
+import type {
+  User,
+  Chat,
+  Message,
+  Status,
+  Call,
+  AppSettings,
+  GroupChat,
+  MessageAttachment,
+  SyncState,
+} from "@/types";
 import {
   mockUsers,
   mockChats,
@@ -11,9 +26,12 @@ import {
   autoReplies,
 } from "./mockData";
 
-interface ChatState {
+export interface ChatState {
+  // Auth state
   currentUser: User | null;
   isAuthenticated: boolean;
+
+  // Data state
   users: User[];
   chats: Chat[];
   groupChats: GroupChat[];
@@ -22,28 +40,43 @@ interface ChatState {
   calls: Call[];
   settings: AppSettings;
   syncState: SyncState;
+
+  // UI state
   isLoading: boolean;
   typingUsers: Record<string, boolean>;
 
+  // Actions - Auth
   login: (phone: string) => Promise<void>;
   verifyOtp: (otp: string) => Promise<boolean>;
   logout: () => Promise<void>;
   loadPersistedState: () => Promise<void>;
 
+  // Actions - Messages
   getMessagesForChat: (chatId: string) => Message[];
-  sendMessage: (chatId: string, text?: string, attachment?: MessageAttachment, replyTo?: string) => void;
+  sendMessage: (
+    chatId: string,
+    text?: string,
+    attachment?: MessageAttachment,
+    replyTo?: string
+  ) => void;
   deleteMessage: (messageId: string) => void;
+  editMessage: (messageId: string, text: string) => void;
   markChatAsRead: (chatId: string) => void;
+  addReaction: (messageId: string, reaction: string) => void;
+  removeReaction: (messageId: string) => void;
+
+  // Actions - Chats
   getUserById: (userId: string) => User | undefined;
   getChatById: (chatId: string) => Chat | GroupChat | undefined;
   getAllChats: () => (Chat | GroupChat)[];
-  
   pinChat: (chatId: string) => void;
   unpinChat: (chatId: string) => void;
   muteChat: (chatId: string) => void;
   unmuteChat: (chatId: string) => void;
   archiveChat: (chatId: string) => void;
-  
+  unarchiveChat: (chatId: string) => void;
+
+  // Actions - Groups
   createGroup: (name: string, participantIds: string[]) => GroupChat;
   addToGroup: (groupId: string, userId: string) => void;
   removeFromGroup: (groupId: string, userId: string) => void;
@@ -52,16 +85,16 @@ interface ChatState {
   removeAdmin: (groupId: string, userId: string) => void;
   updateGroupInfo: (groupId: string, name?: string, description?: string) => void;
 
-  addReaction: (messageId: string, reaction: string) => void;
-  removeReaction: (messageId: string) => void;
-
+  // Actions - Settings
   toggleDarkMode: () => void;
   setWallpaper: (wallpaper: string | null) => void;
   setFontSize: (size: "small" | "medium" | "large") => void;
+  toggleNotifications: () => void;
+  toggleSound: () => void;
   clearChatHistory: () => Promise<void>;
 
+  // Actions - Typing & Sync
   setTyping: (chatId: string, isTyping: boolean) => void;
-  
   syncMessages: () => Promise<void>;
   retryMessage: (messageId: string) => void;
 }
@@ -82,6 +115,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
     wallpaper: null,
     fontSize: "medium",
     notifications: true,
+    soundEnabled: true,
+    blurredChatList: false,
   },
   syncState: {
     lastSyncTimestamp: null,
@@ -93,16 +128,23 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   loadPersistedState: async () => {
     try {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
+      const stored = StorageService.getItem(STORAGE_KEY);
+      if (stored && typeof stored === "object") {
+        const parsed = stored as Partial<ChatState>;
         set({
           currentUser: parsed.currentUser || null,
           isAuthenticated: parsed.isAuthenticated || false,
           messages: parsed.messages || mockMessages,
           chats: parsed.chats || mockChats,
           groupChats: parsed.groupChats || mockGroupChats,
-          settings: parsed.settings || { darkMode: false, wallpaper: null, fontSize: "medium", notifications: true },
+          settings: parsed.settings || {
+            darkMode: false,
+            wallpaper: null,
+            fontSize: "medium",
+            notifications: true,
+            soundEnabled: true,
+            blurredChatList: false,
+          },
           isLoading: false,
         });
       } else {
@@ -128,24 +170,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if (otp.length === 6) {
       const { currentUser, messages, chats, groupChats, settings } = get();
       set({ isAuthenticated: true });
-      await AsyncStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({
-          currentUser,
-          isAuthenticated: true,
-          messages,
-          chats,
-          groupChats,
-          settings,
-        })
-      );
+      StorageService.setItem(STORAGE_KEY, {
+        currentUser,
+        isAuthenticated: true,
+        messages,
+        chats,
+        groupChats,
+        settings,
+      });
       return true;
     }
     return false;
   },
 
   logout: async () => {
-    await AsyncStorage.removeItem(STORAGE_KEY);
+    StorageService.removeItem(STORAGE_KEY);
     set({
       currentUser: null,
       isAuthenticated: false,
@@ -159,7 +198,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
     return get().messages.filter((m) => m.chatId === chatId);
   },
 
-  sendMessage: (chatId: string, text?: string, attachment?: MessageAttachment, replyTo?: string) => {
+  sendMessage: (
+    chatId: string,
+    text?: string,
+    attachment?: MessageAttachment,
+    replyTo?: string
+  ) => {
     const newMessage: Message = {
       id: `msg_${Date.now()}`,
       chatId,
@@ -171,32 +215,33 @@ export const useChatStore = create<ChatState>((set, get) => ({
       replyTo,
     };
 
-    const { messages, chats, groupChats } = get();
+    const { messages, chats, groupChats, currentUser, isAuthenticated, settings } = get();
     const updatedMessages = [...messages, newMessage];
-    
+
     const updatedChats = chats.map((chat) =>
       chat.id === chatId ? { ...chat, lastMessage: newMessage } : chat
     );
-    
+
     const updatedGroupChats = groupChats.map((chat) =>
       chat.id === chatId ? { ...chat, lastMessage: newMessage } : chat
     );
 
-    set({ messages: updatedMessages, chats: updatedChats, groupChats: updatedGroupChats });
+    set({
+      messages: updatedMessages,
+      chats: updatedChats,
+      groupChats: updatedGroupChats,
+    });
 
-    const { currentUser, isAuthenticated, settings } = get();
-    AsyncStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        currentUser,
-        isAuthenticated,
-        messages: updatedMessages,
-        chats: updatedChats,
-        groupChats: updatedGroupChats,
-        settings,
-      })
-    );
+    StorageService.setItem(STORAGE_KEY, {
+      currentUser,
+      isAuthenticated,
+      messages: updatedMessages,
+      chats: updatedChats,
+      groupChats: updatedGroupChats,
+      settings,
+    });
 
+    // Simulate message delivery status
     setTimeout(() => {
       set((state) => ({
         messages: state.messages.map((m) =>
@@ -221,6 +266,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }));
     }, 2000);
 
+    // Auto-reply simulation for private chats
     const chat = chats.find((c) => c.id === chatId);
     if (chat && chat.type === "private" && chat.participantId) {
       setTimeout(() => {
@@ -241,15 +287,19 @@ export const useChatStore = create<ChatState>((set, get) => ({
         };
 
         set((state) => {
-          const newMessages = [...state.messages, replyMessage];
-          const newChats = state.chats.map((c) =>
+          const newMsgs = [...state.messages, replyMessage];
+          const newChts = state.chats.map((c) =>
             c.id === chatId
-              ? { ...c, lastMessage: replyMessage, unreadCount: c.unreadCount + 1 }
+              ? {
+                  ...c,
+                  lastMessage: replyMessage,
+                  unreadCount: c.unreadCount + 1,
+                }
               : c
           );
           return {
-            messages: newMessages,
-            chats: newChats,
+            messages: newMsgs,
+            chats: newChts,
             typingUsers: { ...state.typingUsers, [chat.participantId!]: false },
           };
         });
@@ -263,14 +313,18 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }));
   },
 
+  editMessage: (messageId: string, text: string) => {
+    set((state) => ({
+      messages: state.messages.map((m) =>
+        m.id === messageId ? { ...m, text, edited: true, editedAt: new Date().toISOString() } : m
+      ),
+    }));
+  },
+
   markChatAsRead: (chatId: string) => {
     set((state) => ({
-      chats: state.chats.map((c) =>
-        c.id === chatId ? { ...c, unreadCount: 0 } : c
-      ),
-      groupChats: state.groupChats.map((c) =>
-        c.id === chatId ? { ...c, unreadCount: 0 } : c
-      ),
+      chats: state.chats.map((c) => (c.id === chatId ? { ...c, unreadCount: 0 } : c)),
+      groupChats: state.groupChats.map((c) => (c.id === chatId ? { ...c, unreadCount: 0 } : c)),
     }));
   },
 
@@ -296,60 +350,47 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   pinChat: (chatId: string) => {
     set((state) => ({
-      chats: state.chats.map((c) =>
-        c.id === chatId ? { ...c, isPinned: true } : c
-      ),
-      groupChats: state.groupChats.map((c) =>
-        c.id === chatId ? { ...c, isPinned: true } : c
-      ),
+      chats: state.chats.map((c) => (c.id === chatId ? { ...c, isPinned: true } : c)),
+      groupChats: state.groupChats.map((c) => (c.id === chatId ? { ...c, isPinned: true } : c)),
     }));
   },
 
   unpinChat: (chatId: string) => {
     set((state) => ({
-      chats: state.chats.map((c) =>
-        c.id === chatId ? { ...c, isPinned: false } : c
-      ),
-      groupChats: state.groupChats.map((c) =>
-        c.id === chatId ? { ...c, isPinned: false } : c
-      ),
+      chats: state.chats.map((c) => (c.id === chatId ? { ...c, isPinned: false } : c)),
+      groupChats: state.groupChats.map((c) => (c.id === chatId ? { ...c, isPinned: false } : c)),
     }));
   },
 
   muteChat: (chatId: string) => {
     set((state) => ({
-      chats: state.chats.map((c) =>
-        c.id === chatId ? { ...c, isMuted: true } : c
-      ),
-      groupChats: state.groupChats.map((c) =>
-        c.id === chatId ? { ...c, isMuted: true } : c
-      ),
+      chats: state.chats.map((c) => (c.id === chatId ? { ...c, isMuted: true } : c)),
+      groupChats: state.groupChats.map((c) => (c.id === chatId ? { ...c, isMuted: true } : c)),
     }));
   },
 
   unmuteChat: (chatId: string) => {
     set((state) => ({
-      chats: state.chats.map((c) =>
-        c.id === chatId ? { ...c, isMuted: false } : c
-      ),
-      groupChats: state.groupChats.map((c) =>
-        c.id === chatId ? { ...c, isMuted: false } : c
-      ),
+      chats: state.chats.map((c) => (c.id === chatId ? { ...c, isMuted: false } : c)),
+      groupChats: state.groupChats.map((c) => (c.id === chatId ? { ...c, isMuted: false } : c)),
     }));
   },
 
   archiveChat: (chatId: string) => {
     set((state) => ({
-      chats: state.chats.map((c) =>
-        c.id === chatId ? { ...c, isArchived: true } : c
-      ),
-      groupChats: state.groupChats.map((c) =>
-        c.id === chatId ? { ...c, isArchived: true } : c
-      ),
+      chats: state.chats.map((c) => (c.id === chatId ? { ...c, isArchived: true } : c)),
+      groupChats: state.groupChats.map((c) => (c.id === chatId ? { ...c, isArchived: true } : c)),
     }));
   },
 
-  createGroup: (name: string, participantIds: string[]) => {
+  unarchiveChat: (chatId: string) => {
+    set((state) => ({
+      chats: state.chats.map((c) => (c.id === chatId ? { ...c, isArchived: false } : c)),
+      groupChats: state.groupChats.map((c) => (c.id === chatId ? { ...c, isArchived: false } : c)),
+    }));
+  },
+
+  createGroup: (name: string, participantIds: string[]): GroupChat => {
     const newGroup: GroupChat = {
       id: `group_${Date.now()}`,
       type: "group",
@@ -360,20 +401,18 @@ export const useChatStore = create<ChatState>((set, get) => ({
       createdAt: new Date().toISOString(),
       unreadCount: 0,
     };
-    
+
     set((state) => ({
       groupChats: [...state.groupChats, newGroup],
     }));
-    
+
     return newGroup;
   },
 
   addToGroup: (groupId: string, userId: string) => {
     set((state) => ({
       groupChats: state.groupChats.map((g) =>
-        g.id === groupId
-          ? { ...g, participants: [...(g.participants || []), userId] }
-          : g
+        g.id === groupId ? { ...g, participants: [...(g.participants || []), userId] } : g
       ),
     }));
   },
@@ -395,7 +434,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   leaveGroup: (groupId: string) => {
     const { groupChats } = get();
     const group = groupChats.find((g) => g.id === groupId);
-    
+
     if (group) {
       if (group.adminIds.length === 1 && group.adminIds[0] === "currentUser") {
         const newAdmin = group.participants?.find((p) => p !== "currentUser");
@@ -441,9 +480,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   removeAdmin: (groupId: string, userId: string) => {
     set((state) => ({
       groupChats: state.groupChats.map((g) =>
-        g.id === groupId
-          ? { ...g, adminIds: g.adminIds.filter((a) => a !== userId) }
-          : g
+        g.id === groupId ? { ...g, adminIds: g.adminIds.filter((a) => a !== userId) } : g
       ),
     }));
   },
@@ -452,7 +489,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set((state) => ({
       groupChats: state.groupChats.map((g) =>
         g.id === groupId
-          ? { ...g, ...(name && { name }), ...(description !== undefined && { description }) }
+          ? {
+              ...g,
+              ...(name && { name }),
+              ...(description !== undefined && { description }),
+            }
           : g
       ),
     }));
@@ -462,7 +503,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set((state) => ({
       messages: state.messages.map((m) =>
         m.id === messageId
-          ? { ...m, reactions: { ...(m.reactions || {}), currentUser: reaction } }
+          ? {
+              ...m,
+              reactions: { ...(m.reactions || {}), currentUser: reaction },
+            }
           : m
       ),
     }));
@@ -473,7 +517,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
       messages: state.messages.map((m) => {
         if (m.id === messageId && m.reactions) {
           const { currentUser, ...rest } = m.reactions;
-          return { ...m, reactions: Object.keys(rest).length > 0 ? rest : undefined };
+          return {
+            ...m,
+            reactions: Object.keys(rest).length > 0 ? rest : undefined,
+          };
         }
         return m;
       }),
@@ -498,20 +545,40 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }));
   },
 
+  toggleNotifications: () => {
+    set((state) => ({
+      settings: {
+        ...state.settings,
+        notifications: !state.settings.notifications,
+      },
+    }));
+  },
+
+  toggleSound: () => {
+    set((state) => ({
+      settings: {
+        ...state.settings,
+        soundEnabled: !state.settings.soundEnabled,
+      },
+    }));
+  },
+
   clearChatHistory: async () => {
-    set({ messages: [], chats: mockChats.map((c) => ({ ...c, lastMessage: undefined, unreadCount: 0 })) });
     const { currentUser, isAuthenticated, settings, groupChats } = get();
-    await AsyncStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        currentUser,
-        isAuthenticated,
-        messages: [],
-        chats: mockChats.map((c) => ({ ...c, lastMessage: undefined, unreadCount: 0 })),
-        groupChats,
-        settings,
-      })
-    );
+    const clearedChats = mockChats.map((c) => ({
+      ...c,
+      lastMessage: undefined,
+      unreadCount: 0,
+    }));
+    set({ messages: [], chats: clearedChats });
+    StorageService.setItem(STORAGE_KEY, {
+      currentUser,
+      isAuthenticated,
+      messages: [],
+      chats: clearedChats,
+      groupChats,
+      settings,
+    });
   },
 
   setTyping: (chatId: string, isTyping: boolean) => {
@@ -540,16 +607,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   retryMessage: (messageId: string) => {
     set((state) => ({
-      messages: state.messages.map((m) =>
-        m.id === messageId ? { ...m, status: "sending" } : m
-      ),
+      messages: state.messages.map((m) => (m.id === messageId ? { ...m, status: "sending" } : m)),
     }));
 
     setTimeout(() => {
       set((state) => ({
-        messages: state.messages.map((m) =>
-          m.id === messageId ? { ...m, status: "sent" } : m
-        ),
+        messages: state.messages.map((m) => (m.id === messageId ? { ...m, status: "sent" } : m)),
       }));
     }, 1000);
   },

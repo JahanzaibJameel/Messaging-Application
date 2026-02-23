@@ -28,7 +28,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const { login } = useChatStore();
   const [countryCode, setCountryCode] = useState("+1");
   const [phoneNumber, setPhoneNumber] = useState("");
-  
+
   const inputScale = useSharedValue(1);
 
   const inputAnimatedStyle = useAnimatedStyle(() => ({
@@ -48,7 +48,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
-    
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     await login(`${countryCode} ${phoneNumber}`);
     navigation.navigate("OTP", { phone: `${countryCode} ${phoneNumber}` });
@@ -79,20 +79,11 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         </ThemedText>
       </Animated.View>
 
-      <Animated.View
-        entering={FadeIn.delay(200).duration(500)}
-        style={styles.form}
-      >
+      <Animated.View entering={FadeIn.delay(200).duration(500)} style={styles.form}>
         <Animated.View
-          style={[
-            styles.inputContainer,
-            { backgroundColor: theme.surface },
-            inputAnimatedStyle,
-          ]}
+          style={[styles.inputContainer, { backgroundColor: theme.surface }, inputAnimatedStyle]}
         >
-          <Pressable
-            style={[styles.countryCodeContainer, { borderRightColor: theme.divider }]}
-          >
+          <Pressable style={[styles.countryCodeContainer, { borderRightColor: theme.divider }]}>
             <ThemedText style={styles.countryCode}>{countryCode}</ThemedText>
           </Pressable>
           <TextInput

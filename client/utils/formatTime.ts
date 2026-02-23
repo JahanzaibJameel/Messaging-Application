@@ -13,34 +13,34 @@ export function formatMessageTime(timestamp: string): string {
 
 export function formatChatListTime(timestamp: string): string {
   const date = dayjs(timestamp);
-  
+
   if (date.isToday()) {
     return date.format("h:mm A");
   }
-  
+
   if (date.isYesterday()) {
     return "Yesterday";
   }
-  
+
   const daysAgo = dayjs().diff(date, "day");
   if (daysAgo < 7) {
     return date.format("dddd");
   }
-  
+
   return date.format("M/D/YY");
 }
 
 export function formatLastSeen(timestamp: string): string {
   const date = dayjs(timestamp);
-  
+
   if (date.isToday()) {
     return `last seen today at ${date.format("h:mm A")}`;
   }
-  
+
   if (date.isYesterday()) {
     return `last seen yesterday at ${date.format("h:mm A")}`;
   }
-  
+
   return `last seen ${date.format("M/D/YY")} at ${date.format("h:mm A")}`;
 }
 

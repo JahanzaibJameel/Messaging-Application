@@ -1,4 +1,3 @@
-import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import SplashScreen from "@/screens/SplashScreen";
@@ -25,16 +24,8 @@ export default function AuthStackNavigator() {
 
   return (
     <Stack.Navigator screenOptions={screenOptions}>
-      <Stack.Screen
-        name="Splash"
-        component={SplashScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Login"
-        component={LoginScreen}
-        options={{ headerShown: false }}
-      />
+      <Stack.Screen name="Splash" component={SplashScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name="OTP"
         component={OTPScreen}
@@ -43,11 +34,7 @@ export default function AuthStackNavigator() {
           headerBackTitle: "Back",
         }}
       />
-      <Stack.Screen
-        name="Main"
-        component={MainTabNavigator}
-        options={{ headerShown: false }}
-      />
+      <Stack.Screen name="Main" component={MainTabNavigator} options={{ headerShown: false }} />
       <Stack.Screen
         name="Chat"
         component={ChatScreen}

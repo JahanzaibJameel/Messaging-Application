@@ -1,47 +1,73 @@
 {
   "expo": {
     "name": "ChatApp",
-    "slug": "chatapp",
-    "version": "1.0.0",
+    "slug": "chatapp-2026",
+    "version": "2.0.0",
+    "runtimeVersion": "2.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "chatapp",
     "userInterfaceStyle": "automatic",
+    "splashScreen": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF",
+      "dark": {
+        "image": "./assets/images/splash-dark.png",
+        "backgroundColor": "#0B141A"
+      }
+    },
+    "icon": "./assets/images/icon.png",
+    "favicon": "./assets/images/favicon.png",
+    "scheme": "chatapp",
+    "primaryColor": "#25D366",
     "newArchEnabled": true,
+    "jsEngine": "hermes",
+    "plugins": [
+      [
+        "expo-font",
+        {
+          "fonts": ["./assets/fonts/Inter-Regular.ttf", "./assets/fonts/Inter-Bold.ttf"]
+        }
+      ]
+    ],
+    "experiments": {
+      "reactCompiler": true,
+      "tsfmt": true
+    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.chatapp.mobile"
+      "bundleIdentifier": "com.chatapp.mobile",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSLocalNetworkUsageDescription": "Allow ChatApp to discover devices on your local network",
+        "NSBonjourServiceTypes": ["_http._tcp", "_ws._tcp"]
+      }
     },
     "android": {
       "package": "com.chatapp.mobile",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#25D366",
         "foregroundImage": "./assets/images/icon.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "output": "single",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "bundler": "metro"
     },
-    "plugins": [
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "dark": {
-            "backgroundColor": "#0B141A"
-          }
-        }
-      ],
-      "expo-web-browser"
-    ],
-    "experiments": {
-      "reactCompiler": true
+    "extra": {
+      "eas": {
+        "projectId": "chatapp-2026"
+      },
+      "router": {
+        "origin": false
+      }
     }
   }
 }

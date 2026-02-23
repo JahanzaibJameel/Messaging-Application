@@ -17,7 +17,7 @@ export default function CallsScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
   const { calls, getUserById } = useChatStore();
-  
+
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = useCallback(() => {
@@ -28,7 +28,7 @@ export default function CallsScreen() {
   }, []);
 
   const renderItem = useCallback(
-    ({ item, index }: { item: typeof calls[0]; index: number }) => {
+    ({ item, index }: { item: (typeof calls)[0]; index: number }) => {
       const user = getUserById(item.participantId);
       if (!user) return null;
 

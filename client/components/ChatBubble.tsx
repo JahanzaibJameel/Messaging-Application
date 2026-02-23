@@ -1,11 +1,6 @@
-import React from "react";
 import { View, StyleSheet, Pressable } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -24,12 +19,7 @@ interface ChatBubbleProps {
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export function ChatBubble({
-  message,
-  isOwn,
-  onLongPress,
-  replyToMessage,
-}: ChatBubbleProps) {
+export function ChatBubble({ message, isOwn, onLongPress, replyToMessage }: ChatBubbleProps) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
 
@@ -53,15 +43,31 @@ export function ChatBubble({
   const getStatusIcon = () => {
     switch (message.status) {
       case "sending":
-        return <Feather name="clock" size={14} color={isOwn ? "rgba(255,255,255,0.7)" : theme.textSecondary} />;
+        return (
+          <Feather
+            name="clock"
+            size={14}
+            color={isOwn ? "rgba(255,255,255,0.7)" : theme.textSecondary}
+          />
+        );
       case "failed":
         return <Feather name="alert-circle" size={14} color={theme.error} />;
       case "sent":
-        return <Feather name="check" size={14} color={isOwn ? "rgba(255,255,255,0.7)" : theme.textSecondary} />;
+        return (
+          <Feather
+            name="check"
+            size={14}
+            color={isOwn ? "rgba(255,255,255,0.7)" : theme.textSecondary}
+          />
+        );
       case "delivered":
         return (
           <View style={styles.doubleCheck}>
-            <Feather name="check" size={14} color={isOwn ? "rgba(255,255,255,0.7)" : theme.textSecondary} />
+            <Feather
+              name="check"
+              size={14}
+              color={isOwn ? "rgba(255,255,255,0.7)" : theme.textSecondary}
+            />
             <Feather
               name="check"
               size={14}
@@ -74,12 +80,7 @@ export function ChatBubble({
         return (
           <View style={styles.doubleCheck}>
             <Feather name="check" size={14} color={theme.primary} />
-            <Feather
-              name="check"
-              size={14}
-              color={theme.primary}
-              style={styles.secondCheck}
-            />
+            <Feather name="check" size={14} color={theme.primary} style={styles.secondCheck} />
           </View>
         );
       default:
@@ -107,12 +108,7 @@ export function ChatBubble({
   // If it's a media message
   if (message.attachment) {
     return (
-      <View
-        style={[
-          styles.container,
-          isOwn ? styles.containerOwn : styles.containerOther,
-        ]}
-      >
+      <View style={[styles.container, isOwn ? styles.containerOwn : styles.containerOther]}>
         <AnimatedPressable
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
@@ -130,17 +126,14 @@ export function ChatBubble({
                   : { backgroundColor: theme.bubbleReceiver },
               ]}
             >
-              <ThemedText
-                style={[
-                  styles.messageText,
-                  { color: isOwn ? "#FFFFFF" : theme.text },
-                ]}
-              >
+              <ThemedText style={[styles.messageText, { color: isOwn ? "#FFFFFF" : theme.text }]}>
                 {message.text}
               </ThemedText>
             </View>
           ) : null}
-          <View style={[styles.mediaFooter, isOwn ? styles.mediaFooterOwn : styles.mediaFooterOther]}>
+          <View
+            style={[styles.mediaFooter, isOwn ? styles.mediaFooterOwn : styles.mediaFooterOther]}
+          >
             <ThemedText
               style={[
                 styles.mediaTimestamp,
@@ -158,12 +151,7 @@ export function ChatBubble({
   }
 
   return (
-    <View
-      style={[
-        styles.container,
-        isOwn ? styles.containerOwn : styles.containerOther,
-      ]}
-    >
+    <View style={[styles.container, isOwn ? styles.containerOwn : styles.containerOther]}>
       <AnimatedPressable
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
@@ -185,12 +173,7 @@ export function ChatBubble({
         ]}
       >
         {replyToMessage ? (
-          <View
-            style={[
-              styles.replyContainer,
-              { borderLeftColor: theme.primary },
-            ]}
-          >
+          <View style={[styles.replyContainer, { borderLeftColor: theme.primary }]}>
             <ThemedText
               style={[
                 styles.replyText,
@@ -202,12 +185,7 @@ export function ChatBubble({
             </ThemedText>
           </View>
         ) : null}
-        <ThemedText
-          style={[
-            styles.messageText,
-            { color: isOwn ? "#FFFFFF" : theme.text },
-          ]}
-        >
+        <ThemedText style={[styles.messageText, { color: isOwn ? "#FFFFFF" : theme.text }]}>
           {message.text}
         </ThemedText>
         <View style={styles.footer}>
