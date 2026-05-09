@@ -3,8 +3,8 @@
  * Handles uploading media files to cloud storage with progress tracking
  */
 
-import { AppError } from '../errors';
-import type { ProcessedMedia, MediaType } from './MediaProcessor';
+import { AppError } from "../errors";
+import type { ProcessedMedia, MediaType } from "./MediaProcessor";
 
 export interface UploadProgress {
   loaded: number;
@@ -33,7 +33,7 @@ interface UploadTask {
   progressCallback?: UploadProgressCallback;
 }
 
-const UPLOAD_URL = process.env.EXPO_PUBLIC_UPLOAD_URL || 'https://api.chatapp.com/upload';
+const UPLOAD_URL = process.env.EXPO_PUBLIC_UPLOAD_URL || "https://api.chatapp.com/upload";
 const CHUNK_SIZE = 1024 * 1024; // 1MB chunks for resumable uploads
 
 export class MediaUploader {
@@ -42,57 +42,54 @@ export class MediaUploader {
   /**
    * Upload media file
    */
-  async upload(
-    media: ProcessedMedia,
-    onProgress?: UploadProgressCallback
-  ): Promise<UploadResult> {
+  async upload(media: ProcessedMedia, onProgress?: UploadProgressCallback): Promise<UploadResult> {
     const uploadId = `upload_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     try {
       // Create form data
       const formData = new FormData();
-      
+
       // Append file
       const fileBlob = await this.uriToBlob(media.processedUri);
-      formData.append('file', fileBlob, media.fileName);
-      formData.append('type', media.type);
-      formData.append('mimeType', media.mimeType);
-      
-      if (media.width) formData.append('width', media.width.toString());
-      if (media.height) formData.append('height', media.height.toString());
-      if (media.duration) formData.append('duration', media.duration.toString());
+      formData.append("file", fileBlob, media.fileName);
+      formData.append("type", media.type);
+      formData.append("mimeType", media.mimeType);
+
+      if (media.width) formData.append("width", media.width.toString());
+      if (media.height) formData.append("height", media.height.toString());
+      if (media.duration) formData.append("duration", media.duration.toString());
 
       // Upload thumbnail if exists
       if (media.thumbnailUri) {
         const thumbnailBlob = await this.uriToBlob(media.thumbnailUri);
-        formData.append('thumbnail', thumbnailBlob, `thumb_${media.fileName}`);
+        formData.append("thumbnail", thumbnailBlob, `thumb_${media.fileName}`);
       }
 
       const abortController = new AbortController();
-      
+
       const task: UploadTask = {
         id: uploadId,
         media,
         abortController,
         progressCallback: onProgress,
       };
-      
+
       this.activeUploads.set(uploadId, task);
 
       // Perform upload with progress tracking
       const response = await this.performUpload(formData, abortController, onProgress);
-      
+
       this.activeUploads.delete(uploadId);
-      
+
       return response;
     } catch (error) {
       this.activeUploads.delete(uploadId);
-      
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw AppError.network('Upload cancelled', error);
+
+      if (error instanceof Error && error.name === "AbortError") {
+        throw AppError.network("Upload cancelled", error);
       }
-      
-      throw AppError.network('Failed to upload media', error as Error);
+
+      throw AppError.network("Failed to upload media", error as Error);
     }
   }
 
@@ -104,14 +101,14 @@ export class MediaUploader {
     onProgress?: (index: number, progress: UploadProgress) => void
   ): Promise<UploadResult[]> {
     const results: UploadResult[] = [];
-    
+
     for (let i = 0; i < mediaItems.length; i++) {
       const result = await this.upload(mediaItems[i], (progress) => {
         onProgress?.(i, progress);
       });
       results.push(result);
     }
-    
+
     return results;
   }
 
@@ -155,7 +152,7 @@ export class MediaUploader {
   ): Promise<UploadResult> {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      
+
       // Track upload progress
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable && onProgress) {
@@ -178,30 +175,30 @@ export class MediaUploader {
               metadata: response.metadata,
             });
           } catch {
-            reject(new Error('Invalid response format'));
+            reject(new Error("Invalid response format"));
           }
         } else {
           reject(new Error(`Upload failed: ${xhr.status} ${xhr.statusText}`));
         }
       };
 
-      xhr.onerror = () => reject(new Error('Network error during upload'));
-      xhr.ontimeout = () => reject(new Error('Upload timeout'));
-      xhr.onabort = () => reject(new Error('Upload cancelled'));
+      xhr.onerror = () => reject(new Error("Network error during upload"));
+      xhr.ontimeout = () => reject(new Error("Upload timeout"));
+      xhr.onabort = () => reject(new Error("Upload cancelled"));
 
-      xhr.open('POST', UPLOAD_URL);
-      xhr.setRequestHeader('Accept', 'application/json');
-      
+      xhr.open("POST", UPLOAD_URL);
+      xhr.setRequestHeader("Accept", "application/json");
+
       // Add auth token if available
       const authToken = this.getAuthToken();
       if (authToken) {
-        xhr.setRequestHeader('Authorization', `Bearer ${authToken}`);
+        xhr.setRequestHeader("Authorization", `Bearer ${authToken}`);
       }
 
       xhr.send(formData);
 
       // Handle abort
-      abortController.signal.addEventListener('abort', () => {
+      abortController.signal.addEventListener("abort", () => {
         xhr.abort();
       });
     });

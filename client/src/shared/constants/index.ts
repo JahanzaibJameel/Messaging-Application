@@ -3,16 +3,16 @@
  */
 
 // App constants
-export const APP_NAME = 'ChatApp';
-export const APP_VERSION = '3.0.0';
+export const APP_NAME = "ChatApp";
+export const APP_VERSION = "3.0.0";
 
 // Storage keys
 export const STORAGE_KEYS = {
-  AUTH: '@chatapp/auth',
-  CHATS: '@chatapp/chats',
-  MESSAGES: '@chatapp/messages',
-  SETTINGS: '@chatapp/settings',
-  SYNC: '@chatapp/sync',
+  AUTH: "@chatapp/auth",
+  CHATS: "@chatapp/chats",
+  MESSAGES: "@chatapp/messages",
+  SETTINGS: "@chatapp/settings",
+  SYNC: "@chatapp/sync",
 } as const;
 
 // Sync constants

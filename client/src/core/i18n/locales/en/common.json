@@ -1,0 +1,156 @@
+{
+  "app": {
+    "name": "Chat App",
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "ok": "OK",
+    "yes": "Yes",
+    "no": "No",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close"
+  },
+  "navigation": {
+    "chats": "Chats",
+    "settings": "Settings",
+    "profile": "Profile",
+    "contacts": "Contacts"
+  },
+  "chat": {
+    "newMessage": "New message",
+    "typeMessage": "Type a message...",
+    "send": "Send",
+    "voiceMessage": "Voice message",
+    "photo": "Photo",
+    "video": "Video",
+    "document": "Document",
+    "location": "Location",
+    "contact": "Contact",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "online": "Online",
+    "offline": "Offline",
+    "typing": "typing...",
+    "lastSeen": "Last seen {time}",
+    "messageDeleted": "Message deleted",
+    "messageEdited": "Message edited"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "phoneNumber": "Phone number",
+    "otpCode": "Verification code",
+    "sendOtp": "Send verification code",
+    "verifyOtp": "Verify code",
+    "resendOtp": "Resend code",
+    "otpSent": "Verification code sent to {phone}",
+    "otpExpired": "Code expired. Please request a new one.",
+    "invalidOtp": "Invalid verification code",
+    "loginSuccess": "Login successful",
+    "loginFailed": "Login failed",
+    "signup": "Sign up",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?"
+  },
+  "errors": {
+    "networkError": "Network error. Please check your connection.",
+    "serverError": "Server error. Please try again later.",
+    "unknownError": "An unknown error occurred.",
+    "invalidInput": "Invalid input.",
+    "permissionDenied": "Permission denied.",
+    "fileTooLarge": "File is too large.",
+    "unsupportedFile": "Unsupported file format.",
+    "sessionExpired": "Session expired. Please login again."
+  },
+  "settings": {
+    "notifications": "Notifications",
+    "privacy": "Privacy",
+    "security": "Security",
+    "language": "Language",
+    "theme": "Theme",
+    "about": "About",
+    "version": "Version {version}",
+    "darkMode": "Dark Mode",
+    "lightMode": "Light Mode",
+    "systemMode": "System Default"
+  },
+  "relativeTime": {
+    "justNow": "just now",
+    "minutesAgo": "{count, plural, =1 {# minute} other {# minutes}} ago",
+    "hoursAgo": "{count, plural, =1 {# hour} other {# hours}} ago",
+    "daysAgo": "{count, plural, =1 {# day} other {# days}} ago",
+    "weeksAgo": "{count, plural, =1 {# week} other {# weeks}} ago",
+    "monthsAgo": "{count, plural, =1 {# month} other {# months}} ago",
+    "yearsAgo": "{count, plural, =1 {# year} other {# years}} ago"
+  },
+  "accessibility": {
+    "message": "Message",
+    "sendButton": "Send message",
+    "attachFile": "Attach file",
+    "voiceRecording": "Voice recording",
+    "options": "Options",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "closeButton": "Close dialog",
+    "confirm": "Confirm",
+    "dismiss": "Dismiss"
+  },
+  "permissions": {
+    "camera": "Camera access is required to take photos and videos.",
+    "microphone": "Microphone access is required to send voice messages.",
+    "storage": "Storage access is required to save and share files.",
+    "contacts": "Contacts access is required to find people to chat with.",
+    "notifications": "Notification access is required to receive message notifications."
+  },
+  "media": {
+    "selectImage": "Select image",
+    "selectVideo": "Select video",
+    "selectDocument": "Select document",
+    "takePhoto": "Take photo",
+    "recordVideo": "Record video",
+    "chooseFromGallery": "Choose from gallery",
+    "download": "Download",
+    "share": "Share",
+    "forward": "Forward",
+    "copy": "Copy",
+    "quote": "Quote"
+  },
+  "profile": {
+    "name": "Name",
+    "status": "Status",
+    "bio": "Bio",
+    "phone": "Phone",
+    "email": "Email",
+    "updateProfile": "Update Profile",
+    "changePhoto": "Change Photo",
+    "removePhoto": "Remove Photo",
+    "onlineStatus": {
+      "available": "Available",
+      "busy": "Busy",
+      "away": "Away",
+      "invisible": "Invisible"
+    }
+  },
+  "search": {
+    "search": "Search",
+    "searchMessages": "Search messages",
+    "searchContacts": "Search contacts",
+    "noResults": "No results found",
+    "searching": "Searching...",
+    "clearSearch": "Clear search"
+  },
+  "security": {
+    "twoFactorAuth": "Two-Factor Authentication",
+    "enable2FA": "Enable 2FA",
+    "disable2FA": "Disable 2FA",
+    "backupCodes": "Backup Codes",
+    "generateBackupCodes": "Generate Backup Codes",
+    "screenshotProtection": "Screenshot Protection",
+    "blockScreenshots": "Block Screenshots",
+    "allowScreenshots": "Allow Screenshots"
+  }
+}

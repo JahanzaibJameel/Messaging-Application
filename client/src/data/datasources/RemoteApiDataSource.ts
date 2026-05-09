@@ -3,10 +3,10 @@
  * Handles all remote API communication
  */
 
-import { AppError } from '@core/errors';
-import type { ChatModel, MessageModel, UserModel } from '../models/MessageModel';
+import { AppError } from "@core/errors";
+import type { ChatModel, MessageModel, UserModel } from "../models/MessageModel";
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.chatapp.com';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "https://api.chatapp.com";
 
 interface ApiResponse<T> {
   data: T;
@@ -26,19 +26,16 @@ export class RemoteApiDataSource {
     this.authToken = token;
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    
+
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...((options.headers as Record<string, string>) || {}),
     };
 
     if (this.authToken) {
-      headers['Authorization'] = `Bearer ${this.authToken}`;
+      headers["Authorization"] = `Bearer ${this.authToken}`;
     }
 
     try {
@@ -52,8 +49,8 @@ export class RemoteApiDataSource {
         throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
         return await response.json();
       }
 
@@ -62,41 +59,41 @@ export class RemoteApiDataSource {
       if (error instanceof AppError) {
         throw error;
       }
-      throw AppError.network('API request failed', error as Error);
+      throw AppError.network("API request failed", error as Error);
     }
   }
 
   // Auth Operations
   async login(phone: string): Promise<{ otpSent: boolean }> {
-    return this.request('/auth/login', {
-      method: 'POST',
+    return this.request("/auth/login", {
+      method: "POST",
       body: JSON.stringify({ phone }),
     });
   }
 
   async verifyOtp(phone: string, otp: string): Promise<{ token: string; user: UserModel }> {
-    return this.request('/auth/verify', {
-      method: 'POST',
+    return this.request("/auth/verify", {
+      method: "POST",
       body: JSON.stringify({ phone, otp }),
     });
   }
 
   async logout(): Promise<void> {
-    await this.request('/auth/logout', {
-      method: 'POST',
+    await this.request("/auth/logout", {
+      method: "POST",
     });
     this.authToken = null;
   }
 
   async refreshToken(): Promise<{ token: string }> {
-    return this.request('/auth/refresh', {
-      method: 'POST',
+    return this.request("/auth/refresh", {
+      method: "POST",
     });
   }
 
   // User Operations
   async getCurrentUser(): Promise<UserModel> {
-    return this.request('/users/me');
+    return this.request("/users/me");
   }
 
   async getUserById(userId: string): Promise<UserModel> {
@@ -104,29 +101,29 @@ export class RemoteApiDataSource {
   }
 
   async getUsersByIds(userIds: string[]): Promise<UserModel[]> {
-    return this.request('/users/batch', {
-      method: 'POST',
+    return this.request("/users/batch", {
+      method: "POST",
       body: JSON.stringify({ userIds }),
     });
   }
 
   async updateUser(userId: string, updates: Partial<UserModel>): Promise<UserModel> {
     return this.request(`/users/${userId}`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify(updates),
     });
   }
 
   async updateProfile(userId: string, profile: Partial<UserModel>): Promise<UserModel> {
     return this.request(`/users/${userId}/profile`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify(profile),
     });
   }
 
   // Chat Operations
   async getChats(): Promise<ChatModel[]> {
-    return this.request('/chats');
+    return this.request("/chats");
   }
 
   async getChatById(chatId: string): Promise<ChatModel> {
@@ -134,91 +131,94 @@ export class RemoteApiDataSource {
   }
 
   async createPrivateChat(participantId: string): Promise<ChatModel> {
-    return this.request('/chats/private', {
-      method: 'POST',
+    return this.request("/chats/private", {
+      method: "POST",
       body: JSON.stringify({ participantId }),
     });
   }
 
   async createGroup(name: string, participantIds: string[]): Promise<ChatModel> {
-    return this.request('/chats/group', {
-      method: 'POST',
+    return this.request("/chats/group", {
+      method: "POST",
       body: JSON.stringify({ name, participantIds }),
     });
   }
 
   async updateChat(chatId: string, updates: Partial<ChatModel>): Promise<ChatModel> {
     return this.request(`/chats/${chatId}`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify(updates),
     });
   }
 
   async deleteChat(chatId: string): Promise<void> {
     await this.request(`/chats/${chatId}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   }
 
   // Group Operations
   async addParticipant(chatId: string, userId: string): Promise<void> {
     await this.request(`/chats/${chatId}/participants`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ userId }),
     });
   }
 
   async removeParticipant(chatId: string, userId: string): Promise<void> {
     await this.request(`/chats/${chatId}/participants/${userId}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   }
 
   async makeAdmin(chatId: string, userId: string): Promise<void> {
     await this.request(`/chats/${chatId}/admins`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ userId }),
     });
   }
 
   async removeAdmin(chatId: string, userId: string): Promise<void> {
     await this.request(`/chats/${chatId}/admins/${userId}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   }
 
   // Message Operations
-  async getMessages(chatId: string, options?: { limit?: number; before?: string }): Promise<MessageModel[]> {
+  async getMessages(
+    chatId: string,
+    options?: { limit?: number; before?: string }
+  ): Promise<MessageModel[]> {
     const params = new URLSearchParams();
-    if (options?.limit) params.append('limit', options.limit.toString());
-    if (options?.before) params.append('before', options.before);
-    
+    if (options?.limit) params.append("limit", options.limit.toString());
+    if (options?.before) params.append("before", options.before);
+
     return this.request(`/chats/${chatId}/messages?${params.toString()}`);
   }
 
   async sendMessage(message: MessageModel): Promise<MessageModel> {
     return this.request(`/chats/${message.chatId}/messages`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(message),
     });
   }
 
   async updateMessage(messageId: string, updates: Partial<MessageModel>): Promise<MessageModel> {
     return this.request(`/messages/${messageId}`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify(updates),
     });
   }
 
   async deleteMessage(messageId: string): Promise<void> {
     await this.request(`/messages/${messageId}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   }
 
   async markMessagesAsRead(chatId: string, messageIds: string[]): Promise<void> {
     await this.request(`/chats/${chatId}/read`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ messageIds }),
     });
   }
@@ -229,15 +229,13 @@ export class RemoteApiDataSource {
     chats: ChatModel[];
     timestamp: string;
   }> {
-    const params = lastSyncTimestamp 
-      ? `?since=${encodeURIComponent(lastSyncTimestamp)}` 
-      : '';
+    const params = lastSyncTimestamp ? `?since=${encodeURIComponent(lastSyncTimestamp)}` : "";
     return this.request(`/sync/messages${params}`);
   }
 
   async batchSendMessages(messages: MessageModel[]): Promise<MessageModel[]> {
-    return this.request('/messages/batch', {
-      method: 'POST',
+    return this.request("/messages/batch", {
+      method: "POST",
       body: JSON.stringify({ messages }),
     });
   }
@@ -245,7 +243,7 @@ export class RemoteApiDataSource {
   // Typing Indicators
   async sendTypingIndicator(chatId: string, isTyping: boolean): Promise<void> {
     await this.request(`/chats/${chatId}/typing`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ isTyping }),
     });
   }
@@ -253,14 +251,14 @@ export class RemoteApiDataSource {
   // Reactions
   async addReaction(messageId: string, emoji: string): Promise<void> {
     await this.request(`/messages/${messageId}/reactions`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ emoji }),
     });
   }
 
   async removeReaction(messageId: string): Promise<void> {
     await this.request(`/messages/${messageId}/reactions`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   }
 }

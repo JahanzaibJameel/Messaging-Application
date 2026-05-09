@@ -2,9 +2,9 @@
  * Formatting utilities
  */
 
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-import calendar from 'dayjs/plugin/calendar';
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import calendar from "dayjs/plugin/calendar";
 
 dayjs.extend(relativeTime);
 dayjs.extend(calendar);
@@ -16,30 +16,30 @@ export function formatChatListTime(timestamp: Date | string): string {
   const date = dayjs(timestamp);
   const now = dayjs();
 
-  if (date.isSame(now, 'day')) {
-    return date.format('HH:mm');
+  if (date.isSame(now, "day")) {
+    return date.format("HH:mm");
   }
 
-  if (date.isSame(now.subtract(1, 'day'), 'day')) {
-    return 'Yesterday';
+  if (date.isSame(now.subtract(1, "day"), "day")) {
+    return "Yesterday";
   }
 
-  if (date.isSame(now, 'week')) {
-    return date.format('ddd');
+  if (date.isSame(now, "week")) {
+    return date.format("ddd");
   }
 
-  if (date.isSame(now, 'year')) {
-    return date.format('MMM D');
+  if (date.isSame(now, "year")) {
+    return date.format("MMM D");
   }
 
-  return date.format('MM/DD/YY');
+  return date.format("MM/DD/YY");
 }
 
 /**
  * Format message timestamp for chat bubbles
  */
 export function formatMessageTime(timestamp: Date | string): string {
-  return dayjs(timestamp).format('HH:mm');
+  return dayjs(timestamp).format("HH:mm");
 }
 
 /**
@@ -62,19 +62,19 @@ export function formatCalendarTime(timestamp: Date | string): string {
 export function formatDuration(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
-  
+
   if (mins > 0) {
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   }
-  
-  return `0:${secs.toString().padStart(2, '0')}`;
+
+  return `0:${secs.toString().padStart(2, "0")}`;
 }
 
 /**
  * Format file size to human readable
  */
 export function formatFileSize(bytes: number): string {
-  const units = ['B', 'KB', 'MB', 'GB'];
+  const units = ["B", "KB", "MB", "GB"];
   let size = bytes;
   let unitIndex = 0;
 
@@ -91,17 +91,17 @@ export function formatFileSize(bytes: number): string {
  */
 export function formatPhoneNumber(phone: string): string {
   // Remove non-numeric characters
-  const cleaned = phone.replace(/\D/g, '');
-  
+  const cleaned = phone.replace(/\D/g, "");
+
   // Format as +X (XXX) XXX-XXXX
   if (cleaned.length === 11) {
     return `+${cleaned[0]} (${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7)}`;
   }
-  
+
   if (cleaned.length === 10) {
     return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
   }
-  
+
   return phone;
 }
 
@@ -125,9 +125,9 @@ export function formatNumber(num: number): string {
  */
 export function getInitials(name: string): string {
   return name
-    .split(' ')
+    .split(" ")
     .map((n) => n[0])
-    .join('')
+    .join("")
     .toUpperCase()
     .slice(0, 2);
 }

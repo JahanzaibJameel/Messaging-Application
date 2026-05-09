@@ -2,9 +2,9 @@
  * Store types and interfaces
  */
 
-import type { User, UserSettings } from '@domain/entities/User';
-import type { Chat, GroupChat } from '@domain/entities/Chat';
-import type { Message } from '@domain/entities/Message';
+import type { User, UserSettings } from "@domain/entities/User";
+import type { Chat, GroupChat } from "@domain/entities/Chat";
+import type { Message } from "@domain/entities/Message";
 
 // Normalized entity state
 export interface EntityState<T> {
@@ -100,7 +100,7 @@ export interface UserActions {
 // UI Store
 export interface Toast {
   id: string;
-  type: 'success' | 'error' | 'warning' | 'info';
+  type: "success" | "error" | "warning" | "info";
   message: string;
   duration?: number;
   action?: {
@@ -118,7 +118,7 @@ export interface UIState {
 }
 
 export interface UIActions {
-  showToast: (toast: Omit<Toast, 'id'>) => void;
+  showToast: (toast: Omit<Toast, "id">) => void;
   hideToast: (toastId: string) => void;
   setOnline: (value: boolean) => void;
   setSyncing: (value: boolean) => void;
@@ -127,7 +127,7 @@ export interface UIActions {
 }
 
 // Sync Store
-export type SyncStatus = 'idle' | 'syncing' | 'error' | 'offline';
+export type SyncStatus = "idle" | "syncing" | "error" | "offline";
 
 export interface QueuedMessage {
   id: string;
@@ -135,7 +135,7 @@ export interface QueuedMessage {
   chatId: string;
   retryCount: number;
   lastAttempt: string;
-  priority: 'high' | 'normal' | 'low';
+  priority: "high" | "normal" | "low";
 }
 
 export interface SyncState {

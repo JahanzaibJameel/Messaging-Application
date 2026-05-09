@@ -3,10 +3,10 @@
  * Monitors network connectivity status
  */
 
-import NetInfo, { type NetInfoState } from '@react-native-community/netinfo';
-import { logger } from '../logger';
+import NetInfo, { type NetInfoState } from "@react-native-community/netinfo";
+import { logger } from "../logger";
 
-export type NetworkStatus = 'online' | 'offline' | 'unknown';
+export type NetworkStatus = "online" | "offline" | "unknown";
 
 export class NetworkMonitor {
   private isConnected = true;
@@ -20,7 +20,7 @@ export class NetworkMonitor {
   private startMonitoring(): void {
     this.unsubscribe = NetInfo.addEventListener((state: NetInfoState) => {
       const isConnected = state.isConnected ?? false;
-      
+
       if (this.isConnected !== isConnected) {
         this.isConnected = isConnected;
         this.notifyListeners(isConnected);
@@ -33,7 +33,7 @@ export class NetworkMonitor {
       try {
         listener(isOnline);
       } catch (error) {
-        logger.error('Network listener error', error as Error, 'NetworkMonitor');
+        logger.error("Network listener error", error as Error, "NetworkMonitor");
       }
     });
   }
@@ -43,7 +43,7 @@ export class NetworkMonitor {
    */
   addListener(callback: (isOnline: boolean) => void): () => void {
     this.listeners.add(callback);
-    
+
     // Immediately call with current status
     callback(this.isConnected);
 
@@ -70,8 +70,8 @@ export class NetworkMonitor {
    * Get current network status
    */
   getStatus(): NetworkStatus {
-    if (this.isConnected) return 'online';
-    return 'offline';
+    if (this.isConnected) return "online";
+    return "offline";
   }
 
   /**

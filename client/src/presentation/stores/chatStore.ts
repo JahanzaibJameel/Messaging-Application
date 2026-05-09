@@ -3,17 +3,17 @@
  * Manages chat conversations with normalized state
  */
 
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
-import { MMKV } from 'react-native-mmkv';
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
+import { MMKV } from "react-native-mmkv";
 
-import type { Chat, GroupChat } from '@domain/entities/Chat';
-import { ChatEntity } from '@domain/entities/Chat';
-import type { Message } from '@domain/entities/Message';
-import type { ChatState, ChatActions, EntityState } from './types';
+import type { Chat, GroupChat } from "@domain/entities/Chat";
+import { ChatEntity } from "@domain/entities/Chat";
+import type { Message } from "@domain/entities/Message";
+import type { ChatState, ChatActions, EntityState } from "./types";
 
-const storage = new MMKV({ id: 'chat-storage' });
+const storage = new MMKV({ id: "chat-storage" });
 
 const mmkvStorage = {
   getItem: (name: string): string | null => {
@@ -51,10 +51,13 @@ export const useChatStore = create<ChatStore>()(
         setChats: (chats: Chat[]) => {
           set((state) => {
             state.chats.ids = chats.map((c) => c.id);
-            state.chats.entities = chats.reduce((acc, chat) => {
-              acc[chat.id] = chat;
-              return acc;
-            }, {} as Record<string, Chat>);
+            state.chats.entities = chats.reduce(
+              (acc, chat) => {
+                acc[chat.id] = chat;
+                return acc;
+              },
+              {} as Record<string, Chat>
+            );
           });
         },
 
@@ -170,9 +173,9 @@ export const useChatStore = create<ChatStore>()(
         },
 
         createGroup: (name: string, participantIds: string[]) => {
-          const currentUserId = 'currentUser'; // Get from auth store in real implementation
+          const currentUserId = "currentUser"; // Get from auth store in real implementation
           const groupChat = ChatEntity.createGroup(name, participantIds, currentUserId);
-          
+
           set((state) => {
             state.chats.ids.push(groupChat.id);
             state.chats.entities[groupChat.id] = groupChat;
@@ -200,7 +203,7 @@ export const useChatStore = create<ChatStore>()(
               // Pinned chats first
               if (a.isPinned && !b.isPinned) return -1;
               if (!a.isPinned && b.isPinned) return 1;
-              
+
               // Then by last message timestamp
               const aTime = a.lastMessage?.timestamp.getTime() || a.updatedAt.getTime();
               const bTime = b.lastMessage?.timestamp.getTime() || b.updatedAt.getTime();
@@ -217,7 +220,7 @@ export const useChatStore = create<ChatStore>()(
         },
       }),
       {
-        name: 'chat-storage',
+        name: "chat-storage",
         storage: createJSONStorage(() => mmkvStorage),
         partialize: (state) => ({
           chats: state.chats,

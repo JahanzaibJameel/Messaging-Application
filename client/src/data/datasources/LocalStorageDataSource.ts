@@ -3,19 +3,19 @@
  * Handles all local persistence using MMKV
  */
 
-import { MMKV } from 'react-native-mmkv';
-import { AppError } from '@core/errors';
-import type { ChatModel, MessageModel, UserModel } from '../models/MessageModel';
+import { MMKV } from "react-native-mmkv";
+import { AppError } from "@core/errors";
+import type { ChatModel, MessageModel, UserModel } from "../models/MessageModel";
 
-const storage = new MMKV({ id: 'chatapp-local-storage' });
+const storage = new MMKV({ id: "chatapp-local-storage" });
 
 const STORAGE_KEYS = {
-  CHATS: 'chats',
-  MESSAGES: 'messages',
-  USERS: 'users',
-  CURRENT_USER: 'current_user',
-  SETTINGS: 'settings',
-  SYNC_STATE: 'sync_state',
+  CHATS: "chats",
+  MESSAGES: "messages",
+  USERS: "users",
+  CURRENT_USER: "current_user",
+  SETTINGS: "settings",
+  SYNC_STATE: "sync_state",
 } as const;
 
 export class LocalStorageDataSource {
@@ -31,7 +31,7 @@ export class LocalStorageDataSource {
       const data = this.storage.getString(STORAGE_KEYS.CHATS);
       return data ? JSON.parse(data) : [];
     } catch (error) {
-      throw AppError.storage('Failed to get chats from local storage', error as Error);
+      throw AppError.storage("Failed to get chats from local storage", error as Error);
     }
   }
 
@@ -39,7 +39,7 @@ export class LocalStorageDataSource {
     try {
       this.storage.set(STORAGE_KEYS.CHATS, JSON.stringify(chats));
     } catch (error) {
-      throw AppError.storage('Failed to save chats to local storage', error as Error);
+      throw AppError.storage("Failed to save chats to local storage", error as Error);
     }
   }
 
@@ -48,7 +48,7 @@ export class LocalStorageDataSource {
       const chats = await this.getChats();
       return chats.find((c) => c.id === chatId) || null;
     } catch (error) {
-      throw AppError.storage('Failed to get chat by id', error as Error);
+      throw AppError.storage("Failed to get chat by id", error as Error);
     }
   }
 
@@ -56,16 +56,16 @@ export class LocalStorageDataSource {
     try {
       const chats = await this.getChats();
       const index = chats.findIndex((c) => c.id === chat.id);
-      
+
       if (index >= 0) {
         chats[index] = chat;
       } else {
         chats.push(chat);
       }
-      
+
       await this.saveChats(chats);
     } catch (error) {
-      throw AppError.storage('Failed to save chat', error as Error);
+      throw AppError.storage("Failed to save chat", error as Error);
     }
   }
 
@@ -75,7 +75,7 @@ export class LocalStorageDataSource {
       const filtered = chats.filter((c) => c.id !== chatId);
       await this.saveChats(filtered);
     } catch (error) {
-      throw AppError.storage('Failed to delete chat', error as Error);
+      throw AppError.storage("Failed to delete chat", error as Error);
     }
   }
 
@@ -85,7 +85,7 @@ export class LocalStorageDataSource {
       const data = this.storage.getString(STORAGE_KEYS.MESSAGES);
       return data ? JSON.parse(data) : [];
     } catch (error) {
-      throw AppError.storage('Failed to get messages from local storage', error as Error);
+      throw AppError.storage("Failed to get messages from local storage", error as Error);
     }
   }
 
@@ -94,7 +94,7 @@ export class LocalStorageDataSource {
       const messages = await this.getMessages();
       return messages.filter((m) => m.chatId === chatId);
     } catch (error) {
-      throw AppError.storage('Failed to get messages by chat id', error as Error);
+      throw AppError.storage("Failed to get messages by chat id", error as Error);
     }
   }
 
@@ -102,7 +102,7 @@ export class LocalStorageDataSource {
     try {
       this.storage.set(STORAGE_KEYS.MESSAGES, JSON.stringify(messages));
     } catch (error) {
-      throw AppError.storage('Failed to save messages to local storage', error as Error);
+      throw AppError.storage("Failed to save messages to local storage", error as Error);
     }
   }
 
@@ -110,16 +110,16 @@ export class LocalStorageDataSource {
     try {
       const messages = await this.getMessages();
       const index = messages.findIndex((m) => m.id === message.id);
-      
+
       if (index >= 0) {
         messages[index] = message;
       } else {
         messages.push(message);
       }
-      
+
       await this.saveMessages(messages);
     } catch (error) {
-      throw AppError.storage('Failed to save message', error as Error);
+      throw AppError.storage("Failed to save message", error as Error);
     }
   }
 
@@ -129,7 +129,7 @@ export class LocalStorageDataSource {
       const filtered = messages.filter((m) => m.id !== messageId);
       await this.saveMessages(filtered);
     } catch (error) {
-      throw AppError.storage('Failed to delete message', error as Error);
+      throw AppError.storage("Failed to delete message", error as Error);
     }
   }
 
@@ -139,7 +139,7 @@ export class LocalStorageDataSource {
       const filtered = messages.filter((m) => m.chatId !== chatId);
       await this.saveMessages(filtered);
     } catch (error) {
-      throw AppError.storage('Failed to clear chat messages', error as Error);
+      throw AppError.storage("Failed to clear chat messages", error as Error);
     }
   }
 
@@ -149,7 +149,7 @@ export class LocalStorageDataSource {
       const data = this.storage.getString(STORAGE_KEYS.USERS);
       return data ? JSON.parse(data) : [];
     } catch (error) {
-      throw AppError.storage('Failed to get users from local storage', error as Error);
+      throw AppError.storage("Failed to get users from local storage", error as Error);
     }
   }
 
@@ -158,7 +158,7 @@ export class LocalStorageDataSource {
       const users = await this.getUsers();
       return users.find((u) => u.id === userId) || null;
     } catch (error) {
-      throw AppError.storage('Failed to get user by id', error as Error);
+      throw AppError.storage("Failed to get user by id", error as Error);
     }
   }
 
@@ -166,16 +166,16 @@ export class LocalStorageDataSource {
     try {
       const users = await this.getUsers();
       const index = users.findIndex((u) => u.id === user.id);
-      
+
       if (index >= 0) {
         users[index] = user;
       } else {
         users.push(user);
       }
-      
+
       this.storage.set(STORAGE_KEYS.USERS, JSON.stringify(users));
     } catch (error) {
-      throw AppError.storage('Failed to save user', error as Error);
+      throw AppError.storage("Failed to save user", error as Error);
     }
   }
 
@@ -183,7 +183,7 @@ export class LocalStorageDataSource {
     try {
       this.storage.set(STORAGE_KEYS.USERS, JSON.stringify(users));
     } catch (error) {
-      throw AppError.storage('Failed to save users', error as Error);
+      throw AppError.storage("Failed to save users", error as Error);
     }
   }
 
@@ -193,7 +193,7 @@ export class LocalStorageDataSource {
       const data = this.storage.getString(STORAGE_KEYS.CURRENT_USER);
       return data ? JSON.parse(data) : null;
     } catch (error) {
-      throw AppError.storage('Failed to get current user', error as Error);
+      throw AppError.storage("Failed to get current user", error as Error);
     }
   }
 
@@ -205,7 +205,7 @@ export class LocalStorageDataSource {
         this.storage.delete(STORAGE_KEYS.CURRENT_USER);
       }
     } catch (error) {
-      throw AppError.storage('Failed to save current user', error as Error);
+      throw AppError.storage("Failed to save current user", error as Error);
     }
   }
 
@@ -215,7 +215,7 @@ export class LocalStorageDataSource {
       const data = this.storage.getString(STORAGE_KEYS.SETTINGS);
       return data ? JSON.parse(data) : null;
     } catch (error) {
-      throw AppError.storage('Failed to get settings', error as Error);
+      throw AppError.storage("Failed to get settings", error as Error);
     }
   }
 
@@ -223,7 +223,7 @@ export class LocalStorageDataSource {
     try {
       this.storage.set(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
     } catch (error) {
-      throw AppError.storage('Failed to save settings', error as Error);
+      throw AppError.storage("Failed to save settings", error as Error);
     }
   }
 
@@ -233,7 +233,7 @@ export class LocalStorageDataSource {
       const data = this.storage.getString(STORAGE_KEYS.SYNC_STATE);
       return data ? JSON.parse(data) : null;
     } catch (error) {
-      throw AppError.storage('Failed to get sync state', error as Error);
+      throw AppError.storage("Failed to get sync state", error as Error);
     }
   }
 
@@ -241,7 +241,7 @@ export class LocalStorageDataSource {
     try {
       this.storage.set(STORAGE_KEYS.SYNC_STATE, JSON.stringify(state));
     } catch (error) {
-      throw AppError.storage('Failed to save sync state', error as Error);
+      throw AppError.storage("Failed to save sync state", error as Error);
     }
   }
 
@@ -250,7 +250,7 @@ export class LocalStorageDataSource {
     try {
       this.storage.clearAll();
     } catch (error) {
-      throw AppError.storage('Failed to clear all data', error as Error);
+      throw AppError.storage("Failed to clear all data", error as Error);
     }
   }
 

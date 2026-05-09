@@ -6,21 +6,21 @@
 // Note: expo-image-picker and expo-document-picker need to be installed
 // import * as ImagePicker from 'expo-image-picker';
 // import * as DocumentPicker from 'expo-document-picker';
-import { AppError } from '../errors';
-import { logger } from '../logger';
-import { MediaProcessor, type MediaFile, type ProcessedMedia } from './MediaProcessor';
+import { AppError } from "../errors";
+import { logger } from "../logger";
+import { MediaProcessor, type MediaFile, type ProcessedMedia } from "./MediaProcessor";
 
-export type PickerSource = 'camera' | 'library' | 'document';
+export type PickerSource = "camera" | "library" | "document";
 
 export interface PickerOptions {
   allowsMultipleSelection?: boolean;
-  mediaTypes?: 'images' | 'videos' | 'all';
+  mediaTypes?: "images" | "videos" | "all";
   maxSelection?: number;
 }
 
 const DEFAULT_OPTIONS: PickerOptions = {
   allowsMultipleSelection: false,
-  mediaTypes: 'all',
+  mediaTypes: "all",
   maxSelection: 10,
 };
 
@@ -30,16 +30,16 @@ export class MediaPicker {
    */
   static async requestPermissions(source: PickerSource): Promise<boolean> {
     try {
-      if (source === 'camera') {
+      if (source === "camera") {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
-        return status === 'granted';
-      } else if (source === 'library') {
+        return status === "granted";
+      } else if (source === "library") {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        return status === 'granted';
+        return status === "granted";
       }
       return true;
     } catch (error) {
-      logger.error('Permission error', error as Error, 'MediaPicker');
+      logger.error("Permission error", error as Error, "MediaPicker");
       return false;
     }
   }
@@ -48,9 +48,9 @@ export class MediaPicker {
    * Pick image from camera
    */
   static async takePhoto(options: PickerOptions = {}): Promise<ProcessedMedia | null> {
-    const hasPermission = await this.requestPermissions('camera');
+    const hasPermission = await this.requestPermissions("camera");
     if (!hasPermission) {
-      throw AppError.permission('Camera permission not granted');
+      throw AppError.permission("Camera permission not granted");
     }
 
     try {
@@ -68,7 +68,7 @@ export class MediaPicker {
       const asset = result.assets[0];
       return await MediaProcessor.processImage(asset.uri);
     } catch (error) {
-      throw AppError.media('Failed to take photo', error as Error);
+      throw AppError.media("Failed to take photo", error as Error);
     }
   }
 
@@ -77,10 +77,10 @@ export class MediaPicker {
    */
   static async pickFromLibrary(options: PickerOptions = {}): Promise<ProcessedMedia[]> {
     const opts = { ...DEFAULT_OPTIONS, ...options };
-    
-    const hasPermission = await this.requestPermissions('library');
+
+    const hasPermission = await this.requestPermissions("library");
     if (!hasPermission) {
-      throw AppError.permission('Media library permission not granted');
+      throw AppError.permission("Media library permission not granted");
     }
 
     try {
@@ -108,7 +108,7 @@ export class MediaPicker {
         try {
           let processed: ProcessedMedia;
 
-          if (asset.type === 'video') {
+          if (asset.type === "video") {
             processed = await MediaProcessor.processVideo(asset.uri);
           } else {
             processed = await MediaProcessor.processImage(asset.uri);
@@ -116,14 +116,14 @@ export class MediaPicker {
 
           processedMedia.push(processed);
         } catch (error) {
-          logger.error('Failed to process media', error as Error, 'MediaPicker');
+          logger.error("Failed to process media", error as Error, "MediaPicker");
           // Continue with other assets
         }
       }
 
       return processedMedia;
     } catch (error) {
-      throw AppError.media('Failed to pick media from library', error as Error);
+      throw AppError.media("Failed to pick media from library", error as Error);
     }
   }
 
@@ -133,7 +133,7 @@ export class MediaPicker {
   static async pickDocument(): Promise<ProcessedMedia | null> {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: '*/*',
+        type: "*/*",
         copyToCacheDirectory: true,
         multiple: false,
       });
@@ -143,9 +143,12 @@ export class MediaPicker {
       }
 
       const asset = result.assets[0];
-      return await MediaProcessor.processDocument(asset.uri, asset.mimeType || 'application/octet-stream');
+      return await MediaProcessor.processDocument(
+        asset.uri,
+        asset.mimeType || "application/octet-stream"
+      );
     } catch (error) {
-      throw AppError.media('Failed to pick document', error as Error);
+      throw AppError.media("Failed to pick document", error as Error);
     }
   }
 
@@ -155,7 +158,7 @@ export class MediaPicker {
   static async pickAudio(): Promise<ProcessedMedia | null> {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ['audio/*', 'audio/mpeg', 'audio/mp3', 'audio/m4a', 'audio/wav'],
+        type: ["audio/*", "audio/mpeg", "audio/mp3", "audio/m4a", "audio/wav"],
         copyToCacheDirectory: true,
         multiple: false,
       });
@@ -167,7 +170,7 @@ export class MediaPicker {
       const asset = result.assets[0];
       return await MediaProcessor.processAudio(asset.uri);
     } catch (error) {
-      throw AppError.media('Failed to pick audio', error as Error);
+      throw AppError.media("Failed to pick audio", error as Error);
     }
   }
 
@@ -175,16 +178,18 @@ export class MediaPicker {
    * Quick pick - single image
    */
   static async quickImage(): Promise<ProcessedMedia | null> {
-    return this.pickFromLibrary({ mediaTypes: 'images', allowsMultipleSelection: false })
-      .then(results => results[0] || null);
+    return this.pickFromLibrary({ mediaTypes: "images", allowsMultipleSelection: false }).then(
+      (results) => results[0] || null
+    );
   }
 
   /**
    * Quick pick - single video
    */
   static async quickVideo(): Promise<ProcessedMedia | null> {
-    return this.pickFromLibrary({ mediaTypes: 'videos', allowsMultipleSelection: false })
-      .then(results => results[0] || null);
+    return this.pickFromLibrary({ mediaTypes: "videos", allowsMultipleSelection: false }).then(
+      (results) => results[0] || null
+    );
   }
 
   /**
@@ -192,7 +197,7 @@ export class MediaPicker {
    */
   static async pickMultipleImages(maxCount: number = 10): Promise<ProcessedMedia[]> {
     return this.pickFromLibrary({
-      mediaTypes: 'images',
+      mediaTypes: "images",
       allowsMultipleSelection: true,
       maxSelection: maxCount,
     });
@@ -202,34 +207,34 @@ export class MediaPicker {
    * Check if file type is image
    */
   static isImage(mimeType: string): boolean {
-    return mimeType.startsWith('image/');
+    return mimeType.startsWith("image/");
   }
 
   /**
    * Check if file type is video
    */
   static isVideo(mimeType: string): boolean {
-    return mimeType.startsWith('video/');
+    return mimeType.startsWith("video/");
   }
 
   /**
    * Check if file type is audio
    */
   static isAudio(mimeType: string): boolean {
-    return mimeType.startsWith('audio/');
+    return mimeType.startsWith("audio/");
   }
 
   /**
    * Get file icon based on type
    */
   static getFileIcon(mimeType: string): string {
-    if (this.isImage(mimeType)) return 'image';
-    if (this.isVideo(mimeType)) return 'video';
-    if (this.isAudio(mimeType)) return 'music';
-    if (mimeType.includes('pdf')) return 'file-pdf';
-    if (mimeType.includes('word') || mimeType.includes('document')) return 'file-word';
-    if (mimeType.includes('excel') || mimeType.includes('sheet')) return 'file-excel';
-    return 'file';
+    if (this.isImage(mimeType)) return "image";
+    if (this.isVideo(mimeType)) return "video";
+    if (this.isAudio(mimeType)) return "music";
+    if (mimeType.includes("pdf")) return "file-pdf";
+    if (mimeType.includes("word") || mimeType.includes("document")) return "file-word";
+    if (mimeType.includes("excel") || mimeType.includes("sheet")) return "file-excel";
+    return "file";
   }
 }
 

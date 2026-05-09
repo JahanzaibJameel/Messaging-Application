@@ -25,7 +25,7 @@ export interface UserProfile {
 
 export interface UserSettings {
   darkMode: boolean;
-  fontSize: 'small' | 'medium' | 'large';
+  fontSize: "small" | "medium" | "large";
   notifications: boolean;
   soundEnabled: boolean;
   showReadReceipts: boolean;

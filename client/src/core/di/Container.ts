@@ -3,19 +3,19 @@
  * Service locator pattern for Clean Architecture
  */
 
-import type { ChatRepository } from '../../domain/repositories/ChatRepository';
-import type { UserRepository } from '../../domain/repositories/UserRepository';
-import { ChatRepositoryImpl } from '../../data/repositories/ChatRepositoryImpl';
-import { UserRepositoryImpl } from '../../data/repositories/UserRepositoryImpl';
-import { LocalStorageDataSource } from '../../data/datasources/LocalStorageDataSource';
-import { RemoteApiDataSource } from '../../data/datasources/RemoteApiDataSource';
+import type { ChatRepository } from "../../domain/repositories/ChatRepository";
+import type { UserRepository } from "../../domain/repositories/UserRepository";
+import { ChatRepositoryImpl } from "../../data/repositories/ChatRepositoryImpl";
+import { UserRepositoryImpl } from "../../data/repositories/UserRepositoryImpl";
+import { LocalStorageDataSource } from "../../data/datasources/LocalStorageDataSource";
+import { RemoteApiDataSource } from "../../data/datasources/RemoteApiDataSource";
 
 // Service tokens for type-safe resolution
 export const TOKENS = {
-  ChatRepository: Symbol.for('ChatRepository'),
-  UserRepository: Symbol.for('UserRepository'),
-  LocalStorage: Symbol.for('LocalStorage'),
-  RemoteApi: Symbol.for('RemoteApi'),
+  ChatRepository: Symbol.for("ChatRepository"),
+  UserRepository: Symbol.for("UserRepository"),
+  LocalStorage: Symbol.for("LocalStorage"),
+  RemoteApi: Symbol.for("RemoteApi"),
 } as const;
 
 // Type mapping for services

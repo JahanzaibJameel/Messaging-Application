@@ -3,9 +3,9 @@
  * Handles JavaScript errors in the component tree
  */
 
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { logger } from '../../core/logger';
+import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { logger } from "../../core/logger";
 
 interface Props {
   children: React.ReactNode;
@@ -28,12 +28,7 @@ class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    logger.error(
-      'Component error caught by boundary',
-      error,
-      'ErrorBoundary',
-      { errorInfo }
-    );
+    logger.error("Component error caught by boundary", error, "ErrorBoundary", { errorInfo });
   }
 
   resetError = (): void => {
@@ -43,12 +38,7 @@ class ErrorBoundary extends React.Component<Props, State> {
   render(): React.ReactNode {
     if (this.state.hasError) {
       const FallbackComponent = this.props.fallback || DefaultFallback;
-      return (
-        <FallbackComponent
-          error={this.state.error!}
-          resetError={this.resetError}
-        />
-      );
+      return <FallbackComponent error={this.state.error!} resetError={this.resetError} />;
     }
 
     return this.props.children;
@@ -75,32 +65,32 @@ const DefaultFallback: React.FC<FallbackProps> = ({ error, resetError }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
-    color: '#e74c3c',
+    color: "#e74c3c",
   },
   message: {
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 20,
-    color: '#7f8c8d',
+    color: "#7f8c8d",
   },
   button: {
-    backgroundColor: '#3498db',
+    backgroundColor: "#3498db",
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 5,
   },
   buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
   },
 });
 

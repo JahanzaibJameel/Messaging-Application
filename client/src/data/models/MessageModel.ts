@@ -3,7 +3,7 @@
  * Serializable representation of Message entity
  */
 
-import type { MessageStatus, MessageType } from '@/domain/entities/Message';
+import type { MessageStatus, MessageType } from "@/domain/entities/Message";
 
 export interface MessageAttachmentModel {
   type: MessageType;
@@ -43,7 +43,7 @@ export interface MessageModel {
 
 export interface ChatModel {
   id: string;
-  type: 'private' | 'group';
+  type: "private" | "group";
   participantIds: string[];
   lastMessage?: MessageModel;
   unreadCount: number;

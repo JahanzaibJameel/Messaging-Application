@@ -3,22 +3,20 @@
  * Combines local and remote data sources with sync logic
  */
 
-import type { Chat, GroupChat } from '../../domain/entities/Chat';
-import { ChatEntity } from '../../domain/entities/Chat';
-import type { Message } from '../../domain/entities/Message';
-import type { ChatRepository, PaginationOptions } from '../../domain/repositories/ChatRepository';
-import { LocalStorageDataSource } from '../datasources/LocalStorageDataSource';
-import { RemoteApiDataSource } from '../datasources/RemoteApiDataSource';
-import { ChatMapper, MessageMapper } from '../mappers';
+import type { Chat, GroupChat } from "../../domain/entities/Chat";
+import { ChatEntity } from "../../domain/entities/Chat";
+import type { Message } from "../../domain/entities/Message";
+import type { ChatRepository, PaginationOptions } from "../../domain/repositories/ChatRepository";
+import { LocalStorageDataSource } from "../datasources/LocalStorageDataSource";
+import { RemoteApiDataSource } from "../datasources/RemoteApiDataSource";
+import { ChatMapper, MessageMapper } from "../mappers";
+import { logger } from "../../core/logger/Logger";
 
 export class ChatRepositoryImpl implements ChatRepository {
   private localDataSource: LocalStorageDataSource;
   private remoteDataSource: RemoteApiDataSource;
 
-  constructor(
-    localDataSource: LocalStorageDataSource,
-    remoteDataSource: RemoteApiDataSource
-  ) {
+  constructor(localDataSource: LocalStorageDataSource, remoteDataSource: RemoteApiDataSource) {
     this.localDataSource = localDataSource;
     this.remoteDataSource = remoteDataSource;
   }
@@ -36,9 +34,9 @@ export class ChatRepositoryImpl implements ChatRepository {
 
   async getMessages(chatId: string, options?: PaginationOptions): Promise<Message[]> {
     const messageModels = await this.localDataSource.getMessagesByChatId(chatId);
-    
+
     let messages = messageModels.map((model) => MessageMapper.toDomain(model));
-    
+
     // Apply pagination if options provided
     if (options) {
       if (options.before) {
@@ -51,7 +49,7 @@ export class ChatRepositoryImpl implements ChatRepository {
         messages = messages.slice(0, options.limit);
       }
     }
-    
+
     return messages;
   }
 
@@ -64,7 +62,7 @@ export class ChatRepositoryImpl implements ChatRepository {
   async save(chat: Chat): Promise<void> {
     const chatModel = ChatMapper.toModel(chat);
     await this.localDataSource.saveChat(chatModel);
-    
+
     // Try to sync with remote if online
     try {
       await this.remoteDataSource.updateChat(chat.id, chatModel);
@@ -76,7 +74,7 @@ export class ChatRepositoryImpl implements ChatRepository {
   async saveMessage(message: Message): Promise<void> {
     const messageModel = MessageMapper.toModel(message);
     await this.localDataSource.saveMessage(messageModel);
-    
+
     // Update chat's last message
     const chat = await this.getById(message.chatId);
     if (chat) {
@@ -93,7 +91,7 @@ export class ChatRepositoryImpl implements ChatRepository {
 
   async deleteMessage(messageId: string): Promise<void> {
     await this.localDataSource.deleteMessage(messageId);
-    
+
     try {
       await this.remoteDataSource.deleteMessage(messageId);
     } catch {
@@ -115,7 +113,7 @@ export class ChatRepositoryImpl implements ChatRepository {
     // Create locally first
     const groupChat = ChatEntity.createGroup(name, participantIds, createdBy);
     await this.save(groupChat);
-    
+
     // Try to create on remote
     try {
       const remoteGroup = await this.remoteDataSource.createGroup(name, participantIds);
@@ -128,22 +126,22 @@ export class ChatRepositoryImpl implements ChatRepository {
       }
     } catch {
       // Queue for sync - will be handled by sync engine
-      console.log('Queue for sync:', groupChat.id);
+      logger.info("Queue for sync", "ChatRepository", { groupId: groupChat.id });
     }
-    
+
     return groupChat as GroupChat;
   }
 
   async addParticipant(chatId: string, userId: string): Promise<void> {
     const chat = await this.getById(chatId);
-    if (chat && chat.type === 'group') {
+    if (chat?.type === "group") {
       const groupChat = chat as GroupChat;
       if (!groupChat.participantIds.includes(userId)) {
         groupChat.participantIds.push(userId);
         await this.save(groupChat);
       }
     }
-    
+
     try {
       await this.remoteDataSource.addParticipant(chatId, userId);
     } catch {
@@ -153,13 +151,13 @@ export class ChatRepositoryImpl implements ChatRepository {
 
   async removeParticipant(chatId: string, userId: string): Promise<void> {
     const chat = await this.getById(chatId);
-    if (chat && chat.type === 'group') {
+    if (chat?.type === "group") {
       const groupChat = chat as GroupChat;
       groupChat.participantIds = groupChat.participantIds.filter((id) => id !== userId);
       groupChat.adminIds = groupChat.adminIds.filter((id) => id !== userId);
       await this.save(groupChat);
     }
-    
+
     try {
       await this.remoteDataSource.removeParticipant(chatId, userId);
     } catch {
@@ -169,14 +167,14 @@ export class ChatRepositoryImpl implements ChatRepository {
 
   async makeAdmin(chatId: string, userId: string): Promise<void> {
     const chat = await this.getById(chatId);
-    if (chat && chat.type === 'group') {
+    if (chat?.type === "group") {
       const groupChat = chat as GroupChat;
       if (!groupChat.adminIds.includes(userId)) {
         groupChat.adminIds.push(userId);
         await this.save(groupChat);
       }
     }
-    
+
     try {
       await this.remoteDataSource.makeAdmin(chatId, userId);
     } catch {
@@ -186,12 +184,12 @@ export class ChatRepositoryImpl implements ChatRepository {
 
   async removeAdmin(chatId: string, userId: string): Promise<void> {
     const chat = await this.getById(chatId);
-    if (chat && chat.type === 'group') {
+    if (chat?.type === "group") {
       const groupChat = chat as GroupChat;
       groupChat.adminIds = groupChat.adminIds.filter((id) => id !== userId);
       await this.save(groupChat);
     }
-    
+
     try {
       await this.remoteDataSource.removeAdmin(chatId, userId);
     } catch {
@@ -201,7 +199,7 @@ export class ChatRepositoryImpl implements ChatRepository {
 
   async updateGroupInfo(chatId: string, updates: Partial<GroupChat>): Promise<void> {
     const chat = await this.getById(chatId);
-    if (chat && chat.type === 'group') {
+    if (chat?.type === "group") {
       Object.assign(chat, updates);
       await this.save(chat);
     }
@@ -264,7 +262,7 @@ export class ChatRepositoryImpl implements ChatRepository {
 
   async delete(chatId: string): Promise<void> {
     await this.localDataSource.deleteChat(chatId);
-    
+
     try {
       await this.remoteDataSource.deleteChat(chatId);
     } catch {
@@ -274,7 +272,7 @@ export class ChatRepositoryImpl implements ChatRepository {
 
   async clearHistory(chatId: string): Promise<void> {
     await this.localDataSource.clearMessagesByChatId(chatId);
-    
+
     const chat = await this.getById(chatId);
     if (chat) {
       chat.lastMessage = undefined;
@@ -289,16 +287,16 @@ export class ChatRepositoryImpl implements ChatRepository {
     timestamp: string;
   }> {
     const syncResult = await this.remoteDataSource.syncMessages(lastSyncTimestamp);
-    
+
     // Save to local storage
     for (const chatModel of syncResult.chats) {
       await this.localDataSource.saveChat(chatModel);
     }
-    
+
     for (const messageModel of syncResult.messages) {
       await this.localDataSource.saveMessage(messageModel);
     }
-    
+
     return {
       messages: syncResult.messages.map((m) => MessageMapper.toDomain(m)),
       chats: syncResult.chats.map((c) => ChatMapper.toDomain(c)),

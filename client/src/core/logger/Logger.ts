@@ -3,7 +3,7 @@
  * Enterprise-grade logging with levels, filtering, and performance tracking
  */
 
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'fatal';
+export type LogLevel = "debug" | "info" | "warn" | "error" | "fatal";
 
 interface LogEntry {
   timestamp: string;
@@ -41,7 +41,7 @@ class Logger {
 
   constructor(config: Partial<LoggerConfig> = {}) {
     this.config = {
-      minLevel: __DEV__ ? 'debug' : 'info',
+      minLevel: __DEV__ ? "debug" : "info",
       enableConsole: true,
       enableRemote: false,
       sampleRate: 1.0,
@@ -104,22 +104,22 @@ class Logger {
 
   private outputToConsole(entry: LogEntry): void {
     const prefix = `[${entry.timestamp}] [${entry.level.toUpperCase()}]`;
-    const context = entry.context ? ` [${entry.context}]` : '';
+    const context = entry.context ? ` [${entry.context}]` : "";
     const fullMessage = `${prefix}${context}: ${entry.message}`;
 
     switch (entry.level) {
-      case 'debug':
-        console.debug(fullMessage, entry.data ?? '');
+      case "debug":
+        console.debug(fullMessage, entry.data ?? "");
         break;
-      case 'info':
-        console.info(fullMessage, entry.data ?? '');
+      case "info":
+        console.info(fullMessage, entry.data ?? "");
         break;
-      case 'warn':
-        console.warn(fullMessage, entry.data ?? '');
+      case "warn":
+        console.warn(fullMessage, entry.data ?? "");
         break;
-      case 'error':
-      case 'fatal':
-        console.error(fullMessage, entry.data ?? '', entry.error ?? '');
+      case "error":
+      case "fatal":
+        console.error(fullMessage, entry.data ?? "", entry.error ?? "");
         break;
     }
   }
@@ -129,8 +129,8 @@ class Logger {
 
     try {
       await fetch(this.config.remoteUrl!, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(entry),
       });
     } catch {
@@ -140,23 +140,23 @@ class Logger {
 
   // Public API
   debug(message: string, context?: string, data?: unknown): void {
-    this.log(this.createEntry('debug', message, context, data));
+    this.log(this.createEntry("debug", message, context, data));
   }
 
   info(message: string, context?: string, data?: unknown): void {
-    this.log(this.createEntry('info', message, context, data));
+    this.log(this.createEntry("info", message, context, data));
   }
 
   warn(message: string, context?: string, data?: unknown): void {
-    this.log(this.createEntry('warn', message, context, data));
+    this.log(this.createEntry("warn", message, context, data));
   }
 
   error(message: string, error?: Error, context?: string, data?: unknown): void {
-    this.log(this.createEntry('error', message, context, data, error));
+    this.log(this.createEntry("error", message, context, data, error));
   }
 
   fatal(message: string, error?: Error, context?: string, data?: unknown): void {
-    this.log(this.createEntry('fatal', message, context, data, error));
+    this.log(this.createEntry("fatal", message, context, data, error));
   }
 
   // Performance tracking
@@ -164,7 +164,7 @@ class Logger {
     const start = performance.now();
     return () => {
       const duration = performance.now() - start;
-      this.debug(`Timer [${label}]: ${duration.toFixed(2)}ms`, 'Performance');
+      this.debug(`Timer [${label}]: ${duration.toFixed(2)}ms`, "Performance");
     };
   }
 

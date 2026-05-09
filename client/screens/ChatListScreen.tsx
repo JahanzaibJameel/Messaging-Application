@@ -2,12 +2,11 @@ import React, { useState, useCallback } from "react";
 import { View, StyleSheet, FlatList, RefreshControl, TextInput, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useBottomTabBarHeight, BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { CompositeNavigationProp } from "@react-navigation/native";
-import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 
 import { ChatListItem } from "@/components/ChatListItem";
 import { Avatar } from "@/components/Avatar";
@@ -75,9 +74,10 @@ export default function ChatListScreen({ navigation }: ChatListScreenProps) {
 
   const renderItem = useCallback(
     ({ item, index }: { item: Chat | GroupChat; index: number }) => {
-      const chatName = isGroupChat(item) ? item.name : 'Private Chat';
-      const lastMessageText = item.lastMessage?.text || (item.lastMessage?.attachment ? 'Media' : 'Start a conversation');
-      
+      const chatName = isGroupChat(item) ? item.name : "Private Chat";
+      const lastMessageText =
+        item.lastMessage?.text || (item.lastMessage?.attachment ? "Media" : "Start a conversation");
+
       return (
         <Animated.View entering={FadeInDown.delay(index * 50).duration(300)}>
           <Pressable onPress={() => handleChatPress(item)} style={styles.groupChatItem}>

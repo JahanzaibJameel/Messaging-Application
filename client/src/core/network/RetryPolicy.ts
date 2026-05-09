@@ -3,7 +3,7 @@
  * Exponential backoff with jitter for resilient network operations
  */
 
-import { logger } from '../logger';
+import { logger } from "../logger";
 
 export interface RetryConfig {
   maxAttempts: number;
@@ -20,7 +20,7 @@ const DEFAULT_RETRY_CONFIG: RetryConfig = {
   maxDelay: 30000, // 30 seconds
   backoffMultiplier: 2,
   jitterFactor: 0.1,
-  retryableErrors: ['NETWORK_ERROR', 'TIMEOUT', 'RATE_LIMITED', 'SERVER_ERROR'],
+  retryableErrors: ["NETWORK_ERROR", "TIMEOUT", "RATE_LIMITED", "SERVER_ERROR"],
 };
 
 export interface RetryContext {
@@ -41,10 +41,7 @@ export class RetryPolicy {
   /**
    * Execute an operation with retry logic
    */
-  async execute<T>(
-    operation: RetryableOperation<T>,
-    operationName: string
-  ): Promise<T> {
+  async execute<T>(operation: RetryableOperation<T>, operationName: string): Promise<T> {
     const context: RetryContext = {
       attempt: 0,
       startTime: Date.now(),
@@ -55,13 +52,12 @@ export class RetryPolicy {
 
       try {
         const result = await operation(context);
-        
+
         if (context.attempt > 1) {
-          logger.info(
-            `Operation succeeded after ${context.attempt} attempts`,
-            'RetryPolicy',
-            { operation: operationName, duration: Date.now() - context.startTime }
-          );
+          logger.info(`Operation succeeded after ${context.attempt} attempts`, "RetryPolicy", {
+            operation: operationName,
+            duration: Date.now() - context.startTime,
+          });
         }
 
         return result;
@@ -69,30 +65,29 @@ export class RetryPolicy {
         context.lastError = error instanceof Error ? error : new Error(String(error));
 
         const shouldRetry = this.shouldRetry(error, context.attempt);
-        
+
         if (!shouldRetry) {
           logger.error(
             `Operation failed permanently after ${context.attempt} attempts`,
             context.lastError,
-            'RetryPolicy',
+            "RetryPolicy",
             { operation: operationName }
           );
           throw context.lastError;
         }
 
         const delay = this.calculateDelay(context.attempt);
-        
-        logger.warn(
-          `Attempt ${context.attempt} failed, retrying in ${delay}ms`,
-          'RetryPolicy',
-          { operation: operationName, error: context.lastError.message }
-        );
+
+        logger.warn(`Attempt ${context.attempt} failed, retrying in ${delay}ms`, "RetryPolicy", {
+          operation: operationName,
+          error: context.lastError.message,
+        });
 
         await this.sleep(delay);
       }
     }
 
-    throw context.lastError || new Error('Max retry attempts exceeded');
+    throw context.lastError || new Error("Max retry attempts exceeded");
   }
 
   /**
@@ -109,9 +104,7 @@ export class RetryPolicy {
 
     // Check if error message contains retryable keywords
     const errorMessage = error.message.toUpperCase();
-    return this.config.retryableErrors.some((retryable) =>
-      errorMessage.includes(retryable)
-    );
+    return this.config.retryableErrors.some((retryable) => errorMessage.includes(retryable));
   }
 
   /**
@@ -120,8 +113,7 @@ export class RetryPolicy {
   private calculateDelay(attempt: number): number {
     // Exponential backoff: baseDelay * multiplier^(attempt-1)
     const exponentialDelay =
-      this.config.baseDelay *
-      Math.pow(this.config.backoffMultiplier, attempt - 1);
+      this.config.baseDelay * Math.pow(this.config.backoffMultiplier, attempt - 1);
 
     // Cap at max delay
     const cappedDelay = Math.min(exponentialDelay, this.config.maxDelay);

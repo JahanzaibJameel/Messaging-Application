@@ -3,10 +3,10 @@
  * Provides WebSocket functionality for React components
  */
 
-import { useEffect, useCallback, useState, useRef } from 'react';
-import { getWebSocketClient, resetWebSocketClient, type WebSocketStatus } from './WebSocketClient';
-import { getMessageHandler, resetMessageHandler } from './MessageHandler';
-import type { Message } from '@domain/entities/Message';
+import { useEffect, useCallback, useState, useRef } from "react";
+import { getWebSocketClient, resetWebSocketClient, type WebSocketStatus } from "./WebSocketClient";
+import { getMessageHandler, resetMessageHandler } from "./MessageHandler";
+import type { Message } from "@domain/entities/Message";
 
 interface UseWebSocketOptions {
   autoConnect?: boolean;
@@ -17,7 +17,7 @@ interface UseWebSocketOptions {
 
 export function useWebSocket(options: UseWebSocketOptions = {}) {
   const { autoConnect = true, onConnect, onDisconnect, onError } = options;
-  const [status, setStatus] = useState<WebSocketStatus>('disconnected');
+  const [status, setStatus] = useState<WebSocketStatus>("disconnected");
   const wsClientRef = useRef(getWebSocketClient());
   const messageHandlerRef = useRef(getMessageHandler(wsClientRef.current));
 
@@ -27,10 +27,10 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     // Subscribe to status changes
     const unsubscribeStatus = wsClient.onStatusChange((newStatus) => {
       setStatus(newStatus);
-      
-      if (newStatus === 'connected' && onConnect) {
+
+      if (newStatus === "connected" && onConnect) {
         onConnect();
-      } else if (newStatus === 'disconnected' && onDisconnect) {
+      } else if (newStatus === "disconnected" && onDisconnect) {
         onDisconnect();
       }
     });
@@ -70,13 +70,19 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     return messageHandlerRef.current.sendTypingIndicator(chatId, isTyping);
   }, []);
 
-  const sendMessageStatus = useCallback((messageId: string, status: 'delivered' | 'read'): boolean => {
-    return messageHandlerRef.current.sendMessageStatus(messageId, status);
-  }, []);
+  const sendMessageStatus = useCallback(
+    (messageId: string, status: "delivered" | "read"): boolean => {
+      return messageHandlerRef.current.sendMessageStatus(messageId, status);
+    },
+    []
+  );
 
-  const sendReaction = useCallback((messageId: string, emoji: string, action: 'add' | 'remove'): boolean => {
-    return messageHandlerRef.current.sendReaction(messageId, emoji, action);
-  }, []);
+  const sendReaction = useCallback(
+    (messageId: string, emoji: string, action: "add" | "remove"): boolean => {
+      return messageHandlerRef.current.sendReaction(messageId, emoji, action);
+    },
+    []
+  );
 
   const joinChat = useCallback((chatId: string): boolean => {
     return messageHandlerRef.current.joinChat(chatId);
@@ -87,27 +93,30 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   }, []);
 
   // Typing indicator with debounce
-  const sendTyping = useCallback((chatId: string) => {
-    sendTypingIndicator(chatId, true);
-    
-    // Auto-stop typing after 3 seconds
-    setTimeout(() => {
-      sendTypingIndicator(chatId, false);
-    }, 3000);
-  }, [sendTypingIndicator]);
+  const sendTyping = useCallback(
+    (chatId: string) => {
+      sendTypingIndicator(chatId, true);
+
+      // Auto-stop typing after 3 seconds
+      setTimeout(() => {
+        sendTypingIndicator(chatId, false);
+      }, 3000);
+    },
+    [sendTypingIndicator]
+  );
 
   return {
     // Status
     status,
-    isConnected: status === 'connected',
-    isConnecting: status === 'connecting',
-    isReconnecting: status === 'reconnecting',
-    
+    isConnected: status === "connected",
+    isConnecting: status === "connecting",
+    isReconnecting: status === "reconnecting",
+
     // Connection control
     connect,
     disconnect,
     reconnect,
-    
+
     // Message operations
     sendMessage,
     sendTypingIndicator,
@@ -121,15 +130,9 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
 // Hook for chat-specific WebSocket operations
 export function useChatWebSocket(chatId: string | null) {
-  const { 
-    isConnected, 
-    sendTyping, 
-    sendMessageStatus, 
-    sendReaction,
-    joinChat,
-    leaveChat,
-  } = useWebSocket();
-  
+  const { isConnected, sendTyping, sendMessageStatus, sendReaction, joinChat, leaveChat } =
+    useWebSocket();
+
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Join/leave chat when chatId changes
@@ -157,25 +160,34 @@ export function useChatWebSocket(chatId: string | null) {
   }, [chatId, sendTyping]);
 
   // Mark messages as read
-  const markAsRead = useCallback((messageId: string) => {
-    if (isConnected) {
-      sendMessageStatus(messageId, 'read');
-    }
-  }, [isConnected, sendMessageStatus]);
+  const markAsRead = useCallback(
+    (messageId: string) => {
+      if (isConnected) {
+        sendMessageStatus(messageId, "read");
+      }
+    },
+    [isConnected, sendMessageStatus]
+  );
 
   // Add reaction
-  const addReaction = useCallback((messageId: string, emoji: string) => {
-    if (isConnected) {
-      sendReaction(messageId, emoji, 'add');
-    }
-  }, [isConnected, sendReaction]);
+  const addReaction = useCallback(
+    (messageId: string, emoji: string) => {
+      if (isConnected) {
+        sendReaction(messageId, emoji, "add");
+      }
+    },
+    [isConnected, sendReaction]
+  );
 
   // Remove reaction
-  const removeReaction = useCallback((messageId: string) => {
-    if (isConnected) {
-      sendReaction(messageId, '', 'remove');
-    }
-  }, [isConnected, sendReaction]);
+  const removeReaction = useCallback(
+    (messageId: string) => {
+      if (isConnected) {
+        sendReaction(messageId, "", "remove");
+      }
+    },
+    [isConnected, sendReaction]
+  );
 
   return {
     isConnected,

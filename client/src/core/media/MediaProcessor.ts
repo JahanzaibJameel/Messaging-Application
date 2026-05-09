@@ -4,9 +4,9 @@
  * Note: Requires expo-image-manipulator and expo-video-thumbnails to be installed
  */
 
-import { AppError } from '../errors';
+import { AppError } from "../errors";
 
-export type MediaType = 'image' | 'video' | 'audio' | 'document';
+export type MediaType = "image" | "video" | "audio" | "document";
 
 export interface MediaFile {
   uri: string;
@@ -24,7 +24,7 @@ export interface CompressionOptions {
   maxWidth?: number;
   maxHeight?: number;
   quality?: number; // 0-1
-  format?: 'jpeg' | 'png';
+  format?: "jpeg" | "png";
 }
 
 export interface ProcessedMedia extends MediaFile {
@@ -38,7 +38,7 @@ const DEFAULT_IMAGE_OPTIONS: CompressionOptions = {
   maxWidth: 1920,
   maxHeight: 1920,
   quality: 0.8,
-  format: 'jpeg',
+  format: "jpeg",
 };
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
@@ -55,7 +55,7 @@ export class MediaProcessor {
   ): Promise<ProcessedMedia> {
     try {
       const opts = { ...DEFAULT_IMAGE_OPTIONS, ...options };
-      
+
       // TODO: Implement with expo-image-manipulator when installed
       // For now, return the original image
       const fileSize = await this.getFileSize(uri);
@@ -63,16 +63,16 @@ export class MediaProcessor {
       return {
         uri,
         processedUri: uri,
-        type: 'image',
-        fileName: this.generateFileName('image', opts.format || 'jpeg'),
-        mimeType: opts.format === 'png' ? 'image/png' : 'image/jpeg',
+        type: "image",
+        fileName: this.generateFileName("image", opts.format || "jpeg"),
+        mimeType: opts.format === "png" ? "image/png" : "image/jpeg",
         fileSize,
         originalSize: fileSize,
         compressedSize: fileSize,
         compressionRatio: 1,
       };
     } catch (error) {
-      throw AppError.media('Failed to process image', error as Error);
+      throw AppError.media("Failed to process image", error as Error);
     }
   }
 
@@ -88,16 +88,16 @@ export class MediaProcessor {
       return {
         uri,
         processedUri: uri, // Video not compressed, just validated
-        type: 'video',
-        fileName: this.generateFileName('video', 'mp4'),
-        mimeType: 'video/mp4',
+        type: "video",
+        fileName: this.generateFileName("video", "mp4"),
+        mimeType: "video/mp4",
         fileSize,
         originalSize: fileSize,
         compressedSize: fileSize,
         compressionRatio: 1,
       };
     } catch (error) {
-      throw AppError.media('Failed to process video', error as Error);
+      throw AppError.media("Failed to process video", error as Error);
     }
   }
 
@@ -110,22 +110,22 @@ export class MediaProcessor {
 
       // Validate file size
       if (fileSize > MAX_FILE_SIZE) {
-        throw new Error('Audio file too large (max 50MB)');
+        throw new Error("Audio file too large (max 50MB)");
       }
 
       return {
         uri,
         processedUri: uri,
-        type: 'audio',
-        fileName: this.generateFileName('audio', 'm4a'),
-        mimeType: 'audio/m4a',
+        type: "audio",
+        fileName: this.generateFileName("audio", "m4a"),
+        mimeType: "audio/m4a",
         fileSize,
         originalSize: fileSize,
         compressedSize: fileSize,
         compressionRatio: 1,
       };
     } catch (error) {
-      throw AppError.media('Failed to process audio', error as Error);
+      throw AppError.media("Failed to process audio", error as Error);
     }
   }
 
@@ -138,7 +138,7 @@ export class MediaProcessor {
 
       // Validate file size
       if (fileSize > MAX_FILE_SIZE) {
-        throw new Error('Document too large (max 50MB)');
+        throw new Error("Document too large (max 50MB)");
       }
 
       const extension = this.getExtensionFromMimeType(mimeType);
@@ -146,8 +146,8 @@ export class MediaProcessor {
       return {
         uri,
         processedUri: uri,
-        type: 'document',
-        fileName: this.generateFileName('document', extension),
+        type: "document",
+        fileName: this.generateFileName("document", extension),
         mimeType,
         fileSize,
         originalSize: fileSize,
@@ -155,17 +155,14 @@ export class MediaProcessor {
         compressionRatio: 1,
       };
     } catch (error) {
-      throw AppError.media('Failed to process document', error as Error);
+      throw AppError.media("Failed to process document", error as Error);
     }
   }
 
   /**
    * Generate thumbnail for image
    */
-  static async generateThumbnail(
-    uri: string,
-    maxSize: number = 300
-  ): Promise<string> {
+  static async generateThumbnail(uri: string, maxSize: number = 300): Promise<string> {
     // TODO: Implement with expo-image-manipulator when installed
     return uri;
   }
@@ -214,27 +211,27 @@ export class MediaProcessor {
    */
   private static getExtensionFromMimeType(mimeType: string): string {
     const extensions: Record<string, string> = {
-      'application/pdf': 'pdf',
-      'application/msword': 'doc',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
-      'text/plain': 'txt',
-      'image/jpeg': 'jpg',
-      'image/png': 'png',
-      'image/gif': 'gif',
-      'video/mp4': 'mp4',
-      'audio/m4a': 'm4a',
-      'audio/mp3': 'mp3',
+      "application/pdf": "pdf",
+      "application/msword": "doc",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+      "text/plain": "txt",
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/gif": "gif",
+      "video/mp4": "mp4",
+      "audio/m4a": "m4a",
+      "audio/mp3": "mp3",
     };
-    return extensions[mimeType] || 'bin';
+    return extensions[mimeType] || "bin";
   }
 
   /**
    * Format file size for display
    */
   static formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) return "0 B";
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
   }

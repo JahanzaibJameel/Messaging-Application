@@ -3,13 +3,13 @@
  * Displays temporary notifications with animations
  */
 
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Pressable, Animated } from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import React, { useEffect, useRef } from "react";
+import { View, StyleSheet, Pressable, Animated } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useUIStore } from '@presentation/stores';
-import type { Toast as ToastType } from '@presentation/stores/types';
+import { useUIStore } from "@presentation/stores";
+import type { Toast as ToastType } from "@presentation/stores/types";
 
 interface ToastProps {
   toast: ToastType;
@@ -18,24 +18,24 @@ interface ToastProps {
 
 const toastConfig = {
   success: {
-    icon: 'check-circle' as const,
-    color: '#25D366',
-    backgroundColor: '#E8F5E9',
+    icon: "check-circle" as const,
+    color: "#25D366",
+    backgroundColor: "#E8F5E9",
   },
   error: {
-    icon: 'alert-circle' as const,
-    color: '#FF3B30',
-    backgroundColor: '#FFEBEE',
+    icon: "alert-circle" as const,
+    color: "#FF3B30",
+    backgroundColor: "#FFEBEE",
   },
   warning: {
-    icon: 'alert-triangle' as const,
-    color: '#FFA500',
-    backgroundColor: '#FFF3E0',
+    icon: "alert-triangle" as const,
+    color: "#FFA500",
+    backgroundColor: "#FFF3E0",
   },
   info: {
-    icon: 'info' as const,
-    color: '#007AFF',
-    backgroundColor: '#E3F2FD',
+    icon: "info" as const,
+    color: "#007AFF",
+    backgroundColor: "#E3F2FD",
   },
 };
 
@@ -128,11 +128,7 @@ export const ToastContainer: React.FC = () => {
   return (
     <View style={styles.containerWrapper} pointerEvents="box-none">
       {toasts.map((toast) => (
-        <Toast
-          key={toast.id}
-          toast={toast}
-          onDismiss={() => hideToast(toast.id)}
-        />
+        <Toast key={toast.id} toast={toast} onDismiss={() => hideToast(toast.id)} />
       ))}
     </View>
   );
@@ -142,20 +138,20 @@ const styles = StyleSheet.create({
   containerWrapper: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 9999,
-    pointerEvents: 'box-none',
+    pointerEvents: "box-none",
   },
   container: {
     marginHorizontal: 16,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
   },
   content: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 12,
     gap: 12,
   },
@@ -164,7 +160,7 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   actionButton: {
     paddingHorizontal: 8,
@@ -172,7 +168,7 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   closeButton: {
     padding: 4,

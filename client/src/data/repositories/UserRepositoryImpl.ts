@@ -3,21 +3,18 @@
  * Combines local and remote data sources
  */
 
-import type { User, UserProfile, UserSettings } from '../../domain/entities/User';
-import { UserEntity } from '../../domain/entities/User';
-import type { UserRepository } from '../../domain/repositories/UserRepository';
-import { LocalStorageDataSource } from '../datasources/LocalStorageDataSource';
-import { RemoteApiDataSource } from '../datasources/RemoteApiDataSource';
-import { UserMapper } from '../mappers';
+import type { User, UserProfile, UserSettings } from "../../domain/entities/User";
+import { UserEntity } from "../../domain/entities/User";
+import type { UserRepository } from "../../domain/repositories/UserRepository";
+import { LocalStorageDataSource } from "../datasources/LocalStorageDataSource";
+import { RemoteApiDataSource } from "../datasources/RemoteApiDataSource";
+import { UserMapper } from "../mappers";
 
 export class UserRepositoryImpl implements UserRepository {
   private localDataSource: LocalStorageDataSource;
   private remoteDataSource: RemoteApiDataSource;
 
-  constructor(
-    localDataSource: LocalStorageDataSource,
-    remoteDataSource: RemoteApiDataSource
-  ) {
+  constructor(localDataSource: LocalStorageDataSource, remoteDataSource: RemoteApiDataSource) {
     this.localDataSource = localDataSource;
     this.remoteDataSource = remoteDataSource;
   }
@@ -48,14 +45,14 @@ export class UserRepositoryImpl implements UserRepository {
 
   async getByIds(ids: string[]): Promise<User[]> {
     const users: User[] = [];
-    
+
     for (const id of ids) {
       const user = await this.getById(id);
       if (user) {
         users.push(user);
       }
     }
-    
+
     return users;
   }
 
@@ -82,7 +79,7 @@ export class UserRepositoryImpl implements UserRepository {
       // Apply updates
       Object.assign(user, profile);
       await this.save(user);
-      
+
       // Sync with remote
       try {
         await this.remoteDataSource.updateProfile(userId, profile);
@@ -125,17 +122,17 @@ export class UserRepositoryImpl implements UserRepository {
     if (otp.length === 6) {
       const user = new UserEntity({
         id: `user_${Date.now()}`,
-        name: 'You',
-        phone: '',
+        name: "You",
+        phone: "",
         isOnline: true,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-      
+
       await this.saveCurrentUser(user);
       return true;
     }
-    
+
     return false;
   }
 

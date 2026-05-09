@@ -3,8 +3,8 @@
  * Represents a chat message with full lifecycle
  */
 
-export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'failed' | 'error';
-export type MessageType = 'text' | 'image' | 'video' | 'audio' | 'document' | 'location';
+export type MessageStatus = "sending" | "sent" | "delivered" | "read" | "failed" | "error";
+export type MessageType = "text" | "image" | "video" | "audio" | "document" | "location";
 
 export interface MessageAttachment {
   type: MessageType;
@@ -95,7 +95,7 @@ export class MessageEntity implements Message {
       text: input.text,
       attachment: input.attachment,
       timestamp: new Date(),
-      status: 'sending',
+      status: "sending",
       replyTo: input.replyTo,
       reactions: [],
       edited: false,
@@ -109,11 +109,11 @@ export class MessageEntity implements Message {
   }
 
   hasAttachment(): boolean {
-    return this.type !== 'text' && !!this.attachment;
+    return this.type !== "text" && !!this.attachment;
   }
 
   canEdit(): boolean {
-    return this.status !== 'failed' && !this.localOnly;
+    return this.status !== "failed" && !this.localOnly;
   }
 
   canDelete(): boolean {
@@ -121,7 +121,7 @@ export class MessageEntity implements Message {
   }
 
   addReaction(userId: string, emoji: string): void {
-    const existingIndex = this.reactions.findIndex(r => r.userId === userId);
+    const existingIndex = this.reactions.findIndex((r) => r.userId === userId);
     if (existingIndex >= 0) {
       this.reactions[existingIndex].emoji = emoji;
     } else {
@@ -130,24 +130,24 @@ export class MessageEntity implements Message {
   }
 
   removeReaction(userId: string): void {
-    this.reactions = this.reactions.filter(r => r.userId !== userId);
+    this.reactions = this.reactions.filter((r) => r.userId !== userId);
   }
 
   markAsSent(): void {
-    this.status = 'sent';
+    this.status = "sent";
     this.localOnly = false;
   }
 
   markAsDelivered(): void {
-    this.status = 'delivered';
+    this.status = "delivered";
   }
 
   markAsRead(): void {
-    this.status = 'read';
+    this.status = "read";
   }
 
   markAsFailed(): void {
-    this.status = 'failed';
+    this.status = "failed";
   }
 
   incrementRetry(): void {
@@ -164,15 +164,15 @@ export class MessageEntity implements Message {
     if (this.text) return this.text;
     if (this.attachment) {
       const typeLabels: Record<MessageType, string> = {
-        image: 'Image',
-        video: 'Video',
-        audio: 'Voice message',
-        document: 'Document',
-        location: 'Location',
-        text: '',
+        image: "Image",
+        video: "Video",
+        audio: "Voice message",
+        document: "Document",
+        location: "Location",
+        text: "",
       };
-      return typeLabels[this.type] || 'Attachment';
+      return typeLabels[this.type] || "Attachment";
     }
-    return '';
+    return "";
   }
 }

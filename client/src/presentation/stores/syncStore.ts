@@ -3,13 +3,13 @@
  * Manages synchronization state and pending message queue
  */
 
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
-import { MMKV } from 'react-native-mmkv';
-import type { SyncState, SyncActions, QueuedMessage, SyncStatus } from './types';
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
+import { MMKV } from "react-native-mmkv";
+import type { SyncState, SyncActions, QueuedMessage, SyncStatus } from "./types";
 
-const storage = new MMKV({ id: 'sync-storage' });
+const storage = new MMKV({ id: "sync-storage" });
 
 const mmkvStorage = {
   getItem: (name: string): string | null => {
@@ -27,7 +27,7 @@ const mmkvStorage = {
 type SyncStore = SyncState & SyncActions;
 
 const initialState: SyncState = {
-  status: 'idle',
+  status: "idle",
   lastSyncAt: null,
   pendingMessages: [],
   failedMessages: [],
@@ -54,7 +54,9 @@ export const useSyncStore = create<SyncStore>()(
 
         queueMessage: (messageId: string, chatId: string) => {
           set((state: SyncState) => {
-            const exists = state.pendingMessages.some((m: QueuedMessage) => m.messageId === messageId);
+            const exists = state.pendingMessages.some(
+              (m: QueuedMessage) => m.messageId === messageId
+            );
             if (!exists) {
               state.pendingMessages.push({
                 id: `queue_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -62,7 +64,7 @@ export const useSyncStore = create<SyncStore>()(
                 chatId,
                 retryCount: 0,
                 lastAttempt: new Date().toISOString(),
-                priority: 'normal',
+                priority: "normal",
               });
             }
           });
@@ -78,7 +80,9 @@ export const useSyncStore = create<SyncStore>()(
 
         markAsFailed: (messageId: string) => {
           set((state: SyncState) => {
-            const message = state.pendingMessages.find((m: QueuedMessage) => m.messageId === messageId);
+            const message = state.pendingMessages.find(
+              (m: QueuedMessage) => m.messageId === messageId
+            );
             if (message) {
               state.failedMessages.push(message);
               state.pendingMessages = state.pendingMessages.filter(
@@ -90,7 +94,9 @@ export const useSyncStore = create<SyncStore>()(
 
         retryMessage: (messageId: string) => {
           set((state: SyncState) => {
-            const message = state.failedMessages.find((m: QueuedMessage) => m.messageId === messageId);
+            const message = state.failedMessages.find(
+              (m: QueuedMessage) => m.messageId === messageId
+            );
             if (message) {
               message.retryCount = 0;
               message.lastAttempt = new Date().toISOString();
@@ -115,7 +121,7 @@ export const useSyncStore = create<SyncStore>()(
         },
       }),
       {
-        name: 'sync-storage',
+        name: "sync-storage",
         storage: createJSONStorage(() => mmkvStorage),
       }
     )

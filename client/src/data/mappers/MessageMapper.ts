@@ -3,8 +3,17 @@
  * Converts between domain entities and data models
  */
 
-import { MessageEntity, type Message, type MessageAttachment, type MessageReaction } from '@/domain/entities/Message';
-import type { MessageModel, MessageAttachmentModel, MessageReactionModel } from '../models/MessageModel';
+import {
+  MessageEntity,
+  type Message,
+  type MessageAttachment,
+  type MessageReaction,
+} from "@/domain/entities/Message";
+import type {
+  MessageModel,
+  MessageAttachmentModel,
+  MessageReactionModel,
+} from "../models/MessageModel";
 
 export class MessageMapper {
   static toDomain(model: MessageModel): Message {
@@ -18,7 +27,7 @@ export class MessageMapper {
       timestamp: new Date(model.timestamp),
       status: model.status,
       replyTo: model.replyTo,
-      reactions: model.reactions.map(r => MessageMapper.reactionToDomain(r)),
+      reactions: model.reactions.map((r) => MessageMapper.reactionToDomain(r)),
       edited: model.edited,
       editedAt: model.editedAt ? new Date(model.editedAt) : undefined,
       metadata: model.metadata,
@@ -34,11 +43,13 @@ export class MessageMapper {
       senderId: domain.senderId,
       type: domain.type,
       text: domain.text,
-      attachment: domain.attachment ? MessageMapper.attachmentToModel(domain.attachment) : undefined,
+      attachment: domain.attachment
+        ? MessageMapper.attachmentToModel(domain.attachment)
+        : undefined,
       timestamp: domain.timestamp.toISOString(),
       status: domain.status,
       replyTo: domain.replyTo,
-      reactions: domain.reactions.map(r => MessageMapper.reactionToModel(r)),
+      reactions: domain.reactions.map((r) => MessageMapper.reactionToModel(r)),
       edited: domain.edited,
       editedAt: domain.editedAt?.toISOString(),
       metadata: domain.metadata,

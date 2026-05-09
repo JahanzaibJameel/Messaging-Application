@@ -2,4 +2,4 @@
  * Services exports
  */
 
-export * from './websocket';
+export * from "./websocket";

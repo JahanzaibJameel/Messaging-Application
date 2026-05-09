@@ -3,23 +3,23 @@
  * Provides authentication operations for React components
  */
 
-import { useCallback, useState } from 'react';
-import { useAuthStore, useUIStore } from '../stores';
-import { userRepository } from '../../data/repositories';
-import { logger } from '../../core/logger';
-import { UserEntity } from '../../domain/entities/User';
+import { useCallback, useState } from "react";
+import { useAuthStore, useUIStore } from "../stores";
+import { userRepository } from "../../data/repositories";
+import { logger } from "../../core/logger";
+import { UserEntity } from "../../domain/entities/User";
 
 interface LoginState {
   isLoading: boolean;
   error: string | null;
-  step: 'phone' | 'otp' | 'complete';
+  step: "phone" | "otp" | "complete";
 }
 
 export function useAuth() {
   const [loginState, setLoginState] = useState<LoginState>({
     isLoading: false,
     error: null,
-    step: 'phone',
+    step: "phone",
   });
 
   const { currentUser, setCurrentUser, logout: storeLogout } = useAuthStore();
@@ -33,105 +33,114 @@ export function useAuth() {
     setLoginState((prev) => ({ ...prev, error }));
   }, []);
 
-  const setStep = useCallback((step: LoginState['step']) => {
+  const setStep = useCallback((step: LoginState["step"]) => {
     setLoginState((prev) => ({ ...prev, step }));
   }, []);
 
   // Request OTP
-  const requestOtp = useCallback(async (phone: string): Promise<boolean> => {
-    setLoading(true);
-    setError(null);
+  const requestOtp = useCallback(
+    async (phone: string): Promise<boolean> => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      // Validate phone number
-      const cleanedPhone = phone.replace(/\s+/g, '').replace(/[^\d+]/g, '');
-      if (cleanedPhone.length < 10) {
-        setError('Please enter a valid phone number');
+      try {
+        // Validate phone number
+        const cleanedPhone = phone.replace(/\s+/g, "").replace(/[^\d+]/g, "");
+        if (cleanedPhone.length < 10) {
+          setError("Please enter a valid phone number");
+          return false;
+        }
+
+        await userRepository.login(cleanedPhone);
+        setStep("otp");
+
+        showToast({
+          type: "success",
+          message: "OTP sent to your phone",
+          duration: 3000,
+        });
+
+        return true;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to send OTP";
+        setError(message);
         return false;
+      } finally {
+        setLoading(false);
       }
-
-      await userRepository.login(cleanedPhone);
-      setStep('otp');
-      
-      showToast({
-        type: 'success',
-        message: 'OTP sent to your phone',
-        duration: 3000,
-      });
-      
-      return true;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to send OTP';
-      setError(message);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [setLoading, setError, setStep, showToast]);
+    },
+    [setLoading, setError, setStep, showToast]
+  );
 
   // Verify OTP
-  const verifyOtp = useCallback(async (otp: string): Promise<boolean> => {
-    setLoading(true);
-    setError(null);
+  const verifyOtp = useCallback(
+    async (otp: string): Promise<boolean> => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      if (otp.length !== 6 || !/^\d+$/.test(otp)) {
-        setError('Please enter a valid 6-digit OTP');
-        return false;
-      }
-
-      const success = await userRepository.verifyOtp(otp);
-      
-      if (success) {
-        // Get current user from repository
-        const user = await userRepository.getCurrentUser();
-        if (user) {
-          setCurrentUser(user);
-          setStep('complete');
-          
-          showToast({
-            type: 'success',
-            message: 'Welcome back!',
-            duration: 3000,
-          });
+      try {
+        if (otp.length !== 6 || !/^\d+$/.test(otp)) {
+          setError("Please enter a valid 6-digit OTP");
+          return false;
         }
-        return true;
-      } else {
-        setError('Invalid OTP. Please try again.');
+
+        const success = await userRepository.verifyOtp(otp);
+
+        if (success) {
+          // Get current user from repository
+          const user = await userRepository.getCurrentUser();
+          if (user) {
+            setCurrentUser(user);
+            setStep("complete");
+
+            showToast({
+              type: "success",
+              message: "Welcome back!",
+              duration: 3000,
+            });
+          }
+          return true;
+        } else {
+          setError("Invalid OTP. Please try again.");
+          return false;
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to verify OTP";
+        setError(message);
         return false;
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to verify OTP';
-      setError(message);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [setLoading, setError, setStep, setCurrentUser, showToast]);
+    },
+    [setLoading, setError, setStep, setCurrentUser, showToast]
+  );
 
   // Resend OTP
-  const resendOtp = useCallback(async (phone: string): Promise<boolean> => {
-    setLoading(true);
-    setError(null);
+  const resendOtp = useCallback(
+    async (phone: string): Promise<boolean> => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      await userRepository.login(phone);
-      
-      showToast({
-        type: 'success',
-        message: 'OTP resent successfully',
-        duration: 3000,
-      });
-      
-      return true;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to resend OTP';
-      setError(message);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [setLoading, setError, showToast]);
+      try {
+        await userRepository.login(phone);
+
+        showToast({
+          type: "success",
+          message: "OTP resent successfully",
+          duration: 3000,
+        });
+
+        return true;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to resend OTP";
+        setError(message);
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setLoading, setError, showToast]
+  );
 
   // Logout
   const logout = useCallback(async (): Promise<void> => {
@@ -140,14 +149,14 @@ export function useAuth() {
     try {
       await userRepository.logout();
       storeLogout();
-      
+
       showToast({
-        type: 'success',
-        message: 'Logged out successfully',
+        type: "success",
+        message: "Logged out successfully",
         duration: 2000,
       });
     } catch (error) {
-      logger.error('Logout error', error as Error, 'useAuth');
+      logger.error("Logout error", error as Error, "useAuth");
       // Still logout locally even if server fails
       storeLogout();
     } finally {
@@ -156,39 +165,42 @@ export function useAuth() {
   }, [storeLogout, setLoading, showToast]);
 
   // Update profile
-  const updateProfile = useCallback(async (updates: { name?: string; avatar?: string; status?: string }): Promise<boolean> => {
-    if (!currentUser) return false;
+  const updateProfile = useCallback(
+    async (updates: { name?: string; avatar?: string; status?: string }): Promise<boolean> => {
+      if (!currentUser) return false;
 
-    setLoading(true);
+      setLoading(true);
 
-    try {
-      await userRepository.updateProfile(currentUser.id, updates);
-      
-      // Update local user
-      const updatedUser = await userRepository.getCurrentUser();
-      if (updatedUser) {
-        setCurrentUser(updatedUser);
+      try {
+        await userRepository.updateProfile(currentUser.id, updates);
+
+        // Update local user
+        const updatedUser = await userRepository.getCurrentUser();
+        if (updatedUser) {
+          setCurrentUser(updatedUser);
+        }
+
+        showToast({
+          type: "success",
+          message: "Profile updated",
+          duration: 2000,
+        });
+
+        return true;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to update profile";
+        showToast({
+          type: "error",
+          message,
+          duration: 3000,
+        });
+        return false;
+      } finally {
+        setLoading(false);
       }
-
-      showToast({
-        type: 'success',
-        message: 'Profile updated',
-        duration: 2000,
-      });
-
-      return true;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to update profile';
-      showToast({
-        type: 'error',
-        message,
-        duration: 3000,
-      });
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [currentUser, setCurrentUser, setLoading, showToast]);
+    },
+    [currentUser, setCurrentUser, setLoading, showToast]
+  );
 
   // Check if authenticated
   const checkAuth = useCallback(async (): Promise<boolean> => {
@@ -203,7 +215,7 @@ export function useAuth() {
       }
       return false;
     } catch (error) {
-      logger.error('Auth check error', error as Error, 'useAuth');
+      logger.error("Auth check error", error as Error, "useAuth");
       return false;
     }
   }, [setCurrentUser]);
@@ -213,7 +225,7 @@ export function useAuth() {
     setLoginState({
       isLoading: false,
       error: null,
-      step: 'phone',
+      step: "phone",
     });
   }, []);
 

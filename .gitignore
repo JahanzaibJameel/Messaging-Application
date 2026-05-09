@@ -41,3 +41,8 @@ app-example
 # generated native folders
 /ios
 /android
+
+# ProGuard configuration (security)
+!android/app/proguard-rules.pro
+!android/app/src/main/AndroidManifest.xml
+!android/app/src/main/res/xml/network_security_config.xml

@@ -8,7 +8,7 @@ export {
   type MediaFile,
   type ProcessedMedia,
   type CompressionOptions,
-} from './MediaProcessor';
+} from "./MediaProcessor";
 
 export {
   MediaUploader,
@@ -16,7 +16,7 @@ export {
   type UploadResult,
   type UploadProgressCallback,
   mediaUploader,
-} from './MediaUploader';
+} from "./MediaUploader";
 
 export {
   MediaPicker,
@@ -29,6 +29,6 @@ export {
   quickImage,
   quickVideo,
   pickMultipleImages,
-} from './MediaPicker';
+} from "./MediaPicker";
 
-export { useMedia, useChatMedia } from './useMedia';
+export { useMedia, useChatMedia } from "./useMedia";

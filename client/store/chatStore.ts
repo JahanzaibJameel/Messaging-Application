@@ -5,6 +5,7 @@
 
 import { create } from "zustand";
 import { StorageService } from "@/lib/storage";
+import { secureStorage } from "@/lib/secure-storage";
 import type {
   User,
   Chat,
@@ -170,6 +171,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if (otp.length === 6) {
       const { currentUser, messages, chats, groupChats, settings } = get();
       set({ isAuthenticated: true });
+
+      // Store auth token securely
+      const authToken = `token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      await secureStorage.setAuthToken(authToken, currentUser?.id || "currentUser");
+
+      // Store non-sensitive data in regular storage
       StorageService.setItem(STORAGE_KEY, {
         currentUser,
         isAuthenticated: true,
@@ -184,7 +191,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   logout: async () => {
+    // Clear secure storage
+    await secureStorage.removeAuthToken();
+    await secureStorage.clearAll();
+
+    // Clear regular storage
     StorageService.removeItem(STORAGE_KEY);
+
     set({
       currentUser: null,
       isAuthenticated: false,
@@ -268,7 +281,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     // Auto-reply simulation for private chats
     const chat = chats.find((c) => c.id === chatId);
-    if (chat && chat.type === "private" && chat.participantId) {
+    if (chat?.type === "private" && chat.participantId) {
       setTimeout(() => {
         set((state) => ({
           typingUsers: { ...state.typingUsers, [chat.participantId!]: true },

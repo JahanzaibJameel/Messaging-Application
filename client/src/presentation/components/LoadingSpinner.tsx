@@ -3,11 +3,11 @@
  * Consistent loading indicator across the app
  */
 
-import React from 'react';
-import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
+import React from "react";
+import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
 
 interface Props {
-  size?: 'small' | 'large' | number;
+  size?: "small" | "large" | number;
   color?: string;
   text?: string;
   style?: object;
@@ -15,18 +15,16 @@ interface Props {
 }
 
 const LoadingSpinner: React.FC<Props> = ({
-  size = 'large',
-  color = '#3498db',
-  text = 'Loading...',
+  size = "large",
+  color = "#3498db",
+  text = "Loading...",
   style,
   showText = true,
 }) => {
   return (
     <View style={[styles.container, style]}>
       <ActivityIndicator size={size} color={color} />
-      {showText && text ? (
-        <Text style={styles.text}>{text}</Text>
-      ) : null}
+      {showText && text ? <Text style={styles.text}>{text}</Text> : null}
     </View>
   );
 };
@@ -34,14 +32,14 @@ const LoadingSpinner: React.FC<Props> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   text: {
     marginTop: 10,
     fontSize: 14,
-    color: '#7f8c8d',
+    color: "#7f8c8d",
   },
 });
 

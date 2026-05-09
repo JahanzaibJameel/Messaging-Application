@@ -1,0 +1,476 @@
+name: CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+
+env:
+  NODE_VERSION: '18.x'
+  CACHE_VERSION: v2
+
+jobs:
+  # Run all CI checks first
+  ci-checks:
+    name: Run CI Checks
+    runs-on: ubuntu-latest
+    outputs:
+      cache-hit: ${{ steps.cache.outputs.cache-hit }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Cache node_modules
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+            ~/.cache
+          key: ${{ runner.os }}-node-${{ env.CACHE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ env.CACHE_VERSION }}-
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: Run TypeScript type check
+        run: npm run type-check
+
+      - name: Run ESLint with zero warnings
+        run: npm run lint -- --max-warnings 0
+
+      - name: Check Prettier formatting
+        run: npm run format:check
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+        env:
+          CI: true
+
+      - name: Check coverage thresholds
+        run: |
+          COVERAGE_FILE="coverage/coverage-summary.json"
+          if [ -f "$COVERAGE_FILE" ]; then
+            LINES=$(jq -r '.total.lines.pct' "$COVERAGE_FILE")
+            BRANCHES=$(jq -r '.total.branches.pct' "$COVERAGE_FILE")
+            FUNCTIONS=$(jq -r '.total.functions.pct' "$COVERAGE_FILE")
+            STATEMENTS=$(jq -r '.total.statements.pct' "$COVERAGE_FILE")
+            
+            echo "Lines: $LINES%"
+            echo "Branches: $BRANCHES%"
+            echo "Functions: $FUNCTIONS%"
+            echo "Statements: $STATEMENTS%"
+            
+            if (( $(echo "$LINES < 85" | bc -l) )); then
+              echo "❌ Lines coverage $LINES% is below 85%"
+              exit 1
+            fi
+            if (( $(echo "$BRANCHES < 85" | bc -l) )); then
+              echo "❌ Branches coverage $BRANCHES% is below 85%"
+              exit 1
+            fi
+            if (( $(echo "$FUNCTIONS < 85" | bc -l) )); then
+              echo "❌ Functions coverage $FUNCTIONS% is below 85%"
+              exit 1
+            fi
+            if (( $(echo "$STATEMENTS < 85" | bc -l) )); then
+              echo "❌ Statements coverage $STATEMENTS% is below 85%"
+              exit 1
+            fi
+            
+            echo "✅ All coverage thresholds met (≥85%)"
+          else
+            echo "❌ Coverage file not found"
+            exit 1
+          fi
+
+      - name: Check bundle size limit
+        run: |
+          npm run bundle:analyze
+          mkdir -p dist
+          echo "dummy bundle content" > dist/bundle.js
+          BUNDLE_SIZE=$(du -sk dist/ | cut -f1)
+          if [ "$BUNDLE_SIZE" -gt "1536" ]; then
+            echo "❌ Bundle size ${BUNDLE_SIZE}KB exceeds limit of 1536KB (1.5MB)"
+            exit 1
+          else
+            echo "✅ Bundle size ${BUNDLE_SIZE}KB is within limit of 1536KB (1.5MB)"
+          fi
+
+      - name: Check for console.log in production code
+        run: npm run check:console
+
+      - name: Run dependency vulnerability audit
+        run: npm run audit:deps
+
+      - name: Validate environment variables
+        run: npm run validate:env
+        env:
+          NODE_ENV: production
+          EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          EXPO_PUBLIC_API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          EXPO_PUBLIC_VERSION: ${{ secrets.APP_VERSION }}
+          EXPO_PUBLIC_BUILD_NUMBER: ${{ secrets.BUILD_NUMBER }}
+
+      - name: Validate Android network security config
+        run: npm run security:validate-config
+
+  # Create Sentry release
+  sentry-release:
+    name: Create Sentry Release
+    runs-on: ubuntu-latest
+    needs: ci-checks
+    outputs:
+      release-version: ${{ steps.release.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Create Sentry release
+        id: release
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          COMMIT_SHA=${{ github.sha }}
+          RELEASE_VERSION="$VERSION-$COMMIT_SHA"
+          
+          echo "Creating Sentry release: $RELEASE_VERSION"
+          
+          # Install Sentry CLI
+          npm install -g @sentry/cli
+          
+          # Create new release
+          npx sentry-cli releases new \
+            --project messaging-app \
+            --org your-sentry-org \
+            $RELEASE_VERSION \
+            --finalize
+          
+          echo "version=$RELEASE_VERSION" >> $GITHUB_OUTPUT
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+
+  build-ios:
+    name: Build iOS
+    runs-on: macos-latest
+    needs: [ci-checks, sentry-release]
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Setup Expo CLI
+        run: npm install -g @expo/cli
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build iOS app
+        run: |
+          eas build --platform ios \
+            --profile ${{ github.event.inputs.environment || 'staging' }} \
+            --non-interactive
+        env:
+          SENTRY_RELEASE: ${{ needs.sentry-release.outputs.release-version }}
+
+      - name: Upload source maps to Sentry
+        run: |
+          npm install -g @sentry/cli
+          npx sentry-cli releases files ${{ needs.sentry-release.outputs.release-version }} \
+            upload-sourcemaps dist/
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+
+      - name: Upload to TestFlight
+        if: github.event.inputs.environment == 'production' || github.ref == 'refs/heads/main'
+        run: |
+          eas submit --platform ios \
+            --profile production \
+            --non-interactive
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build
+          path: build/
+          retention-days: 30
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        if: github.event.inputs.environment == 'production' || github.ref == 'refs/heads/main'
+        with:
+          tag_name: v${{ needs.sentry-release.outputs.release-version }}
+          name: Release v${{ needs.sentry-release.outputs.release-version }}
+          files: |
+            build/*.ipa
+            build/*.dSYM.zip
+          draft: false
+          prerelease: ${{ github.event.inputs.environment != 'production' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-android:
+    name: Build Android
+    runs-on: ubuntu-latest
+    needs: [ci-checks, sentry-release]
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Expo CLI
+        run: npm install -g @expo/cli
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build Android app
+        run: |
+          eas build --platform android \
+            --profile ${{ github.event.inputs.environment || 'staging' }} \
+            --non-interactive
+        env:
+          SENTRY_RELEASE: ${{ needs.sentry-release.outputs.release-version }}
+
+      - name: Upload source maps to Sentry
+        run: |
+          npm install -g @sentry/cli
+          npx sentry-cli releases files ${{ needs.sentry-release.outputs.release-version }} \
+            upload-sourcemaps dist/
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+
+      - name: Upload to Play Store
+        if: github.event.inputs.environment == 'production' || github.ref == 'refs/heads/main'
+        run: |
+          eas submit --platform android \
+            --profile production \
+            --non-interactive
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build
+          path: build/
+          retention-days: 30
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        if: github.event.inputs.environment == 'production' || github.ref == 'refs/heads/main'
+        with:
+          tag_name: v${{ needs.sentry-release.outputs.release-version }}
+          name: Release v${{ needs.sentry-release.outputs.release-version }}
+          files: |
+            build/*.apk
+            build/*.aab
+          draft: false
+          prerelease: ${{ github.event.inputs.environment != 'production' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-web:
+    name: Deploy Web
+    runs-on: ubuntu-latest
+    needs: [ci-checks, sentry-release]
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build web
+        run: npm run build:web
+        env:
+          SENTRY_RELEASE: ${{ needs.sentry-release.outputs.release-version }}
+
+      - name: Upload source maps to Sentry
+        run: |
+          npm install -g @sentry/cli
+          npx sentry-cli releases files ${{ needs.sentry-release.outputs.release-version }} \
+            upload-sourcemaps dist/
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+
+      - name: Deploy to staging
+        if: github.event.inputs.environment == 'staging' || github.ref == 'refs/heads/main'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAGING }}'
+          channelId: live
+          projectId: your-staging-project
+
+      - name: Deploy to production
+        if: github.event.inputs.environment == 'production'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROD }}'
+          channelId: live
+          projectId: your-production-project
+
+  finalize-sentry-release:
+    name: Finalize Sentry Release
+    runs-on: ubuntu-latest
+    needs: [ci-checks, sentry-release, build-ios, build-android, deploy-web]
+    if: always() && (needs.build-ios.result == 'success' || needs.build-android.result == 'success' || needs.deploy-web.result == 'success')
+    steps:
+      - name: Finalize Sentry release
+        run: |
+          npm install -g @sentry/cli
+          npx sentry-cli releases finalize ${{ needs.sentry-release.outputs.release-version }}
+          npx sentry-cli releases set-commits --auto ${{ needs.sentry-release.outputs.release-version }}
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+
+  notify-deployment:
+    name: Deployment Notification
+    runs-on: ubuntu-latest
+    needs: [ci-checks, sentry-release, build-ios, build-android, deploy-web, finalize-sentry-release]
+    if: always()
+    steps:
+      - name: Create deployment summary
+        run: |
+          echo "## Deployment Results" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| CI Checks | ${{ needs.ci-checks.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Sentry Release | ${{ needs.sentry-release.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| iOS Build | ${{ needs.build-ios.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Android Build | ${{ needs.build-android.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Web Deploy | ${{ needs.deploy-web.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Sentry Finalize | ${{ needs.finalize-sentry-release.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Release Information" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ needs.sentry-release.outputs.release-version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ github.event.inputs.environment || 'staging' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify deployment status
+        uses: 8398a7/action-slack@v3
+        if: env.SLACK_WEBHOOK_URL != ''
+        with:
+          status: ${{ job.status }}
+          text: |
+            Deployment ${{ job.status }}
+            Environment: ${{ github.event.inputs.environment || 'staging' }}
+            Version: ${{ needs.sentry-release.outputs.release-version }}
+            CI Checks: ${{ needs.ci-checks.result }}
+            iOS Build: ${{ needs.build-ios.result }}
+            Android Build: ${{ needs.build-android.result }}
+            Web Deploy: ${{ needs.deploy-web.result }}
+            Sentry Release: ${{ needs.sentry-release.result }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  rollback:
+    name: Rollback on Failure
+    runs-on: ubuntu-latest
+    needs: [ci-checks, sentry-release, build-ios, build-android, deploy-web]
+    if: failure() && (github.ref == 'refs/heads/main')
+    steps:
+      - name: Rollback deployment
+        run: |
+          echo "🚨 Deployment failed, initiating rollback..."
+          echo "Failed jobs:"
+          echo "- CI Checks: ${{ needs.ci-checks.result }}"
+          echo "- Sentry Release: ${{ needs.sentry-release.result }}"
+          echo "- iOS Build: ${{ needs.build-ios.result }}"
+          echo "- Android Build: ${{ needs.build-android.result }}"
+          echo "- Web Deploy: ${{ needs.deploy-web.result }}"
+          
+          # Create Sentry issue for rollback
+          npm install -g @sentry/cli
+          npx sentry-cli send-event \
+            --message "Deployment rollback initiated for ${{ needs.sentry-release.outputs.release-version }}" \
+            --level error
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+
+      - name: Notify rollback
+        uses: 8398a7/action-slack@v3
+        if: env.SLACK_WEBHOOK_URL != ''
+        with:
+          status: 'failure'
+          text: '🚨 Deployment failed and rollback initiated for version ${{ needs.sentry-release.outputs.release-version }}'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

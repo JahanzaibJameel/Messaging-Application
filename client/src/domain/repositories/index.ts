@@ -2,5 +2,5 @@
  * Repository interfaces exports
  */
 
-export * from './ChatRepository';
-export * from './UserRepository';
+export * from "./ChatRepository";
+export * from "./UserRepository";

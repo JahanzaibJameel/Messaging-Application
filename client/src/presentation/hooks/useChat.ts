@@ -3,14 +3,14 @@
  * Provides chat operations for React components
  */
 
-import { useCallback, useEffect, useState } from 'react';
-import { useChatStore, useMessageStore, useUIStore, useAuthStore } from '../stores';
-import { chatRepository } from '../../data/repositories';
-import { logger } from '../../core/logger';
-import { ChatEntity } from '../../domain/entities/Chat';
-import { MessageEntity } from '../../domain/entities/Message';
-import type { Chat, GroupChat } from '../../domain/entities/Chat';
-import type { Message } from '../../domain/entities/Message';
+import { useCallback, useEffect, useState } from "react";
+import { useChatStore, useMessageStore, useUIStore, useAuthStore } from "../stores";
+import { chatRepository } from "../../data/repositories";
+import { logger } from "../../core/logger";
+import { ChatEntity } from "../../domain/entities/Chat";
+import { MessageEntity } from "../../domain/entities/Message";
+import type { Chat, GroupChat } from "../../domain/entities/Chat";
+import type { Message } from "../../domain/entities/Message";
 
 interface UseChatOptions {
   chatId?: string;
@@ -20,7 +20,7 @@ interface UseChatOptions {
 export function useChat(options: UseChatOptions = {}) {
   const { chatId, autoMarkAsRead = true } = options;
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const { currentUser } = useAuthStore();
   const { getChatById, updateChat, deleteChat } = useChatStore();
   const { getMessagesByChatId, addMessage, updateMessage, deleteMessage } = useMessageStore();
@@ -41,7 +41,7 @@ export function useChat(options: UseChatOptions = {}) {
           updateChat(chatId, chatData);
         }
       } catch (error) {
-        logger.error('Failed to load chat', error as Error, 'useChat');
+        logger.error("Failed to load chat", error as Error, "useChat");
       } finally {
         setIsLoading(false);
       }
@@ -58,99 +58,114 @@ export function useChat(options: UseChatOptions = {}) {
   }, [chatId, chat?.unreadCount, autoMarkAsRead]);
 
   // Send text message
-  const sendMessage = useCallback(async (text: string, replyTo?: string) => {
-    if (!chatId || !currentUser) return null;
+  const sendMessage = useCallback(
+    async (text: string, replyTo?: string) => {
+      if (!chatId || !currentUser) return null;
 
-    try {
-      const message = MessageEntity.create({
-        chatId,
-        senderId: currentUser.id,
-        type: 'text',
-        text,
-        replyTo,
-      });
+      try {
+        const message = MessageEntity.create({
+          chatId,
+          senderId: currentUser.id,
+          type: "text",
+          text,
+          replyTo,
+        });
 
-      // Add to local store immediately (optimistic)
-      addMessage(message);
+        // Add to local store immediately (optimistic)
+        addMessage(message);
 
-      // Save to repository
-      await chatRepository.saveMessage(message);
+        // Save to repository
+        await chatRepository.saveMessage(message);
 
-      // Update chat last message
-      const currentChat = getChatById(chatId);
-      if (currentChat) {
-        currentChat.updateLastMessage(message);
-        updateChat(chatId, currentChat);
+        // Update chat last message
+        const currentChat = getChatById(chatId);
+        if (currentChat) {
+          currentChat.updateLastMessage(message);
+          updateChat(chatId, currentChat);
+        }
+
+        return message;
+      } catch (error) {
+        showToast({
+          type: "error",
+          message: "Failed to send message",
+          duration: 3000,
+        });
+        return null;
       }
-
-      return message;
-    } catch (error) {
-      showToast({
-        type: 'error',
-        message: 'Failed to send message',
-        duration: 3000,
-      });
-      return null;
-    }
-  }, [chatId, currentUser, addMessage, updateChat, getChatById, showToast]);
+    },
+    [chatId, currentUser, addMessage, updateChat, getChatById, showToast]
+  );
 
   // Send media message
-  const sendMediaMessage = useCallback(async (
-    type: 'image' | 'video' | 'audio' | 'document',
-    uri: string,
-    metadata?: { width?: number; height?: number; duration?: number; fileName?: string; fileSize?: number }
-  ) => {
-    if (!chatId || !currentUser) return null;
+  const sendMediaMessage = useCallback(
+    async (
+      type: "image" | "video" | "audio" | "document",
+      uri: string,
+      metadata?: {
+        width?: number;
+        height?: number;
+        duration?: number;
+        fileName?: string;
+        fileSize?: number;
+      }
+    ) => {
+      if (!chatId || !currentUser) return null;
 
-    try {
-      const message = MessageEntity.create({
-        chatId,
-        senderId: currentUser.id,
-        type,
-        text: metadata?.fileName || '',
-        attachment: {
-          uri,
+      try {
+        const message = MessageEntity.create({
+          chatId,
+          senderId: currentUser.id,
           type,
-          width: metadata?.width,
-          height: metadata?.height,
-          duration: metadata?.duration,
-          fileName: metadata?.fileName,
-          fileSize: metadata?.fileSize,
-        },
-      });
+          text: metadata?.fileName || "",
+          attachment: {
+            uri,
+            type,
+            width: metadata?.width,
+            height: metadata?.height,
+            duration: metadata?.duration,
+            fileName: metadata?.fileName,
+            fileSize: metadata?.fileSize,
+          },
+        });
 
-      addMessage(message);
-      await chatRepository.saveMessage(message);
+        addMessage(message);
+        await chatRepository.saveMessage(message);
 
-      return message;
-    } catch (error) {
-      showToast({
-        type: 'error',
-        message: 'Failed to send media',
-        duration: 3000,
-      });
-      return null;
-    }
-  }, [chatId, currentUser, addMessage, showToast]);
+        return message;
+      } catch (error) {
+        showToast({
+          type: "error",
+          message: "Failed to send media",
+          duration: 3000,
+        });
+        return null;
+      }
+    },
+    [chatId, currentUser, addMessage, showToast]
+  );
 
   // Delete message
-  const deleteMessageById = useCallback(async (messageId: string) => {
-    try {
-      await chatRepository.deleteMessage(messageId);
-      deleteMessage(messageId);
-      showToast({
-        type: 'success',
-        message: 'Message deleted',
-        duration: 2000,
-      });
-    } catch (error) {
-      showToast({
-        type: 'error',
-        message: 'Failed to delete message',
-        duration: 3000,
-      });
-    }
-  }, [deleteMessage, showToast]);
+  const deleteMessageById = useCallback(
+    async (messageId: string) => {
+      try {
+        await chatRepository.deleteMessage(messageId);
+        deleteMessage(messageId);
+        showToast({
+          type: "success",
+          message: "Message deleted",
+          duration: 2000,
+        });
+      } catch (error) {
+        showToast({
+          type: "error",
+          message: "Failed to delete message",
+          duration: 3000,
+        });
+      }
+    },
+    [deleteMessage, showToast]
+  );
 
   // Mark as read
   const markAsRead = useCallback(async () => {
@@ -164,7 +179,7 @@ export function useChat(options: UseChatOptions = {}) {
         updateChat(chatId, currentChat);
       }
     } catch (error) {
-      logger.error('Failed to mark as read', error as Error, 'useChat');
+      logger.error("Failed to mark as read", error as Error, "useChat");
     }
   }, [chatId, updateChat, getChatById]);
 
@@ -185,8 +200,8 @@ export function useChat(options: UseChatOptions = {}) {
       updateChat(chatId, currentChat);
     } catch (error) {
       showToast({
-        type: 'error',
-        message: 'Failed to update chat',
+        type: "error",
+        message: "Failed to update chat",
         duration: 3000,
       });
     }
@@ -209,8 +224,8 @@ export function useChat(options: UseChatOptions = {}) {
       updateChat(chatId, currentChat);
     } catch (error) {
       showToast({
-        type: 'error',
-        message: 'Failed to update chat',
+        type: "error",
+        message: "Failed to update chat",
         duration: 3000,
       });
     }
@@ -233,8 +248,8 @@ export function useChat(options: UseChatOptions = {}) {
       updateChat(chatId, currentChat);
     } catch (error) {
       showToast({
-        type: 'error',
-        message: 'Failed to update chat',
+        type: "error",
+        message: "Failed to update chat",
         duration: 3000,
       });
     }
@@ -248,14 +263,14 @@ export function useChat(options: UseChatOptions = {}) {
       await chatRepository.delete(chatId);
       deleteChat(chatId);
       showToast({
-        type: 'success',
-        message: 'Chat deleted',
+        type: "success",
+        message: "Chat deleted",
         duration: 2000,
       });
     } catch (error) {
       showToast({
-        type: 'error',
-        message: 'Failed to delete chat',
+        type: "error",
+        message: "Failed to delete chat",
         duration: 3000,
       });
     }
@@ -268,14 +283,14 @@ export function useChat(options: UseChatOptions = {}) {
     try {
       await chatRepository.clearHistory(chatId);
       showToast({
-        type: 'success',
-        message: 'History cleared',
+        type: "success",
+        message: "History cleared",
         duration: 2000,
       });
     } catch (error) {
       showToast({
-        type: 'error',
-        message: 'Failed to clear history',
+        type: "error",
+        message: "Failed to clear history",
         duration: 3000,
       });
     }
@@ -306,91 +321,106 @@ export function useGroupChat(chatId: string) {
   const { showToast } = useUIStore();
 
   const chat = getChatById(chatId);
-  const isGroup = chat?.type === 'group';
+  const isGroup = chat?.type === "group";
   const groupChat = isGroup ? (chat as GroupChat) : null;
 
-  const addParticipant = useCallback(async (userId: string) => {
-    if (!groupChat) return;
+  const addParticipant = useCallback(
+    async (userId: string) => {
+      if (!groupChat) return;
 
-    try {
-      await chatRepository.addParticipant(chatId, userId);
-      groupChat.participantIds.push(userId);
-      updateChat(chatId, groupChat);
-    } catch (error) {
-      showToast({
-        type: 'error',
-        message: 'Failed to add participant',
-        duration: 3000,
-      });
-    }
-  }, [chatId, groupChat, updateChat, showToast]);
-
-  const removeParticipant = useCallback(async (userId: string) => {
-    if (!groupChat) return;
-
-    try {
-      await chatRepository.removeParticipant(chatId, userId);
-      groupChat.participantIds = groupChat.participantIds.filter(id => id !== userId);
-      groupChat.adminIds = groupChat.adminIds.filter(id => id !== userId);
-      updateChat(chatId, groupChat);
-    } catch (error) {
-      showToast({
-        type: 'error',
-        message: 'Failed to remove participant',
-        duration: 3000,
-      });
-    }
-  }, [chatId, groupChat, updateChat, showToast]);
-
-  const makeAdmin = useCallback(async (userId: string) => {
-    if (!groupChat) return;
-
-    try {
-      await chatRepository.makeAdmin(chatId, userId);
-      if (!groupChat.adminIds.includes(userId)) {
-        groupChat.adminIds.push(userId);
+      try {
+        await chatRepository.addParticipant(chatId, userId);
+        groupChat.participantIds.push(userId);
         updateChat(chatId, groupChat);
+      } catch (error) {
+        showToast({
+          type: "error",
+          message: "Failed to add participant",
+          duration: 3000,
+        });
       }
-    } catch (error) {
-      showToast({
-        type: 'error',
-        message: 'Failed to make admin',
-        duration: 3000,
-      });
-    }
-  }, [chatId, groupChat, updateChat, showToast]);
+    },
+    [chatId, groupChat, updateChat, showToast]
+  );
 
-  const removeAdmin = useCallback(async (userId: string) => {
-    if (!groupChat) return;
+  const removeParticipant = useCallback(
+    async (userId: string) => {
+      if (!groupChat) return;
 
-    try {
-      await chatRepository.removeAdmin(chatId, userId);
-      groupChat.adminIds = groupChat.adminIds.filter(id => id !== userId);
-      updateChat(chatId, groupChat);
-    } catch (error) {
-      showToast({
-        type: 'error',
-        message: 'Failed to remove admin',
-        duration: 3000,
-      });
-    }
-  }, [chatId, groupChat, updateChat, showToast]);
+      try {
+        await chatRepository.removeParticipant(chatId, userId);
+        groupChat.participantIds = groupChat.participantIds.filter((id) => id !== userId);
+        groupChat.adminIds = groupChat.adminIds.filter((id) => id !== userId);
+        updateChat(chatId, groupChat);
+      } catch (error) {
+        showToast({
+          type: "error",
+          message: "Failed to remove participant",
+          duration: 3000,
+        });
+      }
+    },
+    [chatId, groupChat, updateChat, showToast]
+  );
 
-  const updateGroupInfo = useCallback(async (updates: Partial<GroupChat>) => {
-    if (!groupChat) return;
+  const makeAdmin = useCallback(
+    async (userId: string) => {
+      if (!groupChat) return;
 
-    try {
-      await chatRepository.updateGroupInfo(chatId, updates);
-      Object.assign(groupChat, updates);
-      updateChat(chatId, groupChat);
-    } catch (error) {
-      showToast({
-        type: 'error',
-        message: 'Failed to update group info',
-        duration: 3000,
-      });
-    }
-  }, [chatId, groupChat, updateChat, showToast]);
+      try {
+        await chatRepository.makeAdmin(chatId, userId);
+        if (!groupChat.adminIds.includes(userId)) {
+          groupChat.adminIds.push(userId);
+          updateChat(chatId, groupChat);
+        }
+      } catch (error) {
+        showToast({
+          type: "error",
+          message: "Failed to make admin",
+          duration: 3000,
+        });
+      }
+    },
+    [chatId, groupChat, updateChat, showToast]
+  );
+
+  const removeAdmin = useCallback(
+    async (userId: string) => {
+      if (!groupChat) return;
+
+      try {
+        await chatRepository.removeAdmin(chatId, userId);
+        groupChat.adminIds = groupChat.adminIds.filter((id) => id !== userId);
+        updateChat(chatId, groupChat);
+      } catch (error) {
+        showToast({
+          type: "error",
+          message: "Failed to remove admin",
+          duration: 3000,
+        });
+      }
+    },
+    [chatId, groupChat, updateChat, showToast]
+  );
+
+  const updateGroupInfo = useCallback(
+    async (updates: Partial<GroupChat>) => {
+      if (!groupChat) return;
+
+      try {
+        await chatRepository.updateGroupInfo(chatId, updates);
+        Object.assign(groupChat, updates);
+        updateChat(chatId, groupChat);
+      } catch (error) {
+        showToast({
+          type: "error",
+          message: "Failed to update group info",
+          duration: 3000,
+        });
+      }
+    },
+    [chatId, groupChat, updateChat, showToast]
+  );
 
   return {
     groupChat,

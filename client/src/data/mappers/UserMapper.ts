@@ -3,8 +3,8 @@
  * Converts between domain entities and data models
  */
 
-import { UserEntity, type User } from '@/domain/entities/User';
-import type { UserModel } from '../models/MessageModel';
+import { UserEntity, type User } from "@/domain/entities/User";
+import type { UserModel } from "../models/MessageModel";
 
 export class UserMapper {
   static toDomain(model: UserModel): User {

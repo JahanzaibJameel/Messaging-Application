@@ -3,14 +3,14 @@
  * Manages offline-first synchronization with conflict resolution
  */
 
-import { useSyncStore, useMessageStore, useChatStore, useUIStore } from '../../presentation/stores';
-import { chatRepository } from '../../data/repositories';
-import { NetworkMonitor } from './NetworkMonitor';
-import { AppError } from '../errors';
-import { logger } from '../logger';
-import type { Message } from '../../domain/entities/Message';
+import { useSyncStore, useMessageStore, useChatStore, useUIStore } from "../../presentation/stores";
+import { chatRepository } from "../../data/repositories";
+import { NetworkMonitor } from "./NetworkMonitor";
+import { AppError } from "../errors";
+import { logger } from "../logger";
+import type { Message } from "../../domain/entities/Message";
 
-export type SyncStatus = 'idle' | 'syncing' | 'error' | 'offline';
+export type SyncStatus = "idle" | "syncing" | "error" | "offline";
 
 interface SyncEngineConfig {
   syncInterval: number;
@@ -28,7 +28,9 @@ export class SyncEngine {
   private config: SyncEngineConfig;
   private networkMonitor: NetworkMonitor;
   private syncTimer: ReturnType<typeof setInterval> | null = null;
+  private retryTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
   private isProcessing = false;
+  private isDestroyed = false;
 
   constructor(config: Partial<SyncEngineConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -39,12 +41,12 @@ export class SyncEngine {
   private setupNetworkListener(): void {
     this.networkMonitor.addListener((isOnline: boolean) => {
       const syncStore = useSyncStore.getState();
-      
+
       if (isOnline) {
-        syncStore.setStatus('idle');
+        syncStore.setStatus("idle");
         this.processQueue();
       } else {
-        syncStore.setStatus('offline');
+        syncStore.setStatus("offline");
       }
     });
   }
@@ -53,10 +55,16 @@ export class SyncEngine {
    * Start periodic sync
    */
   start(): void {
+    if (this.isDestroyed) {
+      return;
+    }
+
     this.stop();
-    
+
     this.syncTimer = setInterval(() => {
-      this.sync();
+      if (!this.isDestroyed) {
+        this.sync();
+      }
     }, this.config.syncInterval);
   }
 
@@ -68,6 +76,21 @@ export class SyncEngine {
       clearInterval(this.syncTimer);
       this.syncTimer = null;
     }
+
+    // Clear all retry timers
+    for (const timer of this.retryTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.retryTimers.clear();
+  }
+
+  /**
+   * Destroy sync engine and cleanup all resources
+   */
+  destroy(): void {
+    this.isDestroyed = true;
+    this.stop();
+    this.networkMonitor.removeAllListeners();
   }
 
   /**
@@ -102,7 +125,7 @@ export class SyncEngine {
     const messageStore = useMessageStore.getState();
     const uiStore = useUIStore.getState();
 
-    syncStore.setStatus('syncing');
+    syncStore.setStatus("syncing");
     uiStore.setSyncing(true);
 
     try {
@@ -110,54 +133,62 @@ export class SyncEngine {
 
       for (const queuedMessage of pendingMessages) {
         const message = messageStore.getMessageById(queuedMessage.messageId);
-        
+
         if (!message) {
           syncStore.removeFromQueue(queuedMessage.messageId);
           continue;
         }
 
         // Skip if already sent
-        if (message.status === 'sent' || message.status === 'read') {
+        if (message.status === "sent" || message.status === "read") {
           syncStore.removeFromQueue(queuedMessage.messageId);
           continue;
         }
 
         try {
           // Update status to sending
-          messageStore.updateMessage(message.id, { status: 'sending' });
+          messageStore.updateMessage(message.id, { status: "sending" });
 
           // Send via repository
           await chatRepository.saveMessage(message);
 
           // Mark as sent
-          messageStore.updateMessage(message.id, { 
-            status: 'sent',
+          messageStore.updateMessage(message.id, {
+            status: "sent",
             localOnly: false,
           });
 
           // Remove from queue
           syncStore.removeFromQueue(queuedMessage.messageId);
         } catch (error) {
-          logger.error(`Failed to sync message ${message.id}`, error as Error, 'SyncEngine');
-          
+          logger.error(`Failed to sync message ${message.id}`, error as Error, "SyncEngine");
+
           // Increment retry count
           const retryCount = queuedMessage.retryCount + 1;
-          
+
           if (retryCount >= this.config.retryAttempts) {
             // Mark as failed
             syncStore.markAsFailed(queuedMessage.messageId);
-            messageStore.updateMessage(message.id, { status: 'error' });
+            messageStore.updateMessage(message.id, { status: "error" });
+          } else {
+            // Schedule retry with timer
+            const timerId = setTimeout(() => {
+              if (!this.isDestroyed) {
+                syncStore.retryMessage(queuedMessage.messageId);
+              }
+            }, this.config.retryDelay);
+            this.retryTimers.set(queuedMessage.messageId, timerId);
           }
         }
       }
 
       // Update last sync time
       syncStore.setLastSync(new Date().toISOString());
-      syncStore.setStatus('idle');
+      syncStore.setStatus("idle");
     } catch (error) {
-      logger.error('Sync error', error as Error, 'SyncEngine');
-      syncStore.setStatus('error');
-      syncStore.setError(error instanceof Error ? error.message : 'Sync failed');
+      logger.error("Sync error", error as Error, "SyncEngine");
+      syncStore.setStatus("error");
+      syncStore.setError(error instanceof Error ? error.message : "Sync failed");
     } finally {
       this.isProcessing = false;
       uiStore.setSyncing(false);
@@ -176,11 +207,11 @@ export class SyncEngine {
     const chatStore = useChatStore.getState();
     const messageStore = useMessageStore.getState();
 
-    syncStore.setStatus('syncing');
+    syncStore.setStatus("syncing");
 
     try {
       const lastSync = syncStore.lastSyncAt;
-      
+
       // Sync with remote
       const result = await chatRepository.syncWithRemote(lastSync || undefined);
 
@@ -194,10 +225,10 @@ export class SyncEngine {
       }
 
       syncStore.setLastSync(result.timestamp);
-      syncStore.setStatus('idle');
+      syncStore.setStatus("idle");
     } catch (error) {
-      logger.error('Full sync error', error as Error, 'SyncEngine');
-      syncStore.setStatus('error');
+      logger.error("Full sync error", error as Error, "SyncEngine");
+      syncStore.setStatus("error");
     }
   }
 
@@ -242,7 +273,7 @@ export function getSyncEngine(config?: Partial<SyncEngineConfig>): SyncEngine {
 
 export function resetSyncEngine(): void {
   if (syncEngineInstance) {
-    syncEngineInstance.stop();
+    syncEngineInstance.destroy();
     syncEngineInstance = null;
   }
 }

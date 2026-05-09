@@ -3,9 +3,9 @@
  * Represents a conversation between users
  */
 
-import type { Message } from './Message';
+import type { Message } from "./Message";
 
-export type ChatType = 'private' | 'group';
+export type ChatType = "private" | "group";
 
 export interface Chat {
   id: string;
@@ -21,7 +21,7 @@ export interface Chat {
 }
 
 export interface GroupChat extends Chat {
-  type: 'group';
+  type: "group";
   name: string;
   description?: string;
   avatar?: string;
@@ -30,13 +30,13 @@ export interface GroupChat extends Chat {
 }
 
 export interface PrivateChat extends Chat {
-  type: 'private';
+  type: "private";
   participantId: string;
 }
 
 export interface ChatParticipant {
   userId: string;
-  role: 'admin' | 'member';
+  role: "admin" | "member";
   joinedAt: Date;
   lastReadMessageId?: string;
 }
@@ -70,7 +70,7 @@ export class ChatEntity implements Chat {
     const now = new Date();
     return new ChatEntity({
       id: `chat_${participantId}_${currentUserId}`,
-      type: 'private',
+      type: "private",
       participantIds: [currentUserId, participantId],
       unreadCount: 0,
       isPinned: false,
@@ -89,9 +89,9 @@ export class ChatEntity implements Chat {
     const now = new Date();
     return {
       id: `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      type: 'group',
+      type: "group",
       name,
-      description: '',
+      description: "",
       participantIds: [...new Set([createdBy, ...participantIds])],
       adminIds: [createdBy],
       createdBy,
@@ -150,16 +150,16 @@ export class ChatEntity implements Chat {
   }
 
   isGroup(): this is GroupChat {
-    return this.type === 'group';
+    return this.type === "group";
   }
 
   isPrivate(): this is PrivateChat {
-    return this.type === 'private';
+    return this.type === "private";
   }
 
   getOtherParticipantId(currentUserId: string): string | undefined {
     if (this.isPrivate()) {
-      return this.participantIds.find(id => id !== currentUserId);
+      return this.participantIds.find((id) => id !== currentUserId);
     }
     return undefined;
   }

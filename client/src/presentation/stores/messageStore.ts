@@ -3,16 +3,16 @@
  * Manages chat messages with normalized state
  */
 
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
-import { MMKV } from 'react-native-mmkv';
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
+import { MMKV } from "react-native-mmkv";
 
-import type { Message } from '@domain/entities/Message';
-import { MessageEntity } from '@domain/entities/Message';
-import type { MessageState, MessageActions, EntityState } from './types';
+import type { Message } from "@domain/entities/Message";
+import { MessageEntity } from "@domain/entities/Message";
+import type { MessageState, MessageActions, EntityState } from "./types";
 
-const storage = new MMKV({ id: 'message-storage' });
+const storage = new MMKV({ id: "message-storage" });
 
 const mmkvStorage = {
   getItem: (name: string): string | null => {
@@ -133,7 +133,7 @@ export const useMessageStore = create<MessageStore>()(
         },
       }),
       {
-        name: 'message-storage',
+        name: "message-storage",
         storage: createJSONStorage(() => mmkvStorage),
         partialize: (state) => ({
           messages: state.messages,

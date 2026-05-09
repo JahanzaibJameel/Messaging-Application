@@ -18,8 +18,8 @@ import { Avatar } from "@/components/Avatar";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing } from "@/constants/theme";
-import { useChatStore, useMessageStore, useUIStore } from "@presentation/stores";
-import { useAuthStore } from "@presentation/stores";
+import { useChatStore, useMessageStore, useUIStore, useAuthStore } from "@presentation/stores";
+
 import type { Message } from "@domain/entities/Message";
 import { MessageEntity } from "@domain/entities/Message";
 import type { GroupChat } from "@domain/entities/Chat";
@@ -38,7 +38,8 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   const { theme } = useTheme();
   const { currentUser } = useAuthStore();
   const { getChatById, markChatAsRead } = useChatStore();
-  const { getMessagesByChatId, addMessage, deleteMessage, setReplyingTo, replyingTo } = useMessageStore();
+  const { getMessagesByChatId, addMessage, deleteMessage, setReplyingTo, replyingTo } =
+    useMessageStore();
   const { showToast } = useUIStore();
 
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
@@ -46,7 +47,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
 
   const messages = getMessagesByChatId(chatId);
   const chat = getChatById(chatId);
-  const group = isGroup && chat?.type === 'group' ? chat as GroupChat : null;
+  const group = isGroup && chat?.type === "group" ? (chat as GroupChat) : null;
 
   // Reverse messages for inverted FlatList (newest first)
   const reversedMessages = useMemo(() => [...messages].reverse(), [messages]);
@@ -112,7 +113,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
       const message = MessageEntity.create({
         chatId,
         senderId: currentUser.id,
-        type: 'text',
+        type: "text",
         text,
         replyTo: replyingTo?.id,
       });
@@ -126,8 +127,8 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
       showToast({
-        type: 'success',
-        message: 'Message sent',
+        type: "success",
+        message: "Message sent",
         duration: 1500,
       });
     },
@@ -150,7 +151,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
     if (selectedMessage?.text) {
       Clipboard.setString(selectedMessage.text);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      showToast({ type: 'success', message: 'Copied to clipboard', duration: 1500 });
+      showToast({ type: "success", message: "Copied to clipboard", duration: 1500 });
     }
     setShowActionSheet(false);
   }, [selectedMessage, showToast]);
@@ -159,7 +160,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
     if (selectedMessage) {
       deleteMessage(selectedMessage.id);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      showToast({ type: 'success', message: 'Message deleted', duration: 1500 });
+      showToast({ type: "success", message: "Message deleted", duration: 1500 });
     }
     setShowActionSheet(false);
   }, [selectedMessage, deleteMessage, showToast]);

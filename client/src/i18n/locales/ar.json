@@ -1,0 +1,54 @@
+{
+  "chatList": {
+    "title": "المحادثات",
+    "empty": "لا توجد محادثات بعد",
+    "search": "بحث عن المحادثات",
+    "unreadCount": "{{count}} غير مقروء",
+    "unreadCount_plural": "{{count}} غير مقروءة"
+  },
+  "chat": {
+    "inputPlaceholder": "اكتب رسالة...",
+    "send": "إرسال",
+    "back": "رجوع",
+    "messages": "الرسائل",
+    "messageFrom": "رسالة من"
+  },
+  "time": {
+    "justNow": "الآن",
+    "minutesAgo": "قبل دقيقة",
+    "minutesAgo_plural": "قبل {{count}} دقائق",
+    "hoursAgo": "قبل ساعة",
+    "hoursAgo_plural": "قبل {{count}} ساعات",
+    "daysAgo": "قبل يوم",
+    "daysAgo_plural": "قبل {{count}} أيام",
+    "weeksAgo": "قبل أسبوع",
+    "weeksAgo_plural": "قبل {{count}} أسابيع",
+    "monthsAgo": "قبل شهر",
+    "monthsAgo_plural": "قبل {{count}} أشهر"
+  },
+  "general": {
+    "loading": "جاري التحميل...",
+    "error": "حدث خطأ ما",
+    "retry": "إعادة المحاولة",
+    "cancel": "إلغاء",
+    "ok": "موافق",
+    "yes": "نعم",
+    "no": "لا"
+  },
+  "accessibility": {
+    "chatItem": "{{name}}، محادثة{{unread}}",
+    "chatItemWithUnread": "{{name}}، محادثة، {{count}} رسائل غير مقروءة",
+    "unreadBadge": "{{count}} رسائل غير مقروءة",
+    "sendButton": "إرسال رسالة",
+    "sendButtonHint": "يرسل الرسالة المكتوبة",
+    "messageInput": "مربع إدخال الرسالة",
+    "messageInputHint": "اكتب رسالة لإرسالها",
+    "backButton": "العودة إلى قائمة المحادثات",
+    "backButtonHint": "يعود إلى شاشة قائمة المحادثات",
+    "messageBubble": "رسالة من {{sender}}: {{text}}",
+    "chatName": "محادثة مع {{name}}",
+    "loadingChat": "جاري تحميل المحادثة",
+    "chatList": "قائمة المحادثات",
+    "messages": "الرسائل"
+  }
+}

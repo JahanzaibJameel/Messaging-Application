@@ -3,9 +3,9 @@
  * Converts between domain entities and data models
  */
 
-import { ChatEntity, type Chat, type GroupChat } from '@/domain/entities/Chat';
-import type { ChatModel } from '../models/MessageModel';
-import { MessageMapper } from './MessageMapper';
+import { ChatEntity, type Chat, type GroupChat } from "@/domain/entities/Chat";
+import type { ChatModel } from "../models/MessageModel";
+import { MessageMapper } from "./MessageMapper";
 
 export class ChatMapper {
   static toDomain(model: ChatModel): Chat {
@@ -22,15 +22,15 @@ export class ChatMapper {
       updatedAt: new Date(model.updatedAt),
     };
 
-    if (model.type === 'group') {
+    if (model.type === "group") {
       return {
         ...baseChat,
-        type: 'group',
-        name: model.name || 'Unnamed Group',
+        type: "group",
+        name: model.name || "Unnamed Group",
         description: model.description,
         avatar: model.avatar,
         adminIds: model.adminIds || [],
-        createdBy: model.createdBy || '',
+        createdBy: model.createdBy || "",
       } as GroupChat;
     }
 
@@ -51,7 +51,7 @@ export class ChatMapper {
       updatedAt: domain.updatedAt.toISOString(),
     };
 
-    if (domain.type === 'group') {
+    if (domain.type === "group") {
       const groupChat = domain as GroupChat;
       return {
         ...baseModel,

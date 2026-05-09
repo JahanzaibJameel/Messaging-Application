@@ -39,7 +39,26 @@
       "buildNumber": "1",
       "infoPlist": {
         "NSLocalNetworkUsageDescription": "Allow ChatApp to discover devices on your local network",
-        "NSBonjourServiceTypes": ["_http._tcp", "_ws._tcp"]
+        "NSBonjourServiceTypes": ["_http._tcp", "_ws._tcp"],
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false,
+          "NSAllowsLocalNetworking": true,
+          "NSExceptionDomains": {
+            "localhost": {
+              "NSExceptionAllowsInsecureHTTPLoads": true,
+              "NSExceptionMinimumTLSVersion": "TLSv1.0"
+            },
+            "127.0.0.1": {
+              "NSExceptionAllowsInsecureHTTPLoads": true,
+              "NSExceptionMinimumTLSVersion": "TLSv1.0"
+            },
+            "10.0.2.2": {
+              "NSExceptionAllowsInsecureHTTPLoads": true,
+              "NSExceptionMinimumTLSVersion": "TLSv1.0"
+            }
+          },
+          "NSExceptionRequiresForwardSecrecy": false
+        }
       }
     },
     "android": {

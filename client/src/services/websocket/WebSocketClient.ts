@@ -3,11 +3,11 @@
  * Manages WebSocket connection with automatic reconnection
  */
 
-import { AppError } from '../../core/errors';
-import { logger } from '../../core/logger';
-import { useAuthStore, useUIStore } from '../../presentation/stores';
+import { AppError } from "../../core/errors";
+import { logger } from "../../core/logger";
+import { useAuthStore, useUIStore } from "../../presentation/stores";
 
-export type WebSocketStatus = 'connecting' | 'connected' | 'disconnected' | 'reconnecting';
+export type WebSocketStatus = "connecting" | "connected" | "disconnected" | "reconnecting";
 
 export interface WebSocketConfig {
   url: string;
@@ -37,9 +37,9 @@ export class WebSocketClient {
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   private messageHandlers: Map<string, Set<(payload: unknown) => void>> = new Map();
   private statusHandlers: Set<(status: WebSocketStatus) => void> = new Set();
-  private status: WebSocketStatus = 'disconnected';
+  private status: WebSocketStatus = "disconnected";
 
-  constructor(config: Omit<WebSocketConfig, 'authToken'> & { authToken?: string }) {
+  constructor(config: Omit<WebSocketConfig, "authToken"> & { authToken?: string }) {
     this.config = { ...DEFAULT_CONFIG, ...config } as WebSocketConfig;
   }
 
@@ -49,7 +49,7 @@ export class WebSocketClient {
       return;
     }
 
-    this.setStatus('connecting');
+    this.setStatus("connecting");
 
     try {
       const url = this.config.authToken
@@ -59,13 +59,13 @@ export class WebSocketClient {
       this.ws = new WebSocket(url);
 
       this.ws.onopen = () => {
-        this.setStatus('connected');
+        this.setStatus("connected");
         this.reconnectAttempts = 0;
         this.startHeartbeat();
-        
+
         useUIStore.getState().showToast({
-          type: 'success',
-          message: 'Connected to server',
+          type: "success",
+          message: "Connected to server",
           duration: 2000,
         });
       };
@@ -76,20 +76,20 @@ export class WebSocketClient {
 
       this.ws.onclose = (event) => {
         this.stopHeartbeat();
-        this.setStatus('disconnected');
-        
+        this.setStatus("disconnected");
+
         if (!event.wasClean) {
           this.scheduleReconnect();
         }
       };
 
       this.ws.onerror = (error) => {
-        logger.error('WebSocket error', error as Error, 'WebSocketClient');
-        this.setStatus('disconnected');
+        logger.error("WebSocket error", error as Error, "WebSocketClient");
+        this.setStatus("disconnected");
       };
     } catch (error) {
-      logger.error('WebSocket connection error', error as Error, 'WebSocketClient');
-      this.setStatus('disconnected');
+      logger.error("WebSocket connection error", error as Error, "WebSocketClient");
+      this.setStatus("disconnected");
       this.scheduleReconnect();
     }
   }
@@ -97,29 +97,29 @@ export class WebSocketClient {
   disconnect(): void {
     this.stopHeartbeat();
     this.clearReconnectTimer();
-    
+
     if (this.ws) {
-      this.ws.close(1000, 'Client disconnect');
+      this.ws.close(1000, "Client disconnect");
       this.ws = null;
     }
-    
-    this.setStatus('disconnected');
+
+    this.setStatus("disconnected");
   }
 
   // Reconnection Logic
   private scheduleReconnect(): void {
     const maxAttempts = this.config.maxReconnectAttempts ?? 10;
     if (this.reconnectAttempts >= maxAttempts) {
-      logger.error('Max reconnection attempts reached', undefined, 'WebSocketClient');
+      logger.error("Max reconnection attempts reached", undefined, "WebSocketClient");
       useUIStore.getState().showToast({
-        type: 'error',
-        message: 'Connection lost. Please check your internet connection.',
+        type: "error",
+        message: "Connection lost. Please check your internet connection.",
         duration: 5000,
       });
       return;
     }
 
-    this.setStatus('reconnecting');
+    this.setStatus("reconnecting");
     this.reconnectAttempts++;
 
     const reconnectInterval = this.config.reconnectInterval ?? 3000;
@@ -128,7 +128,10 @@ export class WebSocketClient {
       30000 // Max 30 seconds
     );
 
-    logger.info(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`, 'WebSocketClient');
+    logger.info(
+      `Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`,
+      "WebSocketClient"
+    );
 
     this.reconnectTimer = setTimeout(() => {
       this.connect();
@@ -145,9 +148,9 @@ export class WebSocketClient {
   // Heartbeat
   private startHeartbeat(): void {
     this.stopHeartbeat();
-    
+
     this.heartbeatTimer = setInterval(() => {
-      this.send({ type: 'ping', payload: {}, timestamp: new Date().toISOString() });
+      this.send({ type: "ping", payload: {}, timestamp: new Date().toISOString() });
     }, this.config.heartbeatInterval);
   }
 
@@ -162,9 +165,9 @@ export class WebSocketClient {
   private handleMessage(data: string): void {
     try {
       const message: WebSocketMessage = JSON.parse(data);
-      
+
       // Handle pong
-      if (message.type === 'pong') {
+      if (message.type === "pong") {
         return;
       }
 
@@ -175,18 +178,18 @@ export class WebSocketClient {
           try {
             handler(message.payload);
           } catch (error) {
-            logger.error(`Handler error for ${message.type}`, error as Error, 'WebSocketClient');
+            logger.error(`Handler error for ${message.type}`, error as Error, "WebSocketClient");
           }
         });
       }
     } catch (error) {
-      logger.error('Failed to parse message', error as Error, 'WebSocketClient');
+      logger.error("Failed to parse message", error as Error, "WebSocketClient");
     }
   }
 
   send(message: WebSocketMessage): boolean {
     if (this.ws?.readyState !== WebSocket.OPEN) {
-      logger.warn('Cannot send, not connected', 'WebSocketClient');
+      logger.warn("Cannot send, not connected", "WebSocketClient");
       return false;
     }
 
@@ -194,7 +197,7 @@ export class WebSocketClient {
       this.ws.send(JSON.stringify(message));
       return true;
     } catch (error) {
-      logger.error('Send error', error as Error, 'WebSocketClient');
+      logger.error("Send error", error as Error, "WebSocketClient");
       return false;
     }
   }
@@ -204,7 +207,7 @@ export class WebSocketClient {
     if (!this.messageHandlers.has(type)) {
       this.messageHandlers.set(type, new Set());
     }
-    
+
     this.messageHandlers.get(type)!.add(handler);
 
     // Return unsubscribe function
@@ -247,11 +250,13 @@ export class WebSocketClient {
 // Singleton instance
 let wsClientInstance: WebSocketClient | null = null;
 
-export function getWebSocketClient(config?: Partial<Omit<WebSocketConfig, 'authToken'>>): WebSocketClient {
+export function getWebSocketClient(
+  config?: Partial<Omit<WebSocketConfig, "authToken">>
+): WebSocketClient {
   if (!wsClientInstance) {
-    const wsUrl = process.env.EXPO_PUBLIC_WS_URL || 'wss://api.chatapp.com/ws';
+    const wsUrl = process.env.EXPO_PUBLIC_WS_URL || "wss://api.chatapp.com/ws";
     const { currentUser } = useAuthStore.getState();
-    
+
     wsClientInstance = new WebSocketClient({
       url: wsUrl,
       authToken: currentUser?.id,

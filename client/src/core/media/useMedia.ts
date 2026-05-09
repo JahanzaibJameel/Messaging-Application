@@ -3,11 +3,15 @@
  * Provides media handling functionality for React components
  */
 
-import { useState, useCallback, useRef } from 'react';
-import { MediaPicker, type PickerOptions } from './MediaPicker';
-import { MediaUploader, type UploadProgress, type UploadResult } from './MediaUploader';
-import { MediaProcessor, type ProcessedMedia, type CompressionOptions } from './MediaProcessor';
-import type { MediaType } from './MediaProcessor';
+import { useState, useCallback, useRef } from "react";
+import { MediaPicker, type PickerOptions } from "./MediaPicker";
+import { MediaUploader, type UploadProgress, type UploadResult } from "./MediaUploader";
+import {
+  MediaProcessor,
+  type ProcessedMedia,
+  type CompressionOptions,
+  MediaType,
+} from "./MediaProcessor";
 
 interface UseMediaOptions {
   onUploadProgress?: (progress: UploadProgress) => void;
@@ -72,22 +76,25 @@ export function useMedia(options: UseMediaOptions = {}) {
   /**
    * Pick from library
    */
-  const pickFromLibrary = useCallback(async (opts?: PickerOptions) => {
-    setProcessing(true);
-    setError(null);
+  const pickFromLibrary = useCallback(
+    async (opts?: PickerOptions) => {
+      setProcessing(true);
+      setError(null);
 
-    try {
-      const media = await MediaPicker.pickFromLibrary(opts);
-      return media;
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      setError(err);
-      onError?.(err);
-      return [];
-    } finally {
-      setProcessing(false);
-    }
-  }, [onError, setProcessing, setError]);
+      try {
+        const media = await MediaPicker.pickFromLibrary(opts);
+        return media;
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        setError(err);
+        onError?.(err);
+        return [];
+      } finally {
+        setProcessing(false);
+      }
+    },
+    [onError, setProcessing, setError]
+  );
 
   /**
    * Pick document
@@ -132,96 +139,108 @@ export function useMedia(options: UseMediaOptions = {}) {
   /**
    * Process image
    */
-  const processImage = useCallback(async (uri: string, opts?: CompressionOptions) => {
-    setProcessing(true);
-    setError(null);
+  const processImage = useCallback(
+    async (uri: string, opts?: CompressionOptions) => {
+      setProcessing(true);
+      setError(null);
 
-    try {
-      const processed = await MediaProcessor.processImage(uri, opts);
-      return processed;
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      setError(err);
-      onError?.(err);
-      return null;
-    } finally {
-      setProcessing(false);
-    }
-  }, [onError, setProcessing, setError]);
+      try {
+        const processed = await MediaProcessor.processImage(uri, opts);
+        return processed;
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        setError(err);
+        onError?.(err);
+        return null;
+      } finally {
+        setProcessing(false);
+      }
+    },
+    [onError, setProcessing, setError]
+  );
 
   /**
    * Upload media
    */
-  const upload = useCallback(async (media: ProcessedMedia): Promise<UploadResult | null> => {
-    setUploading(true);
-    setProgress(null);
-    setError(null);
+  const upload = useCallback(
+    async (media: ProcessedMedia): Promise<UploadResult | null> => {
+      setUploading(true);
+      setProgress(null);
+      setError(null);
 
-    abortControllerRef.current = new AbortController();
+      abortControllerRef.current = new AbortController();
 
-    try {
-      const uploader = new MediaUploader();
-      const result = await uploader.upload(media, (progress) => {
-        setProgress(progress);
-        onUploadProgress?.(progress);
-      });
+      try {
+        const uploader = new MediaUploader();
+        const result = await uploader.upload(media, (progress) => {
+          setProgress(progress);
+          onUploadProgress?.(progress);
+        });
 
-      onUploadComplete?.(result);
-      return result;
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      setError(err);
-      onError?.(err);
-      return null;
-    } finally {
-      setUploading(false);
-      abortControllerRef.current = null;
-    }
-  }, [onUploadProgress, onUploadComplete, onError, setUploading, setProgress, setError]);
+        onUploadComplete?.(result);
+        return result;
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        setError(err);
+        onError?.(err);
+        return null;
+      } finally {
+        setUploading(false);
+        abortControllerRef.current = null;
+      }
+    },
+    [onUploadProgress, onUploadComplete, onError, setUploading, setProgress, setError]
+  );
 
   /**
    * Upload multiple media files
    */
-  const uploadMultiple = useCallback(async (
-    mediaItems: ProcessedMedia[],
-    onItemProgress?: (index: number, progress: UploadProgress) => void
-  ): Promise<UploadResult[]> => {
-    setUploading(true);
-    setError(null);
+  const uploadMultiple = useCallback(
+    async (
+      mediaItems: ProcessedMedia[],
+      onItemProgress?: (index: number, progress: UploadProgress) => void
+    ): Promise<UploadResult[]> => {
+      setUploading(true);
+      setError(null);
 
-    const results: UploadResult[] = [];
+      const results: UploadResult[] = [];
 
-    try {
-      const uploader = new MediaUploader();
+      try {
+        const uploader = new MediaUploader();
 
-      for (let i = 0; i < mediaItems.length; i++) {
-        const result = await uploader.upload(mediaItems[i], (progress) => {
-          setProgress(progress);
-          onItemProgress?.(i, progress);
-        });
-        results.push(result);
+        for (let i = 0; i < mediaItems.length; i++) {
+          const result = await uploader.upload(mediaItems[i], (progress) => {
+            setProgress(progress);
+            onItemProgress?.(i, progress);
+          });
+          results.push(result);
+        }
+
+        return results;
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        setError(err);
+        onError?.(err);
+        return results;
+      } finally {
+        setUploading(false);
       }
-
-      return results;
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      setError(err);
-      onError?.(err);
-      return results;
-    } finally {
-      setUploading(false);
-    }
-  }, [onError, setUploading, setProgress, setError]);
+    },
+    [onError, setUploading, setProgress, setError]
+  );
 
   /**
    * Pick and upload in one step
    */
-  const pickAndUpload = useCallback(async (opts?: PickerOptions): Promise<UploadResult | null> => {
-    const media = await pickFromLibrary(opts);
-    if (media.length === 0) return null;
+  const pickAndUpload = useCallback(
+    async (opts?: PickerOptions): Promise<UploadResult | null> => {
+      const media = await pickFromLibrary(opts);
+      if (media.length === 0) return null;
 
-    return upload(media[0]);
-  }, [pickFromLibrary, upload]);
+      return upload(media[0]);
+    },
+    [pickFromLibrary, upload]
+  );
 
   /**
    * Cancel current upload
@@ -268,34 +287,37 @@ export function useMedia(options: UseMediaOptions = {}) {
 export function useChatMedia(chatId: string) {
   const media = useMedia();
 
-  const sendMediaMessage = useCallback(async (type: MediaType, uri: string) => {
-    // Process media
-    let processed: ProcessedMedia | null = null;
+  const sendMediaMessage = useCallback(
+    async (type: MediaType, uri: string) => {
+      // Process media
+      let processed: ProcessedMedia | null = null;
 
-    switch (type) {
-      case 'image':
-        processed = await media.processImage(uri);
-        break;
-      case 'video':
-        processed = await MediaProcessor.processVideo(uri);
-        break;
-      case 'audio':
-        processed = await MediaProcessor.processAudio(uri);
-        break;
-      case 'document':
-        // Need mime type for documents
-        processed = null;
-        break;
-    }
+      switch (type) {
+        case "image":
+          processed = await media.processImage(uri);
+          break;
+        case "video":
+          processed = await MediaProcessor.processVideo(uri);
+          break;
+        case "audio":
+          processed = await MediaProcessor.processAudio(uri);
+          break;
+        case "document":
+          // Need mime type for documents
+          processed = null;
+          break;
+      }
 
-    if (!processed) {
-      return null;
-    }
+      if (!processed) {
+        return null;
+      }
 
-    // Upload
-    const uploadResult = await media.upload(processed);
-    return uploadResult;
-  }, [media]);
+      // Upload
+      const uploadResult = await media.upload(processed);
+      return uploadResult;
+    },
+    [media]
+  );
 
   return {
     ...media,
