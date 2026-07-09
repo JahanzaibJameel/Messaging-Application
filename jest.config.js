@@ -29,11 +29,14 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/client/$1',
     '^~/(.*)$': '<rootDir>/client/$1',
+    '^react-native-mmkv$': '<rootDir>/client/src/test-utils/mocks/mmkvMock.ts',
+    '^react-native-keychain$': '<rootDir>/client/src/test-utils/mocks/keychainMock.ts',
+    '^react-native-device-info$': '<rootDir>/client/src/test-utils/mocks/deviceInfoMock.ts',
   },
   transformIgnorePatterns: [
     'node_modules/(?!(jest-)?react-native|react-clone|@react-native|expo|@expo|@react-navigation|zustand|immer)',
   ],
-  testEnvironment: 'node',
+  testEnvironment: 'jsdom',
   resetMocks: false,
   restoreMocks: false,
   clearMocks: false,

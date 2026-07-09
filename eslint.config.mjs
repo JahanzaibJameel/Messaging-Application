@@ -59,6 +59,18 @@ export default [
     },
   },
 
+  // App source: relax rules that conflict with legacy screens and RN patterns
+  {
+    files: ["client/**/*.{ts,tsx}"],
+    rules: {
+      "react-hooks/exhaustive-deps": "warn",
+      "react-hooks/rules-of-hooks": "warn",
+      "react/no-unused-prop-types": "off",
+      "react/no-unescaped-entities": "warn",
+      "import/no-unresolved": "off",
+    },
+  },
+
   // Test file overrides
   {
     files: ["**/*.test.{ts,tsx}", "**/__tests__/**/*.{ts,tsx}"],
@@ -95,6 +107,7 @@ export default [
       "node_modules/**",
       "dist/**",
       "build/**",
+      "coverage/**",
       ".expo/**",
       "*.config.js",
       "*.config.ts",

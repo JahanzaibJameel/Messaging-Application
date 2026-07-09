@@ -28,27 +28,24 @@
     "module": "ESNext",
     "jsx": "react-jsx",
     "paths": {
-      "@/*": ["./client/src/*"],
+      "@/*": ["./client/src/*", "./client/*"],
       "@domain/*": ["./client/src/domain/*"],
       "@data/*": ["./client/src/data/*"],
       "@core/*": ["./client/src/core/*"],
       "@presentation/*": ["./client/src/presentation/*"],
       "@services/*": ["./client/src/services/*"],
       "@shared/*": ["./client/src/shared/*"],
-      "@legacy/*": ["./client/*"],
       "@components/*": ["./client/components/*"],
-      "@screens/*": ["./client/screens/*"],
       "@navigation/*": ["./client/navigation/*"],
       "@hooks/*": ["./client/hooks/*"],
-      "@store/*": ["./client/store/*"],
       "@utils/*": ["./client/utils/*"],
       "@constants/*": ["./client/constants/*"],
       "@types/*": ["./client/types/*"],
       "@theme/*": ["./client/theme/*"],
       "@shared-root/*": ["./shared/*"]
     },
-    "types": ["node", "react", "react-native"]
+    "types": ["node", "react", "react-native", "jest"]
   },
   "include": ["**/*.ts", "**/*.tsx", "**/*.d.ts"],
-  "exclude": ["node_modules", "build", "dist", "**/*.test.ts", "**/*.test.tsx", ".expo"]
+  "exclude": ["node_modules", "build", "dist", ".expo"]
 }
