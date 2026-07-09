@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Unit tests for LocalStorageDataSource
  * Testing local data storage operations

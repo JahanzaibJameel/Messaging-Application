@@ -82,7 +82,10 @@ export class UserRepositoryImpl implements UserRepository {
 
       // Sync with remote
       try {
-        await this.remoteDataSource.updateProfile(userId, profile);
+        await this.remoteDataSource.updateProfile(
+          userId,
+          profile as Parameters<RemoteApiDataSource["updateProfile"]>[1]
+        );
       } catch {
         // Will be synced later
       }

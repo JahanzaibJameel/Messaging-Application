@@ -62,6 +62,12 @@ export interface ChatActions {
 // Message Store
 export interface MessageState {
   messages: EntityState<Message>;
+  /**
+   * Secondary index: chatId → ordered array of messageIds.
+   * Maintained atomically alongside `messages` so that
+   * getMessagesByChatId is O(1) instead of O(n).
+   */
+  messagesByChatId: Record<string, string[]>;
   typingUsers: Record<string, boolean>;
   replyingTo: Message | null;
   hasMoreMessages: Record<string, boolean>;
@@ -70,8 +76,10 @@ export interface MessageState {
 export interface MessageActions {
   setMessages: (chatId: string, messages: Message[]) => void;
   addMessage: (message: Message) => void;
+  addMessages: (messages: Message[]) => void;
   updateMessage: (messageId: string, updates: Partial<Message>) => void;
   deleteMessage: (messageId: string) => void;
+  clearMessages: () => void;
   setTyping: (chatId: string, userId: string, isTyping: boolean) => void;
   setReplyingTo: (message: Message | null) => void;
   addReaction: (messageId: string, userId: string, emoji: string) => void;
@@ -115,6 +123,14 @@ export interface UIState {
   isSyncing: boolean;
   searchQuery: string;
   showSearch: boolean;
+  typingIndicators?: Record<
+    string,
+    {
+      users: any[];
+      text: string;
+      isAnyoneTyping: boolean;
+    }
+  >;
 }
 
 export interface UIActions {
@@ -124,6 +140,10 @@ export interface UIActions {
   setSyncing: (value: boolean) => void;
   setSearchQuery: (query: string) => void;
   setShowSearch: (value: boolean) => void;
+  setTypingIndicators: (
+    chatId: string,
+    indicators: { users: any[]; text: string; isAnyoneTyping: boolean }
+  ) => void;
 }
 
 // Sync Store

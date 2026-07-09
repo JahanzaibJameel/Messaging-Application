@@ -1,1 +1,302 @@
-/**\n * Secure Transport Module\n * Provides SSL-pinned HTTP and WebSocket connections\n */\n\nimport { SslPinning } from 'react-native-ssl-pinning';\nimport { getSSLPinningConfig, shouldUseSSLPinning, getCertificateHashForDomain } from './sslPinningConfig';\nimport { captureException, addUserActionBreadcrumb } from '../monitoring/sentry';\n\n/**\n * Secure HTTP request options\n */\nexport interface SecureRequestOptions {\n  url: string;\n  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';\n  headers?: Record<string, string>;\n  body?: string;\n  timeout?: number;\n  certificateHashes?: string[];\n}\n\n/**\n * Secure HTTP response\n */\nexport interface SecureResponse {\n  status: number;\n  statusText: string;\n  headers: Record<string, string>;\n  data: string;\n}\n\n/**\n * WebSocket connection options\n */\nexport interface SecureWebSocketOptions {\n  url: string;\n  protocols?: string[];\n  certificateHashes?: string[];\n  timeout?: number;\n}\n\n/**\n * Make a secure HTTP request with SSL pinning\n */\nexport const secureFetch = async (options: SecureRequestOptions): Promise<SecureResponse> => {\n  try {\n    addUserActionBreadcrumb('secure_fetch_attempt', {\n      url: options.url,\n      method: options.method || 'GET',\n      hasBody: !!options.body,\n    });\n\n    const config = getSSLPinningConfig();\n    const usePinning = shouldUseSSLPinning(new URL(options.url).hostname);\n    \n    const requestOptions: any = {\n      url: options.url,\n      method: options.method || 'GET',\n      headers: {\n        'Content-Type': 'application/json',\n        ...options.headers,\n      },\n      timeout: options.timeout || config.timeout,\n    };\n\n    if (options.body) {\n      requestOptions.body = options.body;\n    }\n\n    // Add SSL pinning if enabled and applicable\n    if (usePinning) {\n      const certHashes = options.certificateHashes || getCertificateHashForDomain(new URL(options.url).hostname);\n      \n      if (certHashes.length > 0) {\n        requestOptions.sslPinning = {\n          certs: certHashes,\n        };\n        \n        addUserActionBreadcrumb('ssl_pinning_enabled', {\n          url: options.url,\n          certCount: certHashes.length,\n        });\n      } else {\n        addUserActionBreadcrumb('ssl_pinning_no_certs', {\n          url: options.url,\n        });\n      }\n    }\n\n    // Make the secure request\n    const response = await SslPinning.fetch(requestOptions);\n    \n    const secureResponse: SecureResponse = {\n      status: response.status || 200,\n      statusText: response.statusText || 'OK',\n      headers: response.headers || {},\n      data: response.data || '',\n    };\n\n    addUserActionBreadcrumb('secure_fetch_success', {\n      url: options.url,\n      status: secureResponse.status,\n      responseSize: secureResponse.data.length,\n    });\n\n    return secureResponse;\n  } catch (error) {\n    addUserActionBreadcrumb('secure_fetch_error', {\n      url: options.url,\n      error: (error as Error).message,\n      errorType: (error as any).code || 'unknown',\n    });\n\n    captureException(error as Error, {\n      action: 'secure_fetch',\n      screen: 'security_module',\n      additionalData: {\n        url: options.url,\n        method: options.method || 'GET',\n      },\n    });\n\n    throw error;\n  }\n};\n\n/**\n * Create a secure WebSocket connection with SSL pinning\n */\nexport const createSecureWebSocket = (options: SecureWebSocketOptions): Promise<WebSocket> => {\n  return new Promise((resolve, reject) => {\n    try {\n      addUserActionBreadcrumb('secure_websocket_attempt', {\n        url: options.url,\n        protocols: options.protocols,\n      });\n\n      const config = getSSLPinningConfig();\n      const usePinning = shouldUseSSLPinning(new URL(options.url).hostname);\n      \n      let ws: WebSocket;\n      \n      // For React Native, we'll use the standard WebSocket API\n      // SSL pinning for WebSockets requires native module integration\n      // This is a placeholder implementation that would need native bridge\n      \n      try {\n        ws = new WebSocket(options.url, options.protocols);\n        \n        // Set up timeout\n        const timeout = options.timeout || config.timeout;\n        const timeoutId = setTimeout(() => {\n          if (ws.readyState === WebSocket.CONNECTING) {\n            ws.close();\n            reject(new Error('WebSocket connection timeout'));\n          }\n        }, timeout);\n        \n        ws.onopen = () => {\n          clearTimeout(timeoutId);\n          addUserActionBreadcrumb('secure_websocket_connected', {\n            url: options.url,\n          });\n          resolve(ws);\n        };\n        \n        ws.onerror = (error) => {\n          clearTimeout(timeoutId);\n          addUserActionBreadcrumb('secure_websocket_error', {\n            url: options.url,\n            error: String(error),\n          });\n          \n          captureException(new Error('WebSocket connection failed'), {\n            action: 'secure_websocket',\n            screen: 'security_module',\n            additionalData: {\n              url: options.url,\n            },\n          });\n          \n          reject(error);\n        };\n        \n        ws.onclose = (event) => {\n          clearTimeout(timeoutId);\n          addUserActionBreadcrumb('secure_websocket_closed', {\n            url: options.url,\n            code: event.code,\n            reason: event.reason,\n          });\n        };\n        \n      } catch (error) {\n        addUserActionBreadcrumb('secure_websocket_creation_error', {\n          url: options.url,\n          error: (error as Error).message,\n        });\n        \n        captureException(error as Error, {\n          action: 'secure_websocket_creation',\n          screen: 'security_module',\n          additionalData: {\n            url: options.url,\n          },\n        });\n        \n        reject(error);\n      }\n      \n    } catch (error) {\n      addUserActionBreadcrumb('secure_websocket_setup_error', {\n        url: options.url,\n        error: (error as Error).message,\n      });\n      \n      captureException(error as Error, {\n        action: 'secure_websocket_setup',\n        screen: 'security_module',\n        additionalData: {\n          url: options.url,\n        },\n      });\n      \n      reject(error);\n    }\n  });\n};\n\n/**\n * Validate SSL certificate for a domain\n */\nexport const validateCertificate = async (domain: string): Promise<boolean> => {\n  try {\n    addUserActionBreadcrumb('certificate_validation_attempt', { domain });\n    \n    const config = getSSLPinningConfig();\n    const certHashes = getCertificateHashForDomain(domain);\n    \n    if (!config.enabled || certHashes.length === 0) {\n      addUserActionBreadcrumb('certificate_validation_disabled', { domain });\n      return true; // Skip validation if pinning is disabled\n    }\n    \n    // Make a test request to validate certificate\n    const testUrl = `https://${domain}/health`; // Assuming health endpoint\n    \n    try {\n      await secureFetch({\n        url: testUrl,\n        method: 'GET',\n        timeout: 5000,\n      });\n      \n      addUserActionBreadcrumb('certificate_validation_success', { domain });\n      return true;\n    } catch (error) {\n      addUserActionBreadcrumb('certificate_validation_failed', {\n        domain,\n        error: (error as Error).message,\n      });\n      return false;\n    }\n    \n  } catch (error) {\n    addUserActionBreadcrumb('certificate_validation_error', {\n      domain,\n      error: (error as Error).message,\n    });\n    \n    captureException(error as Error, {\n      action: 'certificate_validation',\n      screen: 'security_module',\n      additionalData: { domain },\n    });\n    \n    return false;\n  }\n};\n\n/**\n * Get secure URL with protocol enforcement\n */\nexport const getSecureUrl = (baseUrl: string, path: string, useWebSocket = false): string => {\n  const config = getSSLPinningConfig();\n  const domain = useWebSocket ? config.wsDomain : config.domain;\n  const protocol = useWebSocket ? 'wss://' : 'https://';\n  \n  // Ensure path starts with /\n  const cleanPath = path.startsWith('/') ? path : `/${path}`;\n  \n  // Force HTTPS/WSS in production\n  if (!config.allowInsecureConnections) {\n    return `${protocol}${domain}${cleanPath}`;\n  }\n  \n  // In development, allow HTTP for localhost\n  if (domain.includes('localhost') || domain.includes('127.0.0.1')) {\n    const devProtocol = useWebSocket ? 'ws://' : 'http://';\n    return `${devProtocol}${domain}${cleanPath}`;\n  }\n  \n  return `${protocol}${domain}${cleanPath}`;\n};\n\n/**\n * Check if a URL is secure (HTTPS/WSS)\n */\nexport const isSecureUrl = (url: string): boolean => {\n  try {\n    const parsedUrl = new URL(url);\n    return parsedUrl.protocol === 'https:' || parsedUrl.protocol === 'wss:';\n  } catch {\n    return false;\n  }\n};\n\n/**\n * Enforce secure URL (upgrade HTTP to HTTPS if needed)\n */\nexport const enforceSecureUrl = (url: string): string => {\n  try {\n    const parsedUrl = new URL(url);\n    const config = getSSLPinningConfig();\n    \n    // Force HTTPS in production\n    if (!config.allowInsecureConnections && parsedUrl.protocol === 'http:') {\n      parsedUrl.protocol = 'https:';\n      return parsedUrl.toString();\n    }\n    \n    return url;\n  } catch {\n    // If URL parsing fails, return as-is\n    return url;\n  }\n};\n\nexport default {\n  secureFetch,\n  createSecureWebSocket,\n  validateCertificate,\n  getSecureUrl,\n  isSecureUrl,\n  enforceSecureUrl,\n};
+/**
+ * Secure transport: HTTP via react-native-ssl-pinning (production) and WebSocket helpers.
+ * Pinning is disabled in development via __DEV__ (plain fetch / WebSocket).
+ */
+
+import { fetch as sslFetch } from "react-native-ssl-pinning";
+import { captureException, addUserActionBreadcrumb } from "../monitoring/sentry";
+import { getSSLPinningConfig } from "./sslPinningConfig";
+
+/** Replace with your server leaf/SPKI pin before shipping production. */
+export const PLACEHOLDER_SSL_PINS = [
+  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+  "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=",
+];
+
+export interface SecureRequestOptions {
+  url: string;
+  method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+  headers?: Record<string, string>;
+  body?: string;
+  timeout?: number;
+  certificateHashes?: string[];
+}
+
+export interface SecureResponse {
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+  data: string;
+}
+
+export interface SecureWebSocketOptions {
+  url: string;
+  protocols?: string | string[];
+  certificateHashes?: string[];
+  timeout?: number;
+}
+
+async function readSslResponseBody(res: {
+  data?: string;
+  bodyString?: string;
+  text?: () => Promise<string>;
+}): Promise<string> {
+  if (typeof res.data === "string" && res.data.length > 0) {
+    return res.data;
+  }
+  if (typeof res.bodyString === "string") {
+    return res.bodyString;
+  }
+  if (typeof res.text === "function") {
+    return res.text();
+  }
+  return "";
+}
+
+function normalizeHeaders(h: Record<string, string> | undefined): Record<string, string> {
+  if (!h) {
+    return {};
+  }
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(h)) {
+    out[k] = String(v);
+  }
+  return out;
+}
+
+/**
+ * HTTP request with SSL pinning in release builds; standard fetch in development (__DEV__).
+ */
+export const secureFetch = async (options: SecureRequestOptions): Promise<SecureResponse> => {
+  try {
+    addUserActionBreadcrumb("secure_fetch_attempt", {
+      url: options.url,
+      method: options.method || "GET",
+      hasBody: !!options.body,
+    });
+
+    const method = options.method || "GET";
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      ...options.headers,
+    };
+    const timeoutMs = options.timeout ?? getSSLPinningConfig().timeout;
+
+    if (__DEV__) {
+      const res = await fetch(options.url, {
+        method,
+        headers,
+        body: options.body,
+      });
+      const data = await res.text();
+      const secureResponse: SecureResponse = {
+        status: res.status,
+        statusText: res.statusText || "",
+        headers: normalizeHeaders(
+          Object.fromEntries(res.headers.entries()) as Record<string, string>
+        ),
+        data,
+      };
+      addUserActionBreadcrumb("secure_fetch_success", {
+        url: options.url,
+        status: secureResponse.status,
+        responseSize: secureResponse.data.length,
+      });
+      return secureResponse;
+    }
+
+    const certs =
+      options.certificateHashes && options.certificateHashes.length > 0
+        ? options.certificateHashes
+        : PLACEHOLDER_SSL_PINS;
+
+    const sslRes = await sslFetch(options.url, {
+      method,
+      headers,
+      body: options.body,
+      timeoutInterval: timeoutMs,
+      sslPinning: { certs },
+    } as Parameters<typeof sslFetch>[1]);
+
+    const data = await readSslResponseBody(sslRes);
+    const secureResponse: SecureResponse = {
+      status: sslRes.status || 200,
+      statusText: "OK",
+      headers: normalizeHeaders(sslRes.headers as Record<string, string>),
+      data,
+    };
+
+    addUserActionBreadcrumb("secure_fetch_success", {
+      url: options.url,
+      status: secureResponse.status,
+      responseSize: secureResponse.data.length,
+    });
+
+    return secureResponse;
+  } catch (error) {
+    addUserActionBreadcrumb("secure_fetch_error", {
+      url: options.url,
+      error: (error as Error).message,
+    });
+    captureException(error as Error, {
+      action: "secure_fetch",
+      screen: "security_module",
+      additionalData: {
+        url: options.url,
+        method: options.method || "GET",
+      },
+    });
+    throw error;
+  }
+};
+
+/**
+ * Opens a WebSocket. Production builds require wss://; development allows ws:// (e.g. localhost).
+ * (Pinning applies to HTTP via sslFetch; RN WebSocket uses the system stack.)
+ */
+export const createSecureWebSocket = (options: SecureWebSocketOptions): Promise<WebSocket> => {
+  return new Promise((resolve, reject) => {
+    try {
+      addUserActionBreadcrumb("secure_websocket_attempt", {
+        url: options.url,
+        protocols: options.protocols,
+      });
+
+      if (!__DEV__) {
+        if (!options.url.startsWith("wss://")) {
+          const err = new Error("WebSocket URL must use wss:// in production");
+          captureException(err, {
+            action: "secure_websocket",
+            screen: "security_module",
+            additionalData: { url: options.url },
+          });
+          reject(err);
+          return;
+        }
+      }
+
+      const config = getSSLPinningConfig();
+      const timeoutMs = options.timeout ?? config.timeout;
+      let ws: WebSocket;
+
+      try {
+        ws = new WebSocket(options.url, options.protocols);
+        const timeoutId = setTimeout(() => {
+          if (ws.readyState === WebSocket.CONNECTING) {
+            ws.close();
+            reject(new Error("WebSocket connection timeout"));
+          }
+        }, timeoutMs);
+
+        ws.onopen = () => {
+          clearTimeout(timeoutId);
+          addUserActionBreadcrumb("secure_websocket_connected", { url: options.url });
+          resolve(ws);
+        };
+
+        ws.onerror = (error) => {
+          clearTimeout(timeoutId);
+          addUserActionBreadcrumb("secure_websocket_error", {
+            url: options.url,
+            error: String(error),
+          });
+          captureException(new Error("WebSocket connection failed"), {
+            action: "secure_websocket",
+            screen: "security_module",
+            additionalData: { url: options.url },
+          });
+          reject(error);
+        };
+
+        ws.onclose = (event) => {
+          clearTimeout(timeoutId);
+          addUserActionBreadcrumb("secure_websocket_closed", {
+            url: options.url,
+            code: event.code,
+            reason: event.reason,
+          });
+        };
+      } catch (error) {
+        captureException(error as Error, {
+          action: "secure_websocket_creation",
+          screen: "security_module",
+          additionalData: { url: options.url },
+        });
+        reject(error);
+      }
+    } catch (error) {
+      captureException(error as Error, {
+        action: "secure_websocket_setup",
+        screen: "security_module",
+        additionalData: { url: options.url },
+      });
+      reject(error);
+    }
+  });
+};
+
+export const validateCertificate = async (domain: string): Promise<boolean> => {
+  try {
+    addUserActionBreadcrumb("certificate_validation_attempt", { domain });
+    const testUrl = `https://${domain}/health`;
+    await secureFetch({ url: testUrl, method: "GET", timeout: 5000 });
+    addUserActionBreadcrumb("certificate_validation_success", { domain });
+    return true;
+  } catch (error) {
+    addUserActionBreadcrumb("certificate_validation_failed", {
+      domain,
+      error: (error as Error).message,
+    });
+    return false;
+  }
+};
+
+export const getSecureUrl = (baseUrl: string, path: string, useWebSocket = false): string => {
+  const config = getSSLPinningConfig();
+  const domain = useWebSocket ? config.wsDomain : config.domain;
+  const protocol = useWebSocket ? "wss://" : "https://";
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+
+  if (!config.allowInsecureConnections) {
+    return `${protocol}${domain}${cleanPath}`;
+  }
+
+  if (domain.includes("localhost") || domain.includes("127.0.0.1")) {
+    const devProtocol = useWebSocket ? "ws://" : "http://";
+    return `${devProtocol}${domain}${cleanPath}`;
+  }
+
+  return `${protocol}${domain}${cleanPath}`;
+};
+
+export const isSecureUrl = (url: string): boolean => {
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.protocol === "https:" || parsedUrl.protocol === "wss:";
+  } catch {
+    return false;
+  }
+};
+
+export const enforceSecureUrl = (url: string): string => {
+  try {
+    const parsedUrl = new URL(url);
+    const config = getSSLPinningConfig();
+    if (!config.allowInsecureConnections && parsedUrl.protocol === "http:") {
+      parsedUrl.protocol = "https:";
+      return parsedUrl.toString();
+    }
+    return url;
+  } catch {
+    return url;
+  }
+};
+
+export default {
+  secureFetch,
+  createSecureWebSocket,
+  validateCertificate,
+  getSecureUrl,
+  isSecureUrl,
+  enforceSecureUrl,
+};

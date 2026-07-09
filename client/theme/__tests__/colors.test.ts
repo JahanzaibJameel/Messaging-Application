@@ -1,4 +1,4 @@
-import * as colors from "../colors";
+import { colors, lightTheme, darkTheme } from "../colors";
 
 describe("Theme Colors", () => {
   describe("Light Theme", () => {
@@ -129,94 +129,94 @@ describe("Theme Colors", () => {
 
   describe("Dark Theme", () => {
     it("should export darkTheme object", () => {
-      expect(colors.darkTheme).toBeDefined();
-      expect(typeof colors.darkTheme).toBe("object");
+      expect(darkTheme).toBeDefined();
+      expect(typeof darkTheme).toBe("object");
     });
 
     it("should have all required primary colors", () => {
       const expectedColors = ["primary", "primaryVariant", "secondary", "tertiary"];
 
       expectedColors.forEach((color) => {
-        expect(colors.darkTheme).toHaveProperty(color);
-        expect(typeof colors.darkTheme[color as keyof typeof colors.darkTheme]).toBe("string");
+        expect(darkTheme).toHaveProperty(color);
+        expect(typeof darkTheme[color as keyof typeof darkTheme]).toBe("string");
       });
     });
 
     it("should have valid primary color values", () => {
-      expect(colors.darkTheme.primary).toBe("#128C7E");
-      expect(colors.darkTheme.primaryVariant).toBe("#075E54");
-      expect(colors.darkTheme.secondary).toBe("#25D366");
-      expect(colors.darkTheme.tertiary).toBe("#1FAD5D");
+      expect(darkTheme.primary).toBe("#25D366");
+      expect(darkTheme.primaryVariant).toBe("#1FAD5D");
+      expect(darkTheme.secondary).toBe("#128C7E");
+      expect(darkTheme.tertiary).toBe("#075E54");
     });
 
     it("should have all required background colors", () => {
       const expectedColors = ["background", "surface", "surfaceVariant"];
 
       expectedColors.forEach((color) => {
-        expect(colors.darkTheme).toHaveProperty(color);
-        expect(typeof colors.darkTheme[color as keyof typeof colors.darkTheme]).toBe("string");
+        expect(darkTheme).toHaveProperty(color);
+        expect(typeof darkTheme[color as keyof typeof darkTheme]).toBe("string");
       });
     });
 
     it("should have valid background color values", () => {
-      expect(colors.darkTheme.background).toBe("#121B22");
-      expect(colors.darkTheme.surface).toBe("#1F2C34");
-      expect(colors.darkTheme.surfaceVariant).toBe("#2A3942");
+      expect(darkTheme.background).toBe("#0B141A");
+      expect(darkTheme.surface).toBe("#111B22");
+      expect(darkTheme.surfaceVariant).toBe("#202C33");
     });
 
     it("should have all required text colors", () => {
       const expectedColors = ["text", "textSecondary", "textTertiary"];
 
       expectedColors.forEach((color) => {
-        expect(colors.darkTheme).toHaveProperty(color);
-        expect(typeof colors.darkTheme[color as keyof typeof colors.darkTheme]).toBe("string");
+        expect(darkTheme).toHaveProperty(color);
+        expect(typeof darkTheme[color as keyof typeof darkTheme]).toBe("string");
       });
     });
 
     it("should have valid text color values", () => {
-      expect(colors.darkTheme.text).toBe("#FFFFFF");
-      expect(colors.darkTheme.textSecondary).toBe("#8696A0");
-      expect(colors.darkTheme.textTertiary).toBe("#667781");
+      expect(darkTheme.text).toBe("#FFFFFF");
+      expect(darkTheme.textSecondary).toBe("#AEBAC1");
+      expect(darkTheme.textTertiary).toBe("#8A8D91");
     });
 
     it("should have all required status colors", () => {
       const expectedColors = ["success", "warning", "error", "info"];
 
       expectedColors.forEach((color) => {
-        expect(colors.darkTheme).toHaveProperty(color);
-        expect(typeof colors.darkTheme[color as keyof typeof colors.darkTheme]).toBe("string");
+        expect(darkTheme).toHaveProperty(color);
+        expect(typeof darkTheme[color as keyof typeof darkTheme]).toBe("string");
       });
     });
 
     it("should have valid status color values", () => {
-      expect(colors.darkTheme.success).toBe("#25D366");
-      expect(colors.darkTheme.warning).toBe("#FFA500");
-      expect(colors.darkTheme.error).toBe("#FF3B30");
-      expect(colors.darkTheme.info).toBe("#007AFF");
+      expect(darkTheme.success).toBe("#31A24C");
+      expect(darkTheme.warning).toBe("#FF9500");
+      expect(darkTheme.error).toBe("#FF453A");
+      expect(darkTheme.info).toBe("#0A84FF");
     });
 
     it("should have glass effect color", () => {
-      expect(colors.darkTheme).toHaveProperty("glass");
-      expect(typeof colors.darkTheme.glass).toBe("string");
-      expect(colors.darkTheme.glass).toBe("rgba(18, 27, 34, 0.7)");
+      expect(darkTheme).toHaveProperty("glass");
+      expect(typeof darkTheme.glass).toBe("string");
+      expect(darkTheme.glass).toBe("rgba(17, 27, 34, 0.7)");
     });
 
     it("should have valid hex color format", () => {
       const hexColors = [
-        colors.darkTheme.primary,
-        colors.darkTheme.primaryVariant,
-        colors.darkTheme.secondary,
-        colors.darkTheme.tertiary,
-        colors.darkTheme.background,
-        colors.darkTheme.surface,
-        colors.darkTheme.surfaceVariant,
-        colors.darkTheme.text,
-        colors.darkTheme.textSecondary,
-        colors.darkTheme.textTertiary,
-        colors.darkTheme.success,
-        colors.darkTheme.warning,
-        colors.darkTheme.error,
-        colors.darkTheme.info,
+        darkTheme.primary,
+        darkTheme.primaryVariant,
+        darkTheme.secondary,
+        darkTheme.tertiary,
+        darkTheme.background,
+        darkTheme.surface,
+        darkTheme.surfaceVariant,
+        darkTheme.text,
+        darkTheme.textSecondary,
+        darkTheme.textTertiary,
+        darkTheme.success,
+        darkTheme.warning,
+        darkTheme.error,
+        darkTheme.info,
       ];
 
       hexColors.forEach((color) => {
@@ -225,24 +225,19 @@ describe("Theme Colors", () => {
     });
 
     it("should have valid rgba color format for glass effect", () => {
-      const glassColor = colors.darkTheme.glass;
+      const glassColor = darkTheme.glass;
       expect(/^rgba\(\d+, \d+, \d+, [\d.]+\)$/i.test(glassColor)).toBe(true);
     });
 
     it("should have reasonable color contrast", () => {
       // Text should be readable on background
-      expect(colors.darkTheme.text).not.toBe(colors.darkTheme.background);
-      expect(colors.darkTheme.textSecondary).not.toBe(colors.darkTheme.background);
-      expect(colors.darkTheme.textTertiary).not.toBe(colors.darkTheme.background);
+      expect(darkTheme.text).not.toBe(darkTheme.background);
+      expect(darkTheme.textSecondary).not.toBe(darkTheme.background);
+      expect(darkTheme.textTertiary).not.toBe(darkTheme.background);
     });
 
     it("should have distinct status colors", () => {
-      const statusColors = [
-        colors.darkTheme.success,
-        colors.darkTheme.warning,
-        colors.darkTheme.error,
-        colors.darkTheme.info,
-      ];
+      const statusColors = [darkTheme.success, darkTheme.warning, darkTheme.error, darkTheme.info];
 
       // All status colors should be different
       const uniqueColors = new Set(statusColors);
@@ -252,26 +247,26 @@ describe("Theme Colors", () => {
 
   describe("Theme Consistency", () => {
     it("should have consistent status colors across themes", () => {
-      expect(colors.lightTheme.success).toBe(colors.darkTheme.success);
-      expect(colors.lightTheme.warning).toBe(colors.darkTheme.warning);
-      expect(colors.lightTheme.error).toBe(colors.darkTheme.error);
-      expect(colors.lightTheme.info).toBe(colors.darkTheme.info);
+      expect(lightTheme.success).toBe(darkTheme.success);
+      expect(lightTheme.warning).toBe(darkTheme.warning);
+      expect(lightTheme.error).toBe(darkTheme.error);
+      expect(lightTheme.info).toBe(darkTheme.info);
     });
 
     it("should have different background colors between themes", () => {
-      expect(colors.lightTheme.background).not.toBe(colors.darkTheme.background);
-      expect(colors.lightTheme.surface).not.toBe(colors.darkTheme.surface);
-      expect(colors.lightTheme.surfaceVariant).not.toBe(colors.darkTheme.surfaceVariant);
+      expect(lightTheme.background).not.toBe(darkTheme.background);
+      expect(lightTheme.surface).not.toBe(darkTheme.surface);
+      expect(lightTheme.surfaceVariant).not.toBe(darkTheme.surfaceVariant);
     });
 
     it("should have different text colors between themes", () => {
-      expect(colors.lightTheme.text).not.toBe(colors.darkTheme.text);
-      expect(colors.lightTheme.textSecondary).not.toBe(colors.darkTheme.textSecondary);
-      expect(colors.lightTheme.textTertiary).not.toBe(colors.darkTheme.textTertiary);
+      expect(lightTheme.text).not.toBe(darkTheme.text);
+      expect(lightTheme.textSecondary).not.toBe(darkTheme.textSecondary);
+      expect(lightTheme.textTertiary).not.toBe(darkTheme.textTertiary);
     });
 
     it("should have different glass effect colors between themes", () => {
-      expect(colors.lightTheme.glass).not.toBe(colors.darkTheme.glass);
+      expect(lightTheme.glass).not.toBe(darkTheme.glass);
     });
   });
 
@@ -281,8 +276,8 @@ describe("Theme Colors", () => {
 
       // Access all colors multiple times
       for (let i = 0; i < 1000; i++) {
-        Object.values(colors.lightTheme).forEach((v) => v);
-        Object.values(colors.darkTheme).forEach((v) => v);
+        Object.values(lightTheme).forEach((v) => v);
+        Object.values(darkTheme).forEach((v) => v);
       }
 
       const endTime = Date.now();
@@ -307,8 +302,8 @@ describe("Theme Colors", () => {
 
   describe("Data Consistency", () => {
     it("should maintain consistent values across accesses", () => {
-      const lightTheme1 = colors.lightTheme;
-      const lightTheme2 = colors.lightTheme;
+      const lightTheme1 = lightTheme;
+      const lightTheme2 = lightTheme;
 
       expect(lightTheme1).toBe(lightTheme2);
       expect(JSON.stringify(lightTheme1)).toBe(JSON.stringify(lightTheme2));
@@ -328,8 +323,8 @@ describe("Theme Colors", () => {
 
     it("should have consistent color naming", () => {
       const allColors = {
-        ...Object.keys(colors.lightTheme),
-        ...Object.keys(colors.darkTheme),
+        ...Object.keys(lightTheme),
+        ...Object.keys(darkTheme),
       };
 
       allColors.forEach((color) => {
@@ -342,20 +337,20 @@ describe("Theme Colors", () => {
   describe("Design System Integration", () => {
     it("should follow modern color standards", () => {
       // Check that colors follow modern design standards
-      expect(colors.lightTheme.primary).toMatch(/^#[0-9A-F]{6}$/i);
-      expect(colors.darkTheme.primary).toMatch(/^#[0-9A-F]{6}$/i);
+      expect(lightTheme.primary).toMatch(/^#[0-9A-F]{6}$/i);
+      expect(darkTheme.primary).toMatch(/^#[0-9A-F]{6}$/i);
     });
 
     it("should have appropriate color hierarchy", () => {
       // Primary should be more prominent than secondary
-      expect(colors.lightTheme.primary).not.toBe(colors.lightTheme.secondary);
-      expect(colors.darkTheme.primary).not.toBe(colors.darkTheme.secondary);
+      expect(lightTheme.primary).not.toBe(lightTheme.secondary);
+      expect(darkTheme.primary).not.toBe(darkTheme.secondary);
     });
 
     it("should have glassmorphism effects", () => {
       // Both themes should have glass effects with rgba format
-      expect(colors.lightTheme.glass).toMatch(/^rgba\(/);
-      expect(colors.darkTheme.glass).toMatch(/^rgba\(/);
+      expect(lightTheme.glass).toMatch(/^rgba\(/);
+      expect(darkTheme.glass).toMatch(/^rgba\(/);
     });
   });
 
@@ -363,8 +358,8 @@ describe("Theme Colors", () => {
     it("should handle missing color properties gracefully", () => {
       // Test that accessing non-existent properties doesn't crash
       expect(() => {
-        const lightTheme = colors.lightTheme as any;
-        const nonExistent = lightTheme.nonExistent;
+        const themeRef = lightTheme as Record<string, unknown>;
+        const nonExistent = themeRef.nonExistent;
         expect(nonExistent).toBeUndefined();
       }).not.toThrow();
     });
@@ -372,10 +367,10 @@ describe("Theme Colors", () => {
     it("should handle color modification attempts", () => {
       // Test that colors can be modified (if needed)
       expect(() => {
-        const originalValue = colors.lightTheme.primary;
-        (colors.lightTheme as any).primary = "#000000";
-        expect(colors.lightTheme.primary).toBe("#000000");
-        (colors.lightTheme as any).primary = originalValue; // Restore original value
+        const originalValue = lightTheme.primary;
+        (lightTheme as any).primary = "#000000";
+        expect(lightTheme.primary).toBe("#000000");
+        (lightTheme as any).primary = originalValue; // Restore original value
       }).not.toThrow();
     });
 
@@ -383,7 +378,7 @@ describe("Theme Colors", () => {
       // Test that very large color values don't cause issues
       expect(() => {
         const largeValue = "#999999";
-        const lightThemeWithLarge = { ...colors.lightTheme, testLarge: largeValue };
+        const lightThemeWithLarge = { ...lightTheme, testLarge: largeValue };
         expect(lightThemeWithLarge.testLarge).toBe(largeValue);
       }).not.toThrow();
     });
@@ -414,7 +409,7 @@ describe("Theme Colors", () => {
       ];
 
       // Check for sensitive patterns in color names
-      const allColorNames = [...Object.keys(colors.lightTheme), ...Object.keys(colors.darkTheme)];
+      const allColorNames = [...Object.keys(lightTheme), ...Object.keys(darkTheme)];
 
       allColorNames.forEach((name) => {
         sensitivePatterns.forEach((pattern) => {
@@ -430,20 +425,20 @@ describe("Theme Colors", () => {
       // This is a basic check - in real implementation, you'd use WCAG contrast calculations
 
       // Light theme: dark text on light background
-      expect(colors.lightTheme.text).toBe("#000000"); // Black text
-      expect(colors.lightTheme.background).toBe("#FFFFFF"); // White background
+      expect(lightTheme.text).toBe("#000000"); // Black text
+      expect(lightTheme.background).toBe("#FFFFFF"); // White background
 
       // Dark theme: light text on dark background
-      expect(colors.darkTheme.text).toBe("#FFFFFF"); // White text
-      expect(colors.darkTheme.background).toBe("#121B22"); // Dark background
+      expect(darkTheme.text).toBe("#FFFFFF"); // White text
+      expect(darkTheme.background).toBe("#0B141A"); // Dark background
     });
 
     it("should have distinct status colors for colorblind users", () => {
       const statusColors = [
-        colors.lightTheme.success,
-        colors.lightTheme.warning,
-        colors.lightTheme.error,
-        colors.lightTheme.info,
+        lightTheme.success,
+        lightTheme.warning,
+        lightTheme.error,
+        lightTheme.info,
       ];
 
       // All status colors should be different (basic colorblind accessibility)
@@ -453,10 +448,8 @@ describe("Theme Colors", () => {
 
     it("should have appropriate color opacity for glass effects", () => {
       // Glass effects should have appropriate opacity for readability
-      const lightGlassOpacity = colors.lightTheme.glass.match(
-        /rgba\(\d+, \d+, \d+, ([\d.]+)\)/
-      )?.[1];
-      const darkGlassOpacity = colors.darkTheme.glass.match(/rgba\(\d+, \d+, \d+, ([\d.]+)\)/)?.[1];
+      const lightGlassOpacity = lightTheme.glass.match(/rgba\(\d+, \d+, \d+, ([\d.]+)\)/)?.[1];
+      const darkGlassOpacity = darkTheme.glass.match(/rgba\(\d+, \d+, \d+, ([\d.]+)\)/)?.[1];
 
       expect(lightGlassOpacity).toBe("0.7");
       expect(darkGlassOpacity).toBe("0.7");

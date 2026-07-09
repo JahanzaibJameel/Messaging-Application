@@ -3,8 +3,8 @@
  * Uses React Native Reanimated worklets for 60fps performance
  */
 
-import React, { useCallback, useRef } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useCallback, useEffect, useRef } from "react";
+import { View, Text, StyleSheet } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -15,10 +15,11 @@ import Animated, {
   cancelAnimation,
   withRepeat,
   withSequence,
-} from 'react-native-reanimated';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { useFeatureFlag } from '@/core/featureFlags/FeatureFlags';
-import { useAccessibility } from '@/core/accessibility/AccessibilityManager';
+  Easing,
+} from "react-native-reanimated";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { useFeatureFlag } from "@/core/featureFlags/FeatureFlags";
+import { useAccessibility } from "@/core/accessibility/AccessibilityManager";
 
 interface OptimizedAnimationsProps {
   children: React.ReactNode;
@@ -29,124 +30,108 @@ interface OptimizedAnimationsProps {
  * Optimized Fade In Animation
  * Runs on UI thread with worklet
  */
-export const OptimizedFadeIn: React.FC<OptimizedAnimationsProps> = React.memo(({
-  children,
-  onAnimationComplete,
-}) => {
-  const { isEnabled: animationsEnabled } = useFeatureFlag('ui-thread-animations');
-  const { reduceMotion } = useAccessibility();
+export const OptimizedFadeIn: React.FC<OptimizedAnimationsProps> = React.memo(
+  ({ children, onAnimationComplete }) => {
+    const { isEnabled: animationsEnabled } = useFeatureFlag("ui-thread-animations");
+    const { reduceMotion } = useAccessibility();
 
-  const opacity = useSharedValue(0);
-  const scale = useSharedValue(0.8);
+    const opacity = useSharedValue(0);
+    const scale = useSharedValue(0.8);
 
-  // Animation configuration
-  const fadeIn = useCallback(() => {
-    'worklet';
-    if (!animationsEnabled || reduceMotion) {
-      // No animation or reduced motion
-      opacity.value = 1;
-      scale.value = 1;
-      onAnimationComplete?.();
-      return;
-    }
+    // Animation configuration
+    const fadeIn = useCallback(() => {
+      "worklet";
+      if (!animationsEnabled || reduceMotion) {
+        // No animation or reduced motion
+        opacity.value = 1;
+        scale.value = 1;
+        onAnimationComplete?.();
+        return;
+      }
 
-    // Optimized fade in animation
-    opacity.value = withTiming(1, {
-      duration: reduceMotion ? 100 : 300,
-      easing: reduceMotion ? 'linear' : 'easeOutCubic',
+      // Optimized fade in animation
+      opacity.value = withTiming(1, {
+        duration: reduceMotion ? 100 : 300,
+        easing: reduceMotion ? Easing.linear : Easing.out(Easing.cubic),
+      });
+
+      scale.value = withSpring(1, {
+        damping: 20,
+        stiffness: 300,
+        mass: 1,
+        overshootClamping: false,
+      });
+    }, [animationsEnabled, reduceMotion, onAnimationComplete, opacity, scale]);
+
+    useEffect(() => {
+      fadeIn();
+    }, [fadeIn]);
+
+    const animatedStyle = useAnimatedStyle(() => {
+      "worklet";
+      return {
+        opacity: opacity.value,
+        transform: [{ scale: scale.value }],
+      };
     });
 
-    scale.value = withSpring(1, {
-      damping: 20,
-      stiffness: 300,
-      mass: 1,
-      overshootClamping: false,
-    });
+    return <Animated.View style={[styles.container, animatedStyle]}>{children}</Animated.View>;
+  }
+);
 
-    // Run animations on UI thread
-    runOnUI(() => {
-      'worklet';
-      opacity.value = fadeIn;
-      scale.value = scale;
-    });
-  }, [animationsEnabled, shouldReduceMotion, onAnimationComplete]);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    'worklet';
-    return {
-      opacity: opacity.value,
-      transform: [{ scale: scale.value }],
-    };
-  });
-
-  return (
-    <Animated.View style={[styles.container, animatedStyle]}>
-      {children}
-    </Animated.View>
-  );
-});
-
-OptimizedFadeIn.displayName = 'OptimizedFadeIn';
+OptimizedFadeIn.displayName = "OptimizedFadeIn";
 
 /**
  * Optimized Slide In Animation
  * Runs on UI thread with worklet
  */
-export const OptimizedSlideIn: React.FC<OptimizedAnimationsProps> = React.memo(({
-  children,
-  onAnimationComplete,
-}) => {
-  const { isEnabled: animationsEnabled } = useFeatureFlag('ui-thread-animations');
-  const { reduceMotion } = useAccessibility();
+export const OptimizedSlideIn: React.FC<OptimizedAnimationsProps> = React.memo(
+  ({ children, onAnimationComplete }) => {
+    const { isEnabled: animationsEnabled } = useFeatureFlag("ui-thread-animations");
+    const { reduceMotion } = useAccessibility();
 
-  const translateX = useSharedValue(50);
-  const opacity = useSharedValue(0);
+    const translateX = useSharedValue(50);
+    const opacity = useSharedValue(0);
 
-  const slideIn = useCallback(() => {
-    'worklet';
-    if (!animationsEnabled || shouldReduceMotion) {
-      // No animation or reduced motion
-      translateX.value = 0;
-      opacity.value = 1;
-      onAnimationComplete?.();
-      return;
-    }
+    const slideIn = useCallback(() => {
+      "worklet";
+      if (!animationsEnabled || reduceMotion) {
+        // No animation or reduced motion
+        translateX.value = 0;
+        opacity.value = 1;
+        onAnimationComplete?.();
+        return;
+      }
 
-    // Optimized slide in animation
-    translateX.value = withTiming(0, {
-      duration: shouldReduceMotion ? 100 : 400,
-      easing: shouldReduceMotion ? 'linear' : 'easeOutCubic',
+      // Optimized slide in animation
+      translateX.value = withTiming(0, {
+        duration: reduceMotion ? 100 : 400,
+        easing: reduceMotion ? Easing.linear : Easing.out(Easing.cubic),
+      });
+
+      opacity.value = withTiming(1, {
+        duration: reduceMotion ? 100 : 300,
+        easing: reduceMotion ? Easing.linear : Easing.out(Easing.cubic),
+      });
+    }, [animationsEnabled, reduceMotion, onAnimationComplete, translateX, opacity]);
+
+    useEffect(() => {
+      slideIn();
+    }, [slideIn]);
+
+    const animatedStyle = useAnimatedStyle(() => {
+      "worklet";
+      return {
+        opacity: opacity.value,
+        transform: [{ translateX: translateX.value }],
+      };
     });
 
-    opacity.value = withTiming(1, {
-      duration: shouldReduceMotion ? 100 : 300,
-      easing: shouldReduceMotion ? 'linear' : 'easeOutCubic',
-    });
+    return <Animated.View style={[styles.container, animatedStyle]}>{children}</Animated.View>;
+  }
+);
 
-    // Run animations on UI thread
-    runOnUI(() => {
-      'worklet';
-      translateX.value = slideIn;
-      opacity.value = fadeIn;
-    });
-  }, [animationsEnabled, shouldReduceMotion, onAnimationComplete]);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    'worklet';
-    return {
-      opacity: opacity.value,
-      transform: [{ translateX: translateX.value }],
-    };
-  });
-
-  return (
-    <Animated.View style={[styles.container, animatedStyle]}>
-      {children}
-    </Animated.View>
-  );
-});
-
-OptimizedSlideIn.displayName = 'OptimizedSlideIn';
+OptimizedSlideIn.displayName = "OptimizedSlideIn";
 
 /**
  * Optimized Message Bubble Animation
@@ -156,20 +141,16 @@ export const OptimizedMessageBubble: React.FC<{
   children: React.ReactNode;
   onPress?: () => void;
   onLongPress?: () => void;
-}> = React.memo(({
-  children,
-  onPress,
-  onLongPress,
-}) => {
-  const { isEnabled: animationsEnabled } = useFeatureFlag('ui-thread-animations');
+}> = React.memo(({ children, onPress, onLongPress }) => {
+  const { isEnabled: animationsEnabled } = useFeatureFlag("ui-thread-animations");
   const { reduceMotion } = useAccessibility();
 
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
 
   const handlePress = useCallback(() => {
-    'worklet';
-    if (!animationsEnabled || shouldReduceMotion) {
+    "worklet";
+    if (!animationsEnabled || reduceMotion) {
       onPress?.();
       return;
     }
@@ -184,7 +165,7 @@ export const OptimizedMessageBubble: React.FC<{
     // Reset after animation
     setTimeout(() => {
       runOnUI(() => {
-        'worklet';
+        "worklet";
         scale.value = withSpring(1, {
           damping: 20,
           stiffness: 300,
@@ -194,11 +175,11 @@ export const OptimizedMessageBubble: React.FC<{
     }, 150);
 
     onPress?.();
-  }, [animationsEnabled, shouldReduceMotion, onPress]);
+  }, [animationsEnabled, reduceMotion, onPress]);
 
   const handleLongPress = useCallback(() => {
-    'worklet';
-    if (!animationsEnabled || shouldReduceMotion) {
+    "worklet";
+    if (!animationsEnabled || reduceMotion) {
       onLongPress?.();
       return;
     }
@@ -212,7 +193,7 @@ export const OptimizedMessageBubble: React.FC<{
     // Reset after animation
     setTimeout(() => {
       runOnUI(() => {
-        'worklet';
+        "worklet";
         scale.value = withSpring(1, {
           damping: 20,
           stiffness: 300,
@@ -222,10 +203,10 @@ export const OptimizedMessageBubble: React.FC<{
     }, 350);
 
     onLongPress?.();
-  }, [animationsEnabled, shouldReduceMotion, onLongPress]);
+  }, [animationsEnabled, reduceMotion, onLongPress]);
 
   const animatedStyle = useAnimatedStyle(() => {
-    'worklet';
+    "worklet";
     return {
       opacity: opacity.value,
       transform: [{ scale: scale.value }],
@@ -234,23 +215,23 @@ export const OptimizedMessageBubble: React.FC<{
 
   const gesture = Gesture.Tap()
     .onStart(() => {
-      'worklet';
+      "worklet";
       opacity.value = 0.8;
     })
     .onEnd(() => {
-      'worklet';
+      "worklet";
       opacity.value = 1;
     })
     .onFinalize(handlePress)
     .onTouchesDown(() => {
-      'worklet';
+      "worklet";
       scale.value = 0.98;
     })
     .runOnJS(true);
 
   return (
     <GestureDetector gesture={gesture}>
-      <Animated.View 
+      <Animated.View
         style={[styles.messageBubble, animatedStyle]}
         accessible={true}
         accessibilityLabel="Message bubble"
@@ -263,35 +244,35 @@ export const OptimizedMessageBubble: React.FC<{
   );
 });
 
-OptimizedMessageBubble.displayName = 'OptimizedMessageBubble';
+OptimizedMessageBubble.displayName = "OptimizedMessageBubble";
 
 /**
  * Optimized Loading Spinner
  * Smooth rotation animation on UI thread
  */
 export const OptimizedLoadingSpinner: React.FC = React.memo(() => {
-  const { isEnabled: animationsEnabled } = useFeatureFlag('ui-thread-animations');
+  const { isEnabled: animationsEnabled } = useFeatureFlag("ui-thread-animations");
   const { reduceMotion } = useAccessibility();
 
   const rotation = useSharedValue(0);
 
   React.useEffect(() => {
-    'worklet';
-    if (!animationsEnabled || shouldReduceMotion) return;
+    "worklet";
+    if (!animationsEnabled || reduceMotion) return;
 
     // Continuous rotation animation
     rotation.value = withRepeat(
       withTiming(360, {
-        duration: shouldReduceMotion ? 2000 : 1000,
-        easing: 'linear',
+        duration: reduceMotion ? 2000 : 1000,
+        easing: Easing.linear,
       }),
-      -1, // Infinite repeat
-      0 // No delay
+      -1,
+      false
     );
-  }, [animationsEnabled, shouldReduceMotion]);
+  }, [animationsEnabled, reduceMotion, rotation]);
 
   const animatedStyle = useAnimatedStyle(() => {
-    'worklet';
+    "worklet";
     return {
       transform: [{ rotate: `${rotation.value}deg` }],
     };
@@ -308,36 +289,36 @@ export const OptimizedLoadingSpinner: React.FC = React.memo(() => {
   );
 });
 
-OptimizedLoadingSpinner.displayName = 'OptimizedLoadingSpinner';
+OptimizedLoadingSpinner.displayName = "OptimizedLoadingSpinner";
 
 /**
  * Performance Monitor Hook
  * Monitors animation performance and FPS
  */
 export const useAnimationPerformanceMonitor = () => {
-  const { isEnabled: performanceMonitoring } = useFeatureFlag('performance-monitoring');
-  
+  const { isEnabled: performanceMonitoring } = useFeatureFlag("performance-monitoring");
+
   const frameCount = useRef(0);
   const lastFrameTime = useRef(Date.now());
 
   const measureFPS = useCallback(() => {
-    'worklet';
+    "worklet";
     const now = Date.now();
     const delta = now - lastFrameTime.current;
     const fps = 1000 / delta;
-    
+
     frameCount.current++;
-    
+
     // Log performance every 60 frames (approximately 1 second)
     if (frameCount.current % 60 === 0) {
       console.log(`Animation FPS: ${fps.toFixed(1)}`);
-      
+
       // Warn if below 55fps
       if (fps < 55 && performanceMonitoring) {
         console.warn(`Low FPS detected: ${fps.toFixed(1)} - Consider optimizing animations`);
       }
     }
-    
+
     lastFrameTime.current = now;
   }, [performanceMonitoring]);
 
@@ -349,11 +330,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   messageBubble: {
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
     borderRadius: 20,
     padding: 12,
     margin: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -361,27 +342,27 @@ const styles = StyleSheet.create({
   },
   spinnerContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   spinner: {
     width: 40,
     height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   spinnerDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#007AFF',
-    position: 'absolute',
+    backgroundColor: "#007AFF",
+    position: "absolute",
   },
   spinnerDot2: {
-    transform: [{ rotate: '120deg' }],
+    transform: [{ rotate: "120deg" }],
   },
   spinnerDot3: {
-    transform: [{ rotate: '240deg' }],
+    transform: [{ rotate: "240deg" }],
   },
 });
 

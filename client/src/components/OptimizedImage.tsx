@@ -1,6 +1,6 @@
-import React, { useState, useCallback } from 'react';
-import { Image, View, StyleSheet, ActivityIndicator } from 'react-native';
-import { Image as ExpoImage } from 'expo-image';
+import React, { useState, useCallback } from "react";
+import { Image, View, StyleSheet, ActivityIndicator } from "react-native";
+import { Image as ExpoImage } from "expo-image";
 
 interface OptimizedImageProps {
   source: { uri: string } | number;
@@ -8,7 +8,7 @@ interface OptimizedImageProps {
   style?: any;
   width?: number;
   height?: number;
-  resizeMode?: 'cover' | 'contain' | 'none' | 'scale-down';
+  resizeMode?: "cover" | "contain" | "none" | "scale-down";
   onLoad?: () => void;
   onError?: () => void;
   accessible?: boolean;
@@ -22,7 +22,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   style,
   width = 100,
   height = 100,
-  resizeMode = 'cover',
+  resizeMode = "cover",
   onLoad,
   onError,
   accessible = true,
@@ -45,8 +45,10 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   }, [onError]);
 
   const getLowResPlaceholder = useCallback(() => {
-    if (typeof source === 'object' && source.uri) {
-      return { uri: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==' };
+    if (typeof source === "object" && source.uri) {
+      return {
+        uri: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+      };
     }
     return source;
   }, [source]);
@@ -75,7 +77,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
         accessibilityHint={accessibilityHint}
         cachePolicy="memory-disk"
         transition={{ duration: 300 }}
-        recyclingKey={typeof source === 'object' ? source.uri : 'static'}
+        recyclingKey={typeof source === "object" ? source.uri : "static"}
       />
       {isLoading && (
         <View style={styles.loadingOverlay}>
@@ -88,30 +90,30 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    position: 'relative',
-    overflow: 'hidden',
+    position: "relative",
+    overflow: "hidden",
   },
   image: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
   },
   loadingOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
   },
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f8f8f8',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f8f8f8",
   },
   errorPlaceholder: {
-    backgroundColor: '#e0e0e0',
+    backgroundColor: "#e0e0e0",
     borderRadius: 8,
   },
 });

@@ -139,7 +139,12 @@ export class MessageHandler {
       senderId: payload.senderId,
       type: payload.type,
       text: payload.text,
-      attachment: payload.attachment,
+      attachment: payload.attachment
+        ? {
+            ...payload.attachment,
+            type: payload.type === "text" ? "document" : payload.type,
+          }
+        : undefined,
       timestamp: new Date(payload.timestamp),
       status: "delivered",
       replyTo: payload.replyTo,

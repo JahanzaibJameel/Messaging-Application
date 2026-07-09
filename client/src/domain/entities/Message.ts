@@ -1,11 +1,46 @@
 /**
  * Message domain entity
  * Represents a chat message with full lifecycle
+ *
+ * @example
+ * ```typescript
+ * const message: Message = {
+ *   id: 'msg-123',
+ *   chatId: 'chat-456',
+ *   senderId: 'user-789',
+ *   content: {
+ *     type: 'text',
+ *     text: 'Hello World'
+ *   },
+ *   timestamp: new Date(),
+ *   status: 'sent',
+ *   reactions: [
+ *     {
+ *       userId: 'user-123',
+ *       emoji: '👍',
+ *       createdAt: new Date()
+ *     }
+ *   ]
+ * };
+ * ```
  */
 
 export type MessageStatus = "sending" | "sent" | "delivered" | "read" | "failed" | "error";
 export type MessageType = "text" | "image" | "video" | "audio" | "document" | "location";
 
+/**
+ * Represents a file attachment in a message
+ * @interface MessageAttachment
+ * @property {MessageType} type - Type of the attachment
+ * @property {string} uri - URI to the attachment file
+ * @property {string} [thumbnail] - URI to thumbnail image (for media files)
+ * @property {number} [width] - Width of the media (for images/videos)
+ * @property {number} [height] - Height of the media (for images/videos)
+ * @property {number} [duration] - Duration in seconds (for audio/video)
+ * @property {string} [fileName] - Original filename
+ * @property {number} [fileSize] - File size in bytes
+ * @property {string} [mimeType] - MIME type of the file
+ */
 export interface MessageAttachment {
   type: MessageType;
   uri: string;
@@ -18,12 +53,35 @@ export interface MessageAttachment {
   mimeType?: string;
 }
 
+/**
+ * Represents a reaction to a message
+ * @interface MessageReaction
+ * @property {string} userId - ID of the user who reacted
+ * @property {string} emoji - Emoji character used for reaction
+ * @property {Date} createdAt - When the reaction was added
+ */
 export interface MessageReaction {
   userId: string;
   emoji: string;
   createdAt: Date;
 }
 
+/**
+ * Main message entity interface
+ * @interface Message
+ * @property {string} id - Unique identifier for the message
+ * @property {string} chatId - ID of the chat this message belongs to
+ * @property {string} senderId - ID of the user who sent the message
+ * @property {MessageContent} content - Message content (text, media, etc.)
+ * @property {Date} timestamp - When the message was created
+ * @property {MessageStatus} status - Current delivery status
+ * @property {MessageReaction[]} [reactions] - Array of message reactions
+ * @property {boolean} [isEdited] - Whether message has been edited
+ * @property {Date} [editedAt] - When message was last edited
+ * @property {string} [replyToId] - ID of message this replies to
+ * @property {MessageAttachment[]} [attachments] - File attachments
+ * @property {Record<string, unknown>} [metadata] - Additional metadata
+ */
 export interface Message {
   id: string;
   chatId: string;

@@ -8,16 +8,16 @@ const isDevelopment = __DEV__;
 const isProduction = !isDevelopment;
 
 // Placeholder backend domain (to be replaced with actual domain)
-const BACKEND_DOMAIN = 'api.chatapp.com';
-const BACKEND_WS_DOMAIN = 'ws.chatapp.com';
+const BACKEND_DOMAIN = "api.chatapp.com";
+const BACKEND_WS_DOMAIN = "ws.chatapp.com";
 
 // Placeholder certificate hashes (to be replaced with actual backend certificates)
 // These are SHA-256 hashes of the backend's public key certificates
 const PLACEHOLDER_CERT_HASHES: string[] = [
   // This is a placeholder hash - replace with actual backend certificate hash
-  'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
   // Add backup certificates for rotation
-  'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=',
+  "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=",
 ];
 
 // Development localhost certificates (for testing)
@@ -44,8 +44,8 @@ export interface SSLPinningConfig {
 export const getSSLPinningConfig = (): SSLPinningConfig => {
   if (isDevelopment) {
     return {
-      domain: 'localhost:8080',
-      wsDomain: 'localhost:8080',
+      domain: "localhost:8080",
+      wsDomain: "localhost:8080",
       enabled: false, // Disable pinning in development for flexibility
       certificateHashes: DEV_CERT_HASHES,
       allowInsecureConnections: true, // Allow HTTP in development
@@ -68,26 +68,28 @@ export const getSSLPinningConfig = (): SSLPinningConfig => {
  */
 export const validateSSLPinningConfig = (): boolean => {
   const config = getSSLPinningConfig();
-  
+
   // In production, ensure pinning is enabled and has certificate hashes
   if (isProduction) {
     if (!config.enabled) {
-      console.error('SSL pinning must be enabled in production');
+      console.error("SSL pinning must be enabled in production");
       return false;
     }
-    
-    if (config.certificateHashes.length === 0 || 
-        config.certificateHashes[0] === 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=') {
-      console.error('Production SSL pinning must use real certificate hashes');
+
+    if (
+      config.certificateHashes.length === 0 ||
+      config.certificateHashes[0] === "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    ) {
+      console.error("Production SSL pinning must use real certificate hashes");
       return false;
     }
-    
+
     if (config.allowInsecureConnections) {
-      console.error('Insecure connections not allowed in production');
+      console.error("Insecure connections not allowed in production");
       return false;
     }
   }
-  
+
   return true;
 };
 
@@ -96,11 +98,11 @@ export const validateSSLPinningConfig = (): boolean => {
  */
 export const getCertificateHashForDomain = (domain: string): string[] => {
   const config = getSSLPinningConfig();
-  
+
   if (domain.includes(config.domain) || domain === config.domain) {
     return config.certificateHashes;
   }
-  
+
   // Return empty array for unknown domains
   return [];
 };
@@ -110,15 +112,17 @@ export const getCertificateHashForDomain = (domain: string): string[] => {
  */
 export const shouldUseSSLPinning = (domain: string): boolean => {
   const config = getSSLPinningConfig();
-  
+
   if (!config.enabled) {
     return false;
   }
-  
-  return domain.includes(config.domain) || 
-         domain.includes(config.wsDomain) ||
-         domain === config.domain ||
-         domain === config.wsDomain;
+
+  return (
+    domain.includes(config.domain) ||
+    domain.includes(config.wsDomain) ||
+    domain === config.domain ||
+    domain === config.wsDomain
+  );
 };
 
 /**
@@ -127,11 +131,11 @@ export const shouldUseSSLPinning = (domain: string): boolean => {
 export const getSecureUrl = (path: string, useWebSocket = false): string => {
   const config = getSSLPinningConfig();
   const domain = useWebSocket ? config.wsDomain : config.domain;
-  const protocol = useWebSocket ? 'wss://' : 'https://';
-  
+  const protocol = useWebSocket ? "wss://" : "https://";
+
   // Ensure path starts with /
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+
   return `${protocol}${domain}${cleanPath}`;
 };
 
@@ -162,12 +166,14 @@ export const SSL_CONFIG = {
 /**
  * Get configuration for specific environment
  */
-export const getSSLPinningConfigForEnv = (env: 'development' | 'staging' | 'production'): SSLPinningConfig => {
+export const getSSLPinningConfigForEnv = (
+  env: "development" | "staging" | "production"
+): SSLPinningConfig => {
   const envConfig = SSL_CONFIG[env];
-  
+
   return {
-    domain: env === 'development' ? 'localhost:8080' : BACKEND_DOMAIN,
-    wsDomain: env === 'development' ? 'localhost:8080' : BACKEND_WS_DOMAIN,
+    domain: env === "development" ? "localhost:8080" : BACKEND_DOMAIN,
+    wsDomain: env === "development" ? "localhost:8080" : BACKEND_WS_DOMAIN,
     enabled: envConfig.enabled,
     certificateHashes: envConfig.certificateHashes,
     allowInsecureConnections: envConfig.allowInsecureConnections,

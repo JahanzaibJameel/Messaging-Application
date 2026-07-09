@@ -82,4 +82,7 @@ export const colors = {
   dark: darkTheme,
 };
 
+/** @deprecated Use `colors.light` */
+export { lightTheme, darkTheme };
+
 export type ThemeColors = typeof lightTheme;

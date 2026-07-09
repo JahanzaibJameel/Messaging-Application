@@ -239,7 +239,7 @@ export const useFeatureFlagsStore = create<FeatureFlagsStore>()(
           // Sync with remote configuration
           await get().syncWithRemote();
 
-          logger.info("Feature flags initialized", { userContext });
+          logger.info("Feature flags initialized", "FeatureFlags", { userContext });
         } catch (error) {
           logger.error("Failed to initialize feature flags:", error);
           set({ error: error instanceof Error ? error.message : "Unknown error" });
@@ -251,7 +251,7 @@ export const useFeatureFlagsStore = create<FeatureFlagsStore>()(
       // Update all flags
       updateFlags: (flags: Record<string, FeatureFlag>) => {
         set({ flags: { ...get().flags, ...flags } });
-        logger.info("Feature flags updated", { count: Object.keys(flags).length });
+        logger.info("Feature flags updated", "FeatureFlags", { count: Object.keys(flags).length });
       },
 
       // Set individual flag
@@ -270,7 +270,7 @@ export const useFeatureFlagsStore = create<FeatureFlagsStore>()(
           },
         });
 
-        logger.info("Feature flag updated", { flagId, flag: updatedFlag });
+        logger.info("Feature flag updated", "FeatureFlags", { flagId, flag: updatedFlag });
       },
 
       // Check if flag is enabled for current user
@@ -279,7 +279,7 @@ export const useFeatureFlagsStore = create<FeatureFlagsStore>()(
         const flag = flags[flagId];
 
         if (!flag) {
-          logger.warn("Feature flag not found", { flagId });
+          logger.warn("Feature flag not found", "FeatureFlags", { flagId });
           return false;
         }
 
@@ -391,7 +391,7 @@ function evaluateConditions(conditions: FeatureFlagCondition[], userContext: Use
         return evaluateDateCondition(condition);
 
       default:
-        logger.warn("Unknown condition type", { type: condition.type });
+        logger.warn("Unknown condition type", "FeatureFlags", { type: condition.type });
         return false;
     }
   });

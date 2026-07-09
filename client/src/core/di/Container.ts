@@ -82,23 +82,23 @@ export function initializeContainer(): void {
 
   // Repositories
   container.registerFactory(TOKENS.ChatRepository, () => {
-    const local = container.resolve(TOKENS.LocalStorage);
-    const remote = container.resolve(TOKENS.RemoteApi);
+    const local = container.resolve(TOKENS.LocalStorage) as LocalStorageDataSource;
+    const remote = container.resolve(TOKENS.RemoteApi) as RemoteApiDataSource;
     return new ChatRepositoryImpl(local, remote);
   });
 
   container.registerFactory(TOKENS.UserRepository, () => {
-    const local = container.resolve(TOKENS.LocalStorage);
-    const remote = container.resolve(TOKENS.RemoteApi);
+    const local = container.resolve(TOKENS.LocalStorage) as LocalStorageDataSource;
+    const remote = container.resolve(TOKENS.RemoteApi) as RemoteApiDataSource;
     return new UserRepositoryImpl(local, remote);
   });
 }
 
 // Convenience hooks for React
 export function useChatRepository(): ChatRepository {
-  return container.resolve(TOKENS.ChatRepository);
+  return container.resolve(TOKENS.ChatRepository) as ChatRepository;
 }
 
 export function useUserRepository(): UserRepository {
-  return container.resolve(TOKENS.UserRepository);
+  return container.resolve(TOKENS.UserRepository) as UserRepository;
 }

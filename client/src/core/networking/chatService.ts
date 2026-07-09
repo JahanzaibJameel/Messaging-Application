@@ -3,7 +3,28 @@
  * Simple implementation for MVP networking
  */
 
-import { addWebSocketBreadcrumb, captureException } from '../../monitoring/sentry';
+import { addWebSocketBreadcrumb, captureException } from "../../monitoring/sentry";
+
+const DEV_WS_FALLBACK = "ws://localhost:8080";
+
+/**
+ * Resolves the default WebSocket URL from EXPO_PUBLIC_WS_URL.
+ * In development (__DEV__), falls back to ws://localhost:8080 when unset.
+ * In production, EXPO_PUBLIC_WS_URL is required and must use wss://.
+ */
+export function resolveDefaultWebSocketUrl(): string {
+  const fromEnv = process.env.EXPO_PUBLIC_WS_URL?.trim();
+  if (__DEV__) {
+    return fromEnv || DEV_WS_FALLBACK;
+  }
+  if (!fromEnv) {
+    throw new Error("EXPO_PUBLIC_WS_URL must be set for production builds.");
+  }
+  if (!fromEnv.startsWith("wss://")) {
+    throw new Error("EXPO_PUBLIC_WS_URL must use the wss:// scheme in production.");
+  }
+  return fromEnv;
+}
 
 export interface ChatMessage {
   id: string;
@@ -33,25 +54,28 @@ export class SimpleChatService implements ChatService {
 
   connect(): void {
     try {
-      addWebSocketBreadcrumb('connect_attempt', { serverUrl: this.serverUrl });
+      addWebSocketBreadcrumb("connect_attempt", { serverUrl: this.serverUrl });
       this.ws = new WebSocket(this.serverUrl);
-      
+
       this.ws.onopen = () => {
-        addWebSocketBreadcrumb('connected', { reconnectAttempts: this.reconnectAttempts });
+        addWebSocketBreadcrumb("connected", { reconnectAttempts: this.reconnectAttempts });
         this.reconnectAttempts = 0;
-        
+
         // Request initial messages
-        this.sendMessage('system', JSON.stringify({
-          type: 'request_history',
-          chatId: 'all'
-        }));
+        this.sendMessage(
+          "system",
+          JSON.stringify({
+            type: "request_history",
+            chatId: "all",
+          })
+        );
       };
 
       this.ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          
-          if (data.type === 'message') {
+
+          if (data.type === "message") {
             const message: ChatMessage = {
               id: data.id,
               text: data.text,
@@ -59,17 +83,19 @@ export class SimpleChatService implements ChatService {
               timestamp: new Date(data.timestamp),
               chatId: data.chatId,
             };
-            
-            addWebSocketBreadcrumb('message_received', {
+
+            addWebSocketBreadcrumb("message_received", {
               messageId: message.id,
               chatId: message.chatId,
               senderId: message.senderId,
               messageLength: message.text.length,
             });
-            
-            this.messageCallbacks.forEach(callback => callback(message));
-          } else if (data.type === 'history') {
-            addWebSocketBreadcrumb('history_received', { messageCount: data.messages?.length || 0 });
+
+            this.messageCallbacks.forEach((callback) => callback(message));
+          } else if (data.type === "history") {
+            addWebSocketBreadcrumb("history_received", {
+              messageCount: data.messages?.length || 0,
+            });
             // Handle initial message history
             data.messages.forEach((msg: any) => {
               const message: ChatMessage = {
@@ -79,45 +105,44 @@ export class SimpleChatService implements ChatService {
                 timestamp: new Date(msg.timestamp),
                 chatId: msg.chatId,
               };
-              this.messageCallbacks.forEach(callback => callback(message));
+              this.messageCallbacks.forEach((callback) => callback(message));
             });
           }
         } catch (error) {
-          addWebSocketBreadcrumb('message_parse_error', { error: String(error) });
+          addWebSocketBreadcrumb("message_parse_error", { error: String(error) });
           captureException(error as Error, {
-            action: 'parse_websocket_message',
-            screen: 'websocket_service',
+            action: "parse_websocket_message",
+            screen: "websocket_service",
             additionalData: { eventData: event.data?.substring(0, 100) },
           });
         }
       };
 
       this.ws.onclose = () => {
-        addWebSocketBreadcrumb('disconnected', { reconnectAttempts: this.reconnectAttempts });
+        addWebSocketBreadcrumb("disconnected", { reconnectAttempts: this.reconnectAttempts });
         this.attemptReconnect();
       };
 
       this.ws.onerror = (error) => {
-        addWebSocketBreadcrumb('error', { error: String(error) });
-        captureException(new Error('WebSocket connection error'), {
-          action: 'websocket_error',
-          screen: 'websocket_service',
+        addWebSocketBreadcrumb("error", { error: String(error) });
+        captureException(new Error("WebSocket connection error"), {
+          action: "websocket_error",
+          screen: "websocket_service",
           additionalData: { serverUrl: this.serverUrl },
         });
       };
-
     } catch (error) {
-      addWebSocketBreadcrumb('connect_failed', { error: String(error) });
+      addWebSocketBreadcrumb("connect_failed", { error: String(error) });
       captureException(error as Error, {
-        action: 'websocket_connect',
-        screen: 'websocket_service',
+        action: "websocket_connect",
+        screen: "websocket_service",
         additionalData: { serverUrl: this.serverUrl },
       });
     }
   }
 
   disconnect(): void {
-    addWebSocketBreadcrumb('disconnect');
+    addWebSocketBreadcrumb("disconnect");
     if (this.ws) {
       this.ws.close();
       this.ws = null;
@@ -128,30 +153,30 @@ export class SimpleChatService implements ChatService {
   sendMessage(chatId: string, message: string): void {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       const payload = {
-        type: 'message',
+        type: "message",
         chatId,
         text: message,
         timestamp: new Date().toISOString(),
-        senderId: 'me'
+        senderId: "me",
       };
-      
+
       try {
         this.ws.send(JSON.stringify(payload));
-        addWebSocketBreadcrumb('message_sent', {
+        addWebSocketBreadcrumb("message_sent", {
           chatId,
           messageLength: message.length,
         });
       } catch (error) {
-        addWebSocketBreadcrumb('message_send_failed', { error: String(error) });
+        addWebSocketBreadcrumb("message_send_failed", { error: String(error) });
         captureException(error as Error, {
-          action: 'send_websocket_message',
-          screen: 'websocket_service',
+          action: "send_websocket_message",
+          screen: "websocket_service",
           additionalData: { chatId, messageLength: message.length },
         });
       }
     } else {
-      addWebSocketBreadcrumb('message_not_sent', { 
-        reason: 'not_connected',
+      addWebSocketBreadcrumb("message_not_sent", {
+        reason: "not_connected",
         chatId,
         messageLength: message.length,
       });
@@ -169,17 +194,17 @@ export class SimpleChatService implements ChatService {
   private attemptReconnect(): void {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      addWebSocketBreadcrumb('reconnect_attempt', {
+      addWebSocketBreadcrumb("reconnect_attempt", {
         attempt: this.reconnectAttempts,
         maxAttempts: this.maxReconnectAttempts,
         delay: this.reconnectDelay * this.reconnectAttempts,
       });
-      
+
       setTimeout(() => {
         this.connect();
       }, this.reconnectDelay * this.reconnectAttempts);
     } else {
-      addWebSocketBreadcrumb('reconnect_failed', {
+      addWebSocketBreadcrumb("reconnect_failed", {
         maxAttemptsReached: true,
         totalAttempts: this.reconnectAttempts,
       });
@@ -188,6 +213,6 @@ export class SimpleChatService implements ChatService {
 }
 
 // Factory function for creating chat service
-export const createChatService = (serverUrl: string = 'ws://localhost:8080'): ChatService => {
-  return new SimpleChatService(serverUrl);
+export const createChatService = (serverUrl?: string): ChatService => {
+  return new SimpleChatService(serverUrl ?? resolveDefaultWebSocketUrl());
 };

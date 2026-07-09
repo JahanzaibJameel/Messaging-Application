@@ -66,5 +66,17 @@ export const useUIStore = create<UIStore>()(
         state.showSearch = value;
       });
     },
+
+    setTypingIndicators: (
+      chatId: string,
+      indicators: { users: any[]; text: string; isAnyoneTyping: boolean }
+    ) => {
+      set((state) => {
+        if (!state.typingIndicators) {
+          state.typingIndicators = {};
+        }
+        state.typingIndicators[chatId] = indicators;
+      });
+    },
   }))
 );

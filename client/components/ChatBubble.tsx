@@ -7,7 +7,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { MediaMessage } from "@/components/MediaMessage";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Shadows } from "@/constants/theme";
-import { Message } from "@/store/types";
+import type { Message } from "@domain/entities/Message";
 import { formatMessageTime } from "@/utils/formatTime";
 
 interface ChatBubbleProps {
@@ -89,16 +89,15 @@ export function ChatBubble({ message, isOwn, onLongPress, replyToMessage }: Chat
   };
 
   const renderReactions = () => {
-    if (!message.reactions || Object.keys(message.reactions).length === 0) {
+    if (!message.reactions || message.reactions.length === 0) {
       return null;
     }
 
-    const reactions = Object.values(message.reactions);
     return (
       <View style={[styles.reactionsContainer, { backgroundColor: theme.surface }]}>
-        {reactions.map((reaction, index) => (
+        {message.reactions.map((reaction, index) => (
           <ThemedText key={index} style={styles.reaction}>
-            {reaction}
+            {reaction.emoji}
           </ThemedText>
         ))}
       </View>

@@ -1,5 +1,5 @@
-import React from 'react';
-import { AccessibilityInfo, Platform } from 'react-native';
+import React from "react";
+import { AccessibilityInfo, Platform } from "react-native";
 
 /**
  * Returns true if user has requested reduced motion.
@@ -12,11 +12,7 @@ export const isReduceMotionEnabled = (): Promise<boolean> => {
 /**
  * Builds a consistent accessibility label from component props.
  */
-export const getAccessibleLabel = (
-  base: string,
-  role?: string,
-  state?: string
-): string => {
+export const getAccessibleLabel = (base: string, role?: string, state?: string): string => {
   let label = base;
   if (role) label += `, ${role}`;
   if (state) label += `, ${state}`;
@@ -60,7 +56,7 @@ export const useScreenReader = () => {
     isScreenReaderEnabled().then(handleScreenReaderChange);
 
     const subscription = AccessibilityInfo.addEventListener(
-      'screenReaderChanged',
+      "screenReaderChanged",
       handleScreenReaderChange
     );
 
@@ -79,7 +75,7 @@ export const useScreenReader = () => {
 export const getTouchableAccessibilityProps = (
   label: string,
   hint?: string,
-  role: 'button' | 'link' | 'tab' = 'button'
+  role: "button" | "link" | "tab" = "button"
 ) => {
   return {
     accessibilityRole: role,
@@ -99,12 +95,9 @@ export const getTouchableAccessibilityProps = (
 /**
  * Creates accessibility properties for text elements.
  */
-export const getTextAccessibilityProps = (
-  label: string,
-  role?: 'text' | 'header' | 'label'
-) => {
+export const getTextAccessibilityProps = (label: string, role?: "text" | "header" | "label") => {
   return {
-    accessibilityRole: role || 'text',
+    accessibilityRole: role || "text",
     accessibilityLabel: label,
     accessible: true,
   };
@@ -122,7 +115,7 @@ export const checkColorContrast = (
   // This is a placeholder - implement proper contrast calculation
   // For production, use a library like 'color-contrast'
   const aaRatio = isLargeText ? 3.0 : 4.5;
-  
+
   // Placeholder implementation - replace with actual contrast calculation
   try {
     // In real implementation, convert hex to RGB and calculate luminance
@@ -138,7 +131,7 @@ export const checkColorContrast = (
  * Useful for dynamic content updates.
  */
 export const announceToScreenReader = (message: string): void => {
-  if (Platform.OS === 'ios') {
+  if (Platform.OS === "ios") {
     AccessibilityInfo.announceForAccessibility(message);
   } else {
     // Android fallback
@@ -151,7 +144,7 @@ export const announceToScreenReader = (message: string): void => {
  */
 export const getListAccessibilityProps = (label: string) => {
   return {
-    accessibilityRole: 'list',
+    accessibilityRole: "list",
     accessibilityLabel: label,
     accessibilityState: {
       disabled: false,
@@ -163,9 +156,9 @@ export const getListAccessibilityProps = (label: string) => {
  * Creates accessibility properties for list items.
  */
 export const getListItemAccessibilityProps = (label: string, position?: number) => {
-  const positionLabel = position !== undefined ? `, Item ${position + 1}` : '';
+  const positionLabel = position !== undefined ? `, Item ${position + 1}` : "";
   return {
-    accessibilityRole: 'listitem',
+    accessibilityRole: "listitem",
     accessibilityLabel: `${label}${positionLabel}`,
     accessibilityState: {
       disabled: false,

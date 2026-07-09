@@ -1,1 +1,50 @@
-/**\n * Navigation Tracking Hook\n * Tracks screen changes and adds Sentry breadcrumbs\n */\n\nimport { useEffect, useRef } from 'react';\nimport { useNavigationContainerRef } from 'expo-router';\nimport { addNavigationBreadcrumb } from '../monitoring/sentry';\n\n/**\n * Hook to track navigation events and add breadcrumbs to Sentry\n */\nexport const useNavigationTracking = () => {\n  const navigationRef = useNavigationContainerRef();\n  const previousRouteName = useRef<string | null>(null);\n\n  useEffect(() => {\n    if (!navigationRef.current) {\n      return;\n    }\n\n    const unsubscribe = navigationRef.current?.addListener('state', (state) => {\n      if (!state) return;\n\n      const currentRoute = state.routes[state.index];\n      const currentRouteName = currentRoute?.name || 'Unknown';\n\n      // Only add breadcrumb if route actually changed\n      if (previousRouteName.current !== currentRouteName) {\n        addNavigationBreadcrumb(currentRouteName, {\n          params: currentRoute?.params,\n          previousRoute: previousRouteName.current,\n        });\n\n        previousRouteName.current = currentRouteName;\n      }\n    });\n\n    return unsubscribe;\n  }, [navigationRef]);\n\n  return navigationRef;\n};\n\n/**\n * Manual navigation breadcrumb for programmatic navigation\n */\nexport const trackNavigation = (screenName: string, params?: Record<string, any>) => {\n  addNavigationBreadcrumb(screenName, params);\n};\n\nexport default useNavigationTracking;
+/**
+ * Navigation Tracking Hook
+ * Tracks screen changes and adds Sentry breadcrumbs
+ */
+
+import { useEffect, useRef } from "react";
+import { useNavigation } from "@react-navigation/native";
+import { addNavigationBreadcrumb } from "../monitoring/sentry";
+
+/**
+ * Hook to track navigation events and add breadcrumbs to Sentry
+ */
+export const useNavigationTracking = () => {
+  const navigation = useNavigation();
+  const previousRouteName = useRef<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("state", () => {
+      const state = navigation.getState();
+      if (!state) {
+        return;
+      }
+
+      const currentRoute = state.routes[state.index];
+      const currentRouteName = currentRoute?.name || "Unknown";
+
+      if (previousRouteName.current !== currentRouteName) {
+        addNavigationBreadcrumb(currentRouteName, {
+          params: currentRoute?.params as Record<string, unknown> | undefined,
+          previousRoute: previousRouteName.current,
+        });
+
+        previousRouteName.current = currentRouteName;
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation]);
+
+  return navigation;
+};
+
+/**
+ * Manual navigation breadcrumb for programmatic navigation
+ */
+export const trackNavigation = (screenName: string, params?: Record<string, unknown>) => {
+  addNavigationBreadcrumb(screenName, params);
+};
+
+export default useNavigationTracking;

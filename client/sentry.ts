@@ -74,10 +74,15 @@ export const clearUser = () => {
 
 // Performance monitoring
 export const startTransaction = (name: string, operation: string = "navigation") => {
-  return Sentry.startTransaction({
-    name,
-    op: operation,
-  });
+  const startSpan = (
+    Sentry as typeof Sentry & {
+      startSpan?: (ctx: { name: string; op: string }) => { end: () => void };
+    }
+  ).startSpan;
+  if (startSpan) {
+    return startSpan({ name, op: operation });
+  }
+  return { end: () => undefined, finish: () => undefined, setTag: () => undefined };
 };
 
 export const addBreadcrumb = (breadcrumb: Sentry.Breadcrumb) => {

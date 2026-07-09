@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Unit tests for WebSocketClient
  * Testing WebSocket connection and message handling

@@ -1,3 +1,9 @@
+/**
+ * Splash Screen
+ * Animated launch screen that reads persisted auth state from useAuthStore
+ * and redirects to Main or Login accordingly.
+ */
+
 import React, { useEffect } from "react";
 import { View, StyleSheet, Image } from "react-native";
 import Animated, {
@@ -6,22 +12,19 @@ import Animated, {
   withTiming,
   withSpring,
   withDelay,
-  runOnJS,
 } from "react-native-reanimated";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
-import { useChatStore } from "@/store/chatStore";
-import { AuthStackParamList } from "@/navigation/AuthStackNavigator";
+import { useAuthStore } from "@presentation/stores";
+import type { SplashNavProp } from "../../../src/navigation/types";
 
-interface SplashScreenProps {
-  navigation: NativeStackNavigationProp<AuthStackParamList, "Splash">;
+interface Props {
+  navigation: SplashNavProp;
 }
 
-export default function SplashScreen({ navigation }: SplashScreenProps) {
+export default function SplashScreen({ navigation }: Props) {
   const { theme } = useTheme();
-  const { loadPersistedState, isAuthenticated, isLoading } = useChatStore();
+  const { isAuthenticated, isLoading } = useAuthStore();
 
   const logoScale = useSharedValue(0.8);
   const logoOpacity = useSharedValue(0);
@@ -31,8 +34,6 @@ export default function SplashScreen({ navigation }: SplashScreenProps) {
     logoScale.value = withSpring(1, { damping: 12, stiffness: 100 });
     logoOpacity.value = withTiming(1, { duration: 600 });
     textOpacity.value = withDelay(300, withTiming(1, { duration: 400 }));
-
-    loadPersistedState();
   }, []);
 
   useEffect(() => {
@@ -46,8 +47,7 @@ export default function SplashScreen({ navigation }: SplashScreenProps) {
       }, 1500);
       return () => clearTimeout(timer);
     }
-    return;
-  }, [isLoading, isAuthenticated]);
+  }, [isLoading, isAuthenticated, navigation]);
 
   const logoStyle = useAnimatedStyle(() => ({
     transform: [{ scale: logoScale.value }],
@@ -62,7 +62,7 @@ export default function SplashScreen({ navigation }: SplashScreenProps) {
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
       <Animated.View style={[styles.logoContainer, logoStyle]}>
         <Image
-          source={require("../../assets/images/icon.png")}
+          source={require("../../../../assets/images/icon.png")}
           style={styles.logo}
           resizeMode="contain"
         />

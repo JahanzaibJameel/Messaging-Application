@@ -151,8 +151,9 @@ class Logger {
     this.log(this.createEntry("warn", message, context, data));
   }
 
-  error(message: string, error?: Error, context?: string, data?: unknown): void {
-    this.log(this.createEntry("error", message, context, data, error));
+  error(message: string, error?: unknown, context?: string, data?: unknown): void {
+    const normalizedError = error instanceof Error ? error : undefined;
+    this.log(this.createEntry("error", message, context, data, normalizedError));
   }
 
   fatal(message: string, error?: Error, context?: string, data?: unknown): void {

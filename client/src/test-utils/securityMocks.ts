@@ -1,1 +1,335 @@
-/**\n * Security Module Mocks\n * Provides mock implementations for security modules in test environment\n */\n\nimport { jest } from '@jest/globals';\n\n// Keychain mocks\nexport const mockKeychain = {\n  getGenericPassword: jest.fn(),\n  setGenericPassword: jest.fn(),\n  resetGenericPassword: jest.fn(),\n  getSupportedBiometryType: jest.fn(),\n  ACCESS_CONTROL: {},\n  AUTHENTICATION_TYPE: {},\n  BIOMETRY_TYPE: {},\n};\n\n// Keychain function mocks\nexport const mockGetToken = jest.fn();\nexport const mockSetToken = jest.fn();\nexport const mockResetToken = jest.fn();\nexport const mockSetUserCredentials = jest.fn();\nexport const mockGetUserCredentials = jest.fn();\nexport const mockResetUserCredentials = jest.fn();\nexport const mockHasAuthenticationData = jest.fn();\nexport const mockClearAllAuthenticationData = jest.fn();\n\n// SSL Pinning mocks\nexport const mockSslPinning = {\n  fetch: jest.fn(),\n  getCookies: jest.fn(),\n  clearCookies: jest.fn(),\n};\n\n// Secure transport mocks\nexport const mockSecureFetch = jest.fn();\nexport const mockCreateSecureWebSocket = jest.fn();\nexport const mockValidateCertificate = jest.fn();\nexport const mockGetSecureUrl = jest.fn();\nexport const mockIsSecureUrl = jest.fn();\nexport const mockEnforceSecureUrl = jest.fn();\n\n// SSL Pinning config mocks\nexport const mockGetSSLPinningConfig = jest.fn();\nexport const mockValidateSSLPinningConfig = jest.fn();\nexport const mockGetCertificateHashForDomain = jest.fn();\nexport const mockShouldUseSSLPinning = jest.fn();\n\n// Secure storage mocks\nexport const mockInitializeSecureStorage = jest.fn();\nexport const mockSecureSet = jest.fn();\nexport const mockSecureGet = jest.fn();\nexport const mockSecureDelete = jest.fn();\nexport const mockSecureSetJSON = jest.fn();\nexport const mockSecureGetJSON = jest.fn();\nexport const mockSecureContains = jest.fn();\nexport const mockSecureGetAllKeys = jest.fn();\nexport const mockSecureClearAll = jest.fn();\n\n// Device security mocks\nexport const mockDeviceInfo = {\n  isEmulator: jest.fn(),\n  isJailBroken: jest.fn(),\n  isRooted: jest.fn(),\n  getBuildNumber: jest.fn(),\n  getVersion: jest.fn(),\n  getBundleId: jest.fn(),\n  getSystemName: jest.fn(),\n  getSystemVersion: jest.fn(),\n  getModel: jest.fn(),\n  getBrand: jest.fn(),\n  getDeviceId: jest.fn(),\n};\n\nexport const mockCheckDeviceSecurity = jest.fn();\nexport const mockGetSecurityStatus = jest.fn();\nexport const mockIsDeviceSecure = jest.fn();\nexport const mockUpdateSecurityConfig = jest.fn();\nexport const mockRefreshSecurityStatus = jest.fn();\n\n// Logger mocks\nexport const mockLogger = {\n  debug: jest.fn(),\n  info: jest.fn(),\n  warn: jest.fn(),\n  error: jest.fn(),\n  fatal: jest.fn(),\n  breadcrumb: jest.fn(),\n  time: jest.fn(),\n  timeEnd: jest.fn(),\n  networkRequest: jest.fn(),\n  userInteraction: jest.fn(),\n  security: jest.fn(),\n  setLogLevel: jest.fn(),\n  getRecentLogs: jest.fn(),\n  getLogsByLevel: jest.fn(),\n  getLogsByCategory: jest.fn(),\n  clearLogs: jest.fn(),\n  exportLogs: jest.fn(),\n};\n\n// Mock implementations for default values\nconst createDefaultTokenStorage = () => ({\n  accessToken: 'mock-access-token',\n  refreshToken: 'mock-refresh-token',\n});\n\nconst createDefaultUserCredentials = () => ({\n  userId: 'mock-user-id',\n  email: 'mock@example.com',\n  username: 'mockuser',\n});\n\nconst createDefaultSecurityStatus = () => ({\n  isJailbroken: false,\n  isEmulator: false,\n  isRooted: false,\n  isSecure: true,\n  threats: [],\n});\n\nconst createDefaultSSLPinningConfig = () => ({\n  domain: 'api.chatapp.com',\n  wsDomain: 'ws.chatapp.com',\n  enabled: true,\n  certificateHashes: ['mock-cert-hash'],\n  allowInsecureConnections: false,\n  timeout: 15000,\n});\n\n// Setup all security mocks with default implementations\nexport const setupSecurityMocks = () => {\n  // Keychain mocks\n  mockKeychain.getGenericPassword.mockResolvedValue({\n    username: 'access_token',\n    password: 'mock-access-token',\n  });\n  mockKeychain.setGenericPassword.mockResolvedValue(true);\n  mockKeychain.resetGenericPassword.mockResolvedValue(true);\n  \n  mockGetToken.mockResolvedValue(createDefaultTokenStorage());\n  mockSetToken.mockResolvedValue(true);\n  mockResetToken.mockResolvedValue(true);\n  mockSetUserCredentials.mockResolvedValue(true);\n  mockGetUserCredentials.mockResolvedValue(createDefaultUserCredentials());\n  mockResetUserCredentials.mockResolvedValue(true);\n  mockHasAuthenticationData.mockResolvedValue(true);\n  mockClearAllAuthenticationData.mockResolvedValue(true);\n  \n  // SSL Pinning mocks\n  mockSslPinning.fetch.mockResolvedValue({\n    status: 200,\n    statusText: 'OK',\n    headers: {},\n    data: 'mock-response-data',\n  });\n  \n  mockSecureFetch.mockResolvedValue({\n    status: 200,\n    statusText: 'OK',\n    headers: {},\n    data: 'mock-response-data',\n  });\n  \n  mockCreateSecureWebSocket.mockResolvedValue(new WebSocket('ws://localhost:8080'));\n  mockValidateCertificate.mockResolvedValue(true);\n  mockGetSecureUrl.mockReturnValue('https://api.chatapp.com/test');\n  mockIsSecureUrl.mockReturnValue(true);\n  mockEnforceSecureUrl.mockReturnValue('https://api.chatapp.com/test');\n  \n  mockGetSSLPinningConfig.mockReturnValue(createDefaultSSLPinningConfig());\n  mockValidateSSLPinningConfig.mockReturnValue(true);\n  mockGetCertificateHashForDomain.mockReturnValue(['mock-cert-hash']);\n  mockShouldUseSSLPinning.mockReturnValue(true);\n  \n  // Secure storage mocks\n  mockInitializeSecureStorage.mockResolvedValue(true);\n  mockSecureSet.mockResolvedValue(true);\n  mockSecureGet.mockResolvedValue('mock-secure-value');\n  mockSecureDelete.mockResolvedValue(true);\n  mockSecureSetJSON.mockResolvedValue(true);\n  mockSecureGetJSON.mockResolvedValue({ mockData: 'value' });\n  mockSecureContains.mockResolvedValue(true);\n  mockSecureGetAllKeys.mockResolvedValue(['key1', 'key2']);\n  mockSecureClearAll.mockResolvedValue(true);\n  \n  // Device security mocks\n  mockDeviceInfo.isEmulator.mockResolvedValue(false);\n  mockDeviceInfo.isJailBroken.mockResolvedValue(false);\n  mockDeviceInfo.isRooted.mockResolvedValue(false);\n  \n  mockCheckDeviceSecurity.mockResolvedValue(createDefaultSecurityStatus());\n  mockGetSecurityStatus.mockReturnValue(createDefaultSecurityStatus());\n  mockIsDeviceSecure.mockReturnValue(true);\n  mockUpdateSecurityConfig.mockReturnValue(undefined);\n  mockRefreshSecurityStatus.mockResolvedValue(createDefaultSecurityStatus());\n  \n  // Logger mocks - no return values for most methods\n  mockLogger.debug.mockReturnValue(undefined);\n  mockLogger.info.mockReturnValue(undefined);\n  mockLogger.warn.mockReturnValue(undefined);\n  mockLogger.error.mockReturnValue(undefined);\n  mockLogger.fatal.mockReturnValue(undefined);\n  mockLogger.breadcrumb.mockReturnValue(undefined);\n  mockLogger.time.mockReturnValue(undefined);\n  mockLogger.timeEnd.mockReturnValue(undefined);\n  mockLogger.networkRequest.mockReturnValue(undefined);\n  mockLogger.userInteraction.mockReturnValue(undefined);\n  mockLogger.security.mockReturnValue(undefined);\n  mockLogger.setLogLevel.mockReturnValue(undefined);\n  mockLogger.getRecentLogs.mockReturnValue([]);\n  mockLogger.getLogsByLevel.mockReturnValue([]);\n  mockLogger.getLogsByCategory.mockReturnValue([]);\n  mockLogger.clearLogs.mockReturnValue(undefined);\n  mockLogger.exportLogs.mockReturnValue('[]');\n};\n\n// Reset all security mocks\nexport const resetSecurityMocks = () => {\n  // Keychain mocks\n  mockKeychain.getGenericPassword.mockReset();\n  mockKeychain.setGenericPassword.mockReset();\n  mockKeychain.resetGenericPassword.mockReset();\n  \n  mockGetToken.mockReset();\n  mockSetToken.mockReset();\n  mockResetToken.mockReset();\n  mockSetUserCredentials.mockReset();\n  mockGetUserCredentials.mockReset();\n  mockResetUserCredentials.mockReset();\n  mockHasAuthenticationData.mockReset();\n  mockClearAllAuthenticationData.mockReset();\n  \n  // SSL Pinning mocks\n  mockSslPinning.fetch.mockReset();\n  \n  mockSecureFetch.mockReset();\n  mockCreateSecureWebSocket.mockReset();\n  mockValidateCertificate.mockReset();\n  mockGetSecureUrl.mockReset();\n  mockIsSecureUrl.mockReset();\n  mockEnforceSecureUrl.mockReset();\n  \n  mockGetSSLPinningConfig.mockReset();\n  mockValidateSSLPinningConfig.mockReset();\n  mockGetCertificateHashForDomain.mockReset();\n  mockShouldUseSSLPinning.mockReset();\n  \n  // Secure storage mocks\n  mockInitializeSecureStorage.mockReset();\n  mockSecureSet.mockReset();\n  mockSecureGet.mockReset();\n  mockSecureDelete.mockReset();\n  mockSecureSetJSON.mockReset();\n  mockSecureGetJSON.mockReset();\n  mockSecureContains.mockReset();\n  mockSecureGetAllKeys.mockReset();\n  mockSecureClearAll.mockReset();\n  \n  // Device security mocks\n  mockDeviceInfo.isEmulator.mockReset();\n  mockDeviceInfo.isJailBroken.mockReset();\n  mockDeviceInfo.isRooted.mockReset();\n  \n  mockCheckDeviceSecurity.mockReset();\n  mockGetSecurityStatus.mockReset();\n  mockIsDeviceSecure.mockReset();\n  mockUpdateSecurityConfig.mockReset();\n  mockRefreshSecurityStatus.mockReset();\n  \n  // Logger mocks\n  mockLogger.debug.mockReset();\n  mockLogger.info.mockReset();\n  mockLogger.warn.mockReset();\n  mockLogger.error.mockReset();\n  mockLogger.fatal.mockReset();\n  mockLogger.breadcrumb.mockReset();\n  mockLogger.time.mockReset();\n  mockLogger.timeEnd.mockReset();\n  mockLogger.networkRequest.mockReset();\n  mockLogger.userInteraction.mockReset();\n  mockLogger.security.mockReset();\n  mockLogger.setLogLevel.mockReset();\n  mockLogger.getRecentLogs.mockReset();\n  mockLogger.getLogsByLevel.mockReset();\n  mockLogger.getLogsByCategory.mockReset();\n  mockLogger.clearLogs.mockReset();\n  mockLogger.exportLogs.mockReset();\n};\n\n// Helper functions for test assertions\nexport const expectKeychainCall = (functionName: string, ...args: any[]) => {\n  const mockFunction = {\n    getToken: mockGetToken,\n    setToken: mockSetToken,\n    resetToken: mockResetToken,\n    setUserCredentials: mockSetUserCredentials,\n    getUserCredentials: mockGetUserCredentials,\n    resetUserCredentials: mockResetUserCredentials,\n  }[functionName];\n  \n  if (mockFunction) {\n    expect(mockFunction).toHaveBeenCalledWith(...args);\n  }\n};\n\nexport const expectSecureStorageCall = (functionName: string, ...args: any[]) => {\n  const mockFunction = {\n    secureSet: mockSecureSet,\n    secureGet: mockSecureGet,\n    secureDelete: mockSecureDelete,\n    secureSetJSON: mockSecureSetJSON,\n    secureGetJSON: mockSecureGetJSON,\n  }[functionName];\n  \n  if (mockFunction) {\n    expect(mockFunction).toHaveBeenCalledWith(...args);\n  }\n};\n\nexport const expectLoggerCall = (level: string, message: string, data?: any) => {\n  expect(mockLogger[level]).toHaveBeenCalledWith(message, data, expect.any(String));\n};\n\nexport const expectSecurityCheck = () => {\n  expect(mockCheckDeviceSecurity).toHaveBeenCalled();\n};\n\nexport default {\n  setupSecurityMocks,\n  resetSecurityMocks,\n  expectKeychainCall,\n  expectSecureStorageCall,\n  expectLoggerCall,\n  expectSecurityCheck,\n};
+/**
+ * Security Module Mocks
+ * Provides mock implementations for security modules in test environment
+ */
+
+// Keychain mocks
+export const mockKeychain = {
+  getGenericPassword: jest.fn(),
+  setGenericPassword: jest.fn(),
+  resetGenericPassword: jest.fn(),
+  getSupportedBiometryType: jest.fn(),
+  ACCESS_CONTROL: {},
+  AUTHENTICATION_TYPE: {},
+  BIOMETRY_TYPE: {},
+};
+
+// Keychain function mocks
+export const mockGetToken = jest.fn();
+export const mockSetToken = jest.fn();
+export const mockResetToken = jest.fn();
+export const mockSetUserCredentials = jest.fn();
+export const mockGetUserCredentials = jest.fn();
+export const mockResetUserCredentials = jest.fn();
+export const mockHasAuthenticationData = jest.fn();
+export const mockClearAllAuthenticationData = jest.fn();
+
+// SSL Pinning mocks
+export const mockSslPinning = {
+  fetch: jest.fn(),
+  getCookies: jest.fn(),
+  clearCookies: jest.fn(),
+};
+
+// Secure transport mocks
+export const mockSecureFetch = jest.fn();
+export const mockCreateSecureWebSocket = jest.fn();
+export const mockValidateCertificate = jest.fn();
+export const mockGetSecureUrl = jest.fn();
+export const mockIsSecureUrl = jest.fn();
+export const mockEnforceSecureUrl = jest.fn();
+
+// SSL Pinning config mocks
+export const mockGetSSLPinningConfig = jest.fn();
+export const mockValidateSSLPinningConfig = jest.fn();
+export const mockGetCertificateHashForDomain = jest.fn();
+export const mockShouldUseSSLPinning = jest.fn();
+
+// Secure storage mocks
+export const mockInitializeSecureStorage = jest.fn();
+export const mockSecureSet = jest.fn();
+export const mockSecureGet = jest.fn();
+export const mockSecureDelete = jest.fn();
+export const mockSecureSetJSON = jest.fn();
+export const mockSecureGetJSON = jest.fn();
+export const mockSecureContains = jest.fn();
+export const mockSecureGetAllKeys = jest.fn();
+export const mockSecureClearAll = jest.fn();
+
+// Device security mocks
+export const mockDeviceInfo = {
+  isEmulator: jest.fn(),
+  isJailBroken: jest.fn(),
+  isRooted: jest.fn(),
+  getBuildNumber: jest.fn(),
+  getVersion: jest.fn(),
+  getBundleId: jest.fn(),
+  getSystemName: jest.fn(),
+  getSystemVersion: jest.fn(),
+  getModel: jest.fn(),
+  getBrand: jest.fn(),
+  getDeviceId: jest.fn(),
+};
+
+export const mockCheckDeviceSecurity = jest.fn();
+export const mockGetSecurityStatus = jest.fn();
+export const mockIsDeviceSecure = jest.fn();
+export const mockUpdateSecurityConfig = jest.fn();
+export const mockRefreshSecurityStatus = jest.fn();
+
+// Logger mocks
+export const mockLogger = {
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  fatal: jest.fn(),
+  breadcrumb: jest.fn(),
+  time: jest.fn(),
+  timeEnd: jest.fn(),
+  networkRequest: jest.fn(),
+  userInteraction: jest.fn(),
+  security: jest.fn(),
+  setLogLevel: jest.fn(),
+  getRecentLogs: jest.fn(),
+  getLogsByLevel: jest.fn(),
+  getLogsByCategory: jest.fn(),
+  clearLogs: jest.fn(),
+  exportLogs: jest.fn(),
+};
+
+// Mock implementations for default values
+const createDefaultTokenStorage = () => ({
+  accessToken: "mock-access-token",
+  refreshToken: "mock-refresh-token",
+});
+
+const createDefaultUserCredentials = () => ({
+  userId: "mock-user-id",
+  email: "mock@example.com",
+  username: "mockuser",
+});
+
+const createDefaultSecurityStatus = () => ({
+  isJailbroken: false,
+  isEmulator: false,
+  isRooted: false,
+  isSecure: true,
+  threats: [],
+});
+
+const createDefaultSSLPinningConfig = () => ({
+  domain: "api.chatapp.com",
+  wsDomain: "ws.chatapp.com",
+  enabled: true,
+  certificateHashes: ["mock-cert-hash"],
+  allowInsecureConnections: false,
+  timeout: 15000,
+});
+
+// Setup all security mocks with default implementations
+export const setupSecurityMocks = () => {
+  // Keychain mocks
+  mockKeychain.getGenericPassword.mockResolvedValue({
+    username: "access_token",
+    password: "mock-access-token",
+  });
+  mockKeychain.setGenericPassword.mockResolvedValue(true);
+  mockKeychain.resetGenericPassword.mockResolvedValue(true);
+
+  mockGetToken.mockResolvedValue(createDefaultTokenStorage());
+  mockSetToken.mockResolvedValue(true);
+  mockResetToken.mockResolvedValue(true);
+  mockSetUserCredentials.mockResolvedValue(true);
+  mockGetUserCredentials.mockResolvedValue(createDefaultUserCredentials());
+  mockResetUserCredentials.mockResolvedValue(true);
+  mockHasAuthenticationData.mockResolvedValue(true);
+  mockClearAllAuthenticationData.mockResolvedValue(true);
+
+  // SSL Pinning mocks
+  mockSslPinning.fetch.mockResolvedValue({
+    status: 200,
+    statusText: "OK",
+    headers: {},
+    data: "mock-response-data",
+  });
+
+  mockSecureFetch.mockResolvedValue({
+    status: 200,
+    statusText: "OK",
+    headers: {},
+    data: "mock-response-data",
+  });
+
+  mockCreateSecureWebSocket.mockResolvedValue(new WebSocket("ws://localhost:8080"));
+  mockValidateCertificate.mockResolvedValue(true);
+  mockGetSecureUrl.mockReturnValue("https://api.chatapp.com/test");
+  mockIsSecureUrl.mockReturnValue(true);
+  mockEnforceSecureUrl.mockReturnValue("https://api.chatapp.com/test");
+
+  mockGetSSLPinningConfig.mockReturnValue(createDefaultSSLPinningConfig());
+  mockValidateSSLPinningConfig.mockReturnValue(true);
+  mockGetCertificateHashForDomain.mockReturnValue(["mock-cert-hash"]);
+  mockShouldUseSSLPinning.mockReturnValue(true);
+
+  // Secure storage mocks
+  mockInitializeSecureStorage.mockResolvedValue(true);
+  mockSecureSet.mockResolvedValue(true);
+  mockSecureGet.mockResolvedValue("mock-secure-value");
+  mockSecureDelete.mockResolvedValue(true);
+  mockSecureSetJSON.mockResolvedValue(true);
+  mockSecureGetJSON.mockResolvedValue({ mockData: "value" });
+  mockSecureContains.mockResolvedValue(true);
+  mockSecureGetAllKeys.mockResolvedValue(["key1", "key2"]);
+  mockSecureClearAll.mockResolvedValue(true);
+
+  // Device security mocks
+  mockDeviceInfo.isEmulator.mockResolvedValue(false);
+  mockDeviceInfo.isJailBroken.mockResolvedValue(false);
+  mockDeviceInfo.isRooted.mockResolvedValue(false);
+
+  mockCheckDeviceSecurity.mockResolvedValue(createDefaultSecurityStatus());
+  mockGetSecurityStatus.mockReturnValue(createDefaultSecurityStatus());
+  mockIsDeviceSecure.mockReturnValue(true);
+  mockUpdateSecurityConfig.mockReturnValue(undefined);
+  mockRefreshSecurityStatus.mockResolvedValue(createDefaultSecurityStatus());
+
+  // Logger mocks - no return values for most methods
+  mockLogger.debug.mockReturnValue(undefined);
+  mockLogger.info.mockReturnValue(undefined);
+  mockLogger.warn.mockReturnValue(undefined);
+  mockLogger.error.mockReturnValue(undefined);
+  mockLogger.fatal.mockReturnValue(undefined);
+  mockLogger.breadcrumb.mockReturnValue(undefined);
+  mockLogger.time.mockReturnValue(undefined);
+  mockLogger.timeEnd.mockReturnValue(undefined);
+  mockLogger.networkRequest.mockReturnValue(undefined);
+  mockLogger.userInteraction.mockReturnValue(undefined);
+  mockLogger.security.mockReturnValue(undefined);
+  mockLogger.setLogLevel.mockReturnValue(undefined);
+  mockLogger.getRecentLogs.mockReturnValue([]);
+  mockLogger.getLogsByLevel.mockReturnValue([]);
+  mockLogger.getLogsByCategory.mockReturnValue([]);
+  mockLogger.clearLogs.mockReturnValue(undefined);
+  mockLogger.exportLogs.mockReturnValue("[]");
+};
+
+// Reset all security mocks
+export const resetSecurityMocks = () => {
+  // Keychain mocks
+  mockKeychain.getGenericPassword.mockReset();
+  mockKeychain.setGenericPassword.mockReset();
+  mockKeychain.resetGenericPassword.mockReset();
+
+  mockGetToken.mockReset();
+  mockSetToken.mockReset();
+  mockResetToken.mockReset();
+  mockSetUserCredentials.mockReset();
+  mockGetUserCredentials.mockReset();
+  mockResetUserCredentials.mockReset();
+  mockHasAuthenticationData.mockReset();
+  mockClearAllAuthenticationData.mockReset();
+
+  // SSL Pinning mocks
+  mockSslPinning.fetch.mockReset();
+
+  mockSecureFetch.mockReset();
+  mockCreateSecureWebSocket.mockReset();
+  mockValidateCertificate.mockReset();
+  mockGetSecureUrl.mockReset();
+  mockIsSecureUrl.mockReset();
+  mockEnforceSecureUrl.mockReset();
+
+  mockGetSSLPinningConfig.mockReset();
+  mockValidateSSLPinningConfig.mockReset();
+  mockGetCertificateHashForDomain.mockReset();
+  mockShouldUseSSLPinning.mockReset();
+
+  // Secure storage mocks
+  mockInitializeSecureStorage.mockReset();
+  mockSecureSet.mockReset();
+  mockSecureGet.mockReset();
+  mockSecureDelete.mockReset();
+  mockSecureSetJSON.mockReset();
+  mockSecureGetJSON.mockReset();
+  mockSecureContains.mockReset();
+  mockSecureGetAllKeys.mockReset();
+  mockSecureClearAll.mockReset();
+
+  // Device security mocks
+  mockDeviceInfo.isEmulator.mockReset();
+  mockDeviceInfo.isJailBroken.mockReset();
+  mockDeviceInfo.isRooted.mockReset();
+
+  mockCheckDeviceSecurity.mockReset();
+  mockGetSecurityStatus.mockReset();
+  mockIsDeviceSecure.mockReset();
+  mockUpdateSecurityConfig.mockReset();
+  mockRefreshSecurityStatus.mockReset();
+
+  // Logger mocks
+  mockLogger.debug.mockReset();
+  mockLogger.info.mockReset();
+  mockLogger.warn.mockReset();
+  mockLogger.error.mockReset();
+  mockLogger.fatal.mockReset();
+  mockLogger.breadcrumb.mockReset();
+  mockLogger.time.mockReset();
+  mockLogger.timeEnd.mockReset();
+  mockLogger.networkRequest.mockReset();
+  mockLogger.userInteraction.mockReset();
+  mockLogger.security.mockReset();
+  mockLogger.setLogLevel.mockReset();
+  mockLogger.getRecentLogs.mockReset();
+  mockLogger.getLogsByLevel.mockReset();
+  mockLogger.getLogsByCategory.mockReset();
+  mockLogger.clearLogs.mockReset();
+  mockLogger.exportLogs.mockReset();
+};
+
+// Helper functions for test assertions
+export const expectKeychainCall = (functionName: string, ...args: any[]) => {
+  const mockFunction = {
+    getToken: mockGetToken,
+    setToken: mockSetToken,
+    resetToken: mockResetToken,
+    setUserCredentials: mockSetUserCredentials,
+    getUserCredentials: mockGetUserCredentials,
+    resetUserCredentials: mockResetUserCredentials,
+  }[functionName];
+
+  if (mockFunction) {
+    expect(mockFunction).toHaveBeenCalledWith(...args);
+  }
+};
+
+export const expectSecureStorageCall = (functionName: string, ...args: any[]) => {
+  const mockFunction = {
+    secureSet: mockSecureSet,
+    secureGet: mockSecureGet,
+    secureDelete: mockSecureDelete,
+    secureSetJSON: mockSecureSetJSON,
+    secureGetJSON: mockSecureGetJSON,
+  }[functionName];
+
+  if (mockFunction) {
+    expect(mockFunction).toHaveBeenCalledWith(...args);
+  }
+};
+
+export const expectLoggerCall = (level: string, message: string, data?: any) => {
+  expect(mockLogger[level]).toHaveBeenCalledWith(message, data, expect.any(String));
+};
+
+export const expectSecurityCheck = () => {
+  expect(mockCheckDeviceSecurity).toHaveBeenCalled();
+};
+
+export default {
+  setupSecurityMocks,
+  resetSecurityMocks,
+  expectKeychainCall,
+  expectSecureStorageCall,
+  expectLoggerCall,
+  expectSecurityCheck,
+};

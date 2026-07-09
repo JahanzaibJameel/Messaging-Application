@@ -86,11 +86,19 @@ class SecureHttpClient {
 
       if (this.defaultOptions.enablePinning) {
         // Use certificate pinning for sensitive requests
+        const body =
+          typeof requestOptions.body === "string"
+            ? requestOptions.body
+            : requestOptions.body == null
+              ? undefined
+              : JSON.stringify(requestOptions.body);
         response = await fetchWithPinning(url, {
-          ...requestOptions,
+          method: (requestOptions.method as "GET" | "POST" | "PUT" | "DELETE") ?? "GET",
+          headers: requestOptions.headers as Record<string, string>,
+          body,
           timeoutInterval: this.defaultOptions.timeout,
           sslPinning: {
-            certs: ["sha256/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX="], // Replace with actual certificate hash
+            certs: ["sha256/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX="],
           },
         });
         status = (response as any).status || 200;
@@ -122,7 +130,8 @@ class SecureHttpClient {
 
       // Handle HTTP errors
       if (status >= 400) {
-        error = data?.error || data?.message || `HTTP ${status}`;
+        const errorPayload = data as { error?: string; message?: string } | undefined;
+        error = errorPayload?.error || errorPayload?.message || `HTTP ${status}`;
       }
 
       return {

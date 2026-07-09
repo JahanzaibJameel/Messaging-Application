@@ -1,77 +1,105 @@
 /**
  * Formatting utilities
+ *
+ * Uses date-fns exclusively — dayjs has been removed.
  */
 
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-import calendar from "dayjs/plugin/calendar";
+import {
+  format,
+  isToday,
+  isYesterday,
+  isThisWeek,
+  isThisYear,
+  formatDistanceToNow,
+} from "date-fns";
 
-dayjs.extend(relativeTime);
-dayjs.extend(calendar);
+// ---------------------------------------------------------------------------
+// Date / time formatters
+// ---------------------------------------------------------------------------
 
 /**
- * Format message timestamp for chat list
+ * Format a timestamp for display in the chat list.
+ *
+ * Rules (matches WhatsApp-style):
+ *   Same day    → "14:05"
+ *   Yesterday   → "Yesterday"
+ *   This week   → "Mon" / "Tue" …
+ *   This year   → "Jan 5"
+ *   Older       → "01/05/24"
  */
 export function formatChatListTime(timestamp: Date | string): string {
-  const date = dayjs(timestamp);
-  const now = dayjs();
+  const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
 
-  if (date.isSame(now, "day")) {
-    return date.format("HH:mm");
+  if (isToday(date)) {
+    return format(date, "HH:mm");
   }
 
-  if (date.isSame(now.subtract(1, "day"), "day")) {
+  if (isYesterday(date)) {
     return "Yesterday";
   }
 
-  if (date.isSame(now, "week")) {
-    return date.format("ddd");
+  if (isThisWeek(date, { weekStartsOn: 1 })) {
+    return format(date, "EEE"); // Mon, Tue …
   }
 
-  if (date.isSame(now, "year")) {
-    return date.format("MMM D");
+  if (isThisYear(date)) {
+    return format(date, "MMM d"); // Jan 5
   }
 
-  return date.format("MM/DD/YY");
+  return format(date, "MM/dd/yy"); // 01/05/24
 }
 
 /**
- * Format message timestamp for chat bubbles
+ * Format a message timestamp for chat bubbles.
+ * Returns "HH:mm" (24-hour clock).
  */
 export function formatMessageTime(timestamp: Date | string): string {
-  return dayjs(timestamp).format("HH:mm");
+  const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+  return format(date, "HH:mm");
 }
 
 /**
- * Format relative time (e.g., "2 hours ago")
+ * Format a relative time string, e.g. "2 hours ago".
  */
 export function formatRelativeTime(timestamp: Date | string): string {
-  return dayjs(timestamp).fromNow();
+  const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+  return formatDistanceToNow(date, { addSuffix: true });
 }
 
 /**
- * Format calendar time (e.g., "Today at 2:30 PM")
+ * Format a calendar-style time, e.g. "Today at 14:05" or "01/05/24 14:05".
  */
 export function formatCalendarTime(timestamp: Date | string): string {
-  return dayjs(timestamp).calendar();
+  const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+
+  if (isToday(date)) {
+    return `Today at ${format(date, "HH:mm")}`;
+  }
+
+  if (isYesterday(date)) {
+    return `Yesterday at ${format(date, "HH:mm")}`;
+  }
+
+  return format(date, "MM/dd/yy HH:mm");
 }
 
+// ---------------------------------------------------------------------------
+// Non-date formatters (unchanged)
+// ---------------------------------------------------------------------------
+
 /**
- * Format duration in seconds to readable string
+ * Format a duration in seconds to a readable mm:ss string.
  */
 export function formatDuration(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
-
-  if (mins > 0) {
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  }
-
-  return `0:${secs.toString().padStart(2, "0")}`;
+  return mins > 0
+    ? `${mins}:${secs.toString().padStart(2, "0")}`
+    : `0:${secs.toString().padStart(2, "0")}`;
 }
 
 /**
- * Format file size to human readable
+ * Format a file size in bytes to a human-readable string.
  */
 export function formatFileSize(bytes: number): string {
   const units = ["B", "KB", "MB", "GB"];
@@ -87,13 +115,11 @@ export function formatFileSize(bytes: number): string {
 }
 
 /**
- * Format phone number
+ * Format a phone number into a readable form.
  */
 export function formatPhoneNumber(phone: string): string {
-  // Remove non-numeric characters
   const cleaned = phone.replace(/\D/g, "");
 
-  // Format as +X (XXX) XXX-XXXX
   if (cleaned.length === 11) {
     return `+${cleaned[0]} (${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7)}`;
   }
@@ -106,7 +132,7 @@ export function formatPhoneNumber(phone: string): string {
 }
 
 /**
- * Truncate text with ellipsis
+ * Truncate text with an ellipsis at `maxLength` characters.
  */
 export function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
@@ -114,14 +140,14 @@ export function truncateText(text: string, maxLength: number): string {
 }
 
 /**
- * Format number with commas
+ * Format a number with locale-appropriate thousand separators.
  */
 export function formatNumber(num: number): string {
   return num.toLocaleString();
 }
 
 /**
- * Get initials from name
+ * Extract up to two uppercase initials from a display name.
  */
 export function getInitials(name: string): string {
   return name

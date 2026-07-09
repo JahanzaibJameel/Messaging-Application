@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Unit tests for SyncEngine
  * Testing core synchronization logic without React Native dependencies

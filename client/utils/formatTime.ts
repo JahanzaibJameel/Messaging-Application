@@ -1,47 +1,60 @@
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-import isToday from "dayjs/plugin/isToday";
-import isYesterday from "dayjs/plugin/isYesterday";
+/**
+ * Time formatting utilities (legacy UI layer)
+ *
+ * Migrated from dayjs to date-fns to eliminate the dayjs dependency.
+ * New code should prefer the richer formatters in
+ * client/src/shared/utils/formatters.ts or the i18n-aware helpers in
+ * client/src/i18n/dateHelper.ts.
+ */
 
-dayjs.extend(relativeTime);
-dayjs.extend(isToday);
-dayjs.extend(isYesterday);
+import {
+  format,
+  isToday,
+  isYesterday,
+  differenceInDays,
+  formatDistanceToNow,
+} from "date-fns";
 
-export function formatMessageTime(timestamp: string): string {
-  return dayjs(timestamp).format("h:mm A");
+function toDate(timestamp: string | Date): Date {
+  return timestamp instanceof Date ? timestamp : new Date(timestamp);
 }
 
-export function formatChatListTime(timestamp: string): string {
-  const date = dayjs(timestamp);
+export function formatMessageTime(timestamp: string | Date): string {
+  return format(toDate(timestamp), "h:mm a");
+}
 
-  if (date.isToday()) {
-    return date.format("h:mm A");
+export function formatChatListTime(timestamp: string | Date): string {
+  const date = toDate(timestamp);
+
+  if (isToday(date)) {
+    return format(date, "h:mm a");
   }
 
-  if (date.isYesterday()) {
+  if (isYesterday(date)) {
     return "Yesterday";
   }
 
-  const daysAgo = dayjs().diff(date, "day");
+  const daysAgo = differenceInDays(new Date(), date);
   if (daysAgo < 7) {
-    return date.format("dddd");
+    return format(date, "EEEE"); // Monday, Tuesday …
   }
 
-  return date.format("M/D/YY");
+  return format(date, "M/d/yy");
 }
 
-export function formatLastSeen(timestamp: string): string {
-  const date = dayjs(timestamp);
+export function formatLastSeen(timestamp: string | Date): string {
+  const date = toDate(timestamp);
+  const timeStr = format(date, "h:mm a");
 
-  if (date.isToday()) {
-    return `last seen today at ${date.format("h:mm A")}`;
+  if (isToday(date)) {
+    return `last seen today at ${timeStr}`;
   }
 
-  if (date.isYesterday()) {
-    return `last seen yesterday at ${date.format("h:mm A")}`;
+  if (isYesterday(date)) {
+    return `last seen yesterday at ${timeStr}`;
   }
 
-  return `last seen ${date.format("M/D/YY")} at ${date.format("h:mm A")}`;
+  return `last seen ${format(date, "M/d/yy")} at ${timeStr}`;
 }
 
 export function formatCallDuration(seconds: number): string {
@@ -50,6 +63,6 @@ export function formatCallDuration(seconds: number): string {
   return `${minutes}:${secs.toString().padStart(2, "0")}`;
 }
 
-export function formatStatusTime(timestamp: string): string {
-  return dayjs(timestamp).fromNow();
+export function formatStatusTime(timestamp: string | Date): string {
+  return formatDistanceToNow(toDate(timestamp), { addSuffix: true });
 }

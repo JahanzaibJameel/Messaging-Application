@@ -1,313 +1,258 @@
 /**
- * MVP Chat Screen
- * Simple working chat screen without enterprise complexity
- * WCAG 2.1 AA compliant with accessibility features
+ * Chat Screen
+ * Real-time messaging screen using useChatStore, useMessageStore,
+ * useAuthStore, and the SyncEngine.
+ *
+ * Delivery status progression happens exclusively via SyncEngine /
+ * WebSocket server — no setTimeout-based fake receipts.
  */
 
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView } from 'react-native';
-import { FlashList } from '@shopify/flash-list';
-import { useTranslation } from 'react-i18next';
-import { useMVPStore, useCurrentChat, useMessages } from '../stores/mvpStore';
-import { RootStackParamList } from '../../navigation/types';
-import { useAccessibleAnimation, getAccessibleLabel, getListAccessibilityProps } from '../../accessibility/a11yHelpers';
-import { FeatureGate } from '../../components/FeatureGate';
-import { DEFAULT_FEATURE_FLAGS } from '../../stores/featureFlagsStore';
+import React, { useState, useCallback, useMemo, useEffect } from "react";
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  Pressable,
+} from "react-native";
+import Clipboard from "@react-native-clipboard/clipboard";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useHeaderHeight } from "@react-navigation/elements";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { Feather } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 
-const ChatScreen: React.FC<{ route: any, navigation: any }> = ({ route, navigation }) => {
-  const { t } = useTranslation();
-  const currentChatData = useCurrentChat();
-  const { addMessage } = useMVPStore();
-  const [messageText, setMessageText] = useState('');
-  const reduceMotion = useAccessibleAnimation();
+import { ChatBubble } from "@/components/ChatBubble";
+import { MessageInput } from "@/components/MessageInput";
+import { MessageActionSheet } from "@/components/MessageActionSheet";
+import { EmptyState } from "@/components/EmptyState";
+import { Avatar } from "@/components/Avatar";
+import { ThemedText } from "@/components/ThemedText";
+import { useTheme } from "@/hooks/useTheme";
+import { Spacing } from "@/constants/theme";
 
-  const chatId = route.params?.chatId;
-  const messages = useMessages(chatId) || [];
+import {
+  useChatStore,
+  useMessageStore,
+  useUIStore,
+  useAuthStore,
+} from "@presentation/stores";
+import { MessageEntity } from "@domain/entities/Message";
+import type { Message } from "@domain/entities/Message";
+import type { GroupChat } from "@domain/entities/Chat";
+import { getSyncEngine } from "@core/sync";
+import type { ChatNavProp, ChatRouteProp } from "../../../src/navigation/types";
 
-  const handleSendMessage = () => {
-    if (!messageText.trim() || !chatId) return;
+interface Props {
+  navigation: ChatNavProp;
+  route: ChatRouteProp;
+}
 
-    const newMessage = {
-      id: Date.now().toString(),
-      text: messageText,
-      senderId: 'me',
-      timestamp: new Date(),
-      isOwn: true,
-    };
+export default function ChatScreen({ navigation, route }: Props) {
+  const { chatId, participantId, isGroup } = route.params;
+  const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
+  const { theme } = useTheme();
 
-    addMessage(chatId, newMessage);
-    setMessageText('');
-  };
+  const { currentUser } = useAuthStore();
+  const { getChatById, markChatAsRead } = useChatStore();
+  const {
+    getMessagesByChatId,
+    deleteMessage,
+    setReplyingTo,
+    replyingTo,
+  } = useMessageStore();
+  const { showToast } = useUIStore();
 
-  const renderMessage = ({ item, index }: any) => (
-    <View 
-      style={[
-        styles.messageContainer,
-        item.isOwn && styles.ownMessage
-      ]}
-      accessibilityRole="text"
-      accessibilityLabel={t('accessibility.messageBubble', { sender: item.senderId, text: item.text })}
-      accessible={true}
-    >
-      <Text 
-        style={styles.messageText}
-        accessible={false} // Parent View handles accessibility
-      >
-        {item.text}
-      </Text>
-      <Text 
-        style={styles.timestamp}
-        accessibilityRole="text"
-        accessibilityLabel={`Sent at ${new Date(item.timestamp).toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-        })}`}
-        accessible={false} // Parent View handles accessibility for content
-      >
-        {new Date(item.timestamp).toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-        })}
-      </Text>
-    </View>
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [showActionSheet, setShowActionSheet] = useState(false);
+
+  const messages = getMessagesByChatId(chatId);
+  const chat = getChatById(chatId);
+  const group = isGroup && chat?.type === "group" ? (chat as GroupChat) : null;
+
+  // Newest-first for inverted FlatList
+  const reversedMessages = useMemo(() => [...messages].reverse(), [messages]);
+
+  useEffect(() => {
+    markChatAsRead(chatId);
+  }, [chatId, markChatAsRead]);
+
+  // Set dynamic header
+  useEffect(() => {
+    if (isGroup && group) {
+      navigation.setOptions({
+        headerTitle: () => (
+          <Pressable
+            onPress={() => navigation.navigate("GroupInfo", { groupId: chatId })}
+            style={styles.headerRow}
+          >
+            <Avatar size="small" />
+            <View style={styles.headerInfo}>
+              <ThemedText style={styles.headerTitle} numberOfLines={1}>
+                {group.name}
+              </ThemedText>
+              <ThemedText style={[styles.headerSubtitle, { color: theme.textSecondary }]} numberOfLines={1}>
+                {group.participantIds.length} participants
+              </ThemedText>
+            </View>
+          </Pressable>
+        ),
+        headerRight: () => (
+          <Pressable onPress={() => navigation.navigate("GroupInfo", { groupId: chatId })}>
+            <Feather name="more-vertical" size={22} color={theme.text} />
+          </Pressable>
+        ),
+      });
+    } else {
+      navigation.setOptions({
+        headerTitle: () => (
+          <View style={styles.headerRow}>
+            <Avatar size="small" />
+            <View style={styles.headerInfo}>
+              <ThemedText style={styles.headerTitle} numberOfLines={1}>
+                Chat
+              </ThemedText>
+              <ThemedText style={[styles.headerSubtitle, { color: theme.textSecondary }]} numberOfLines={1}>
+                online
+              </ThemedText>
+            </View>
+          </View>
+        ),
+      });
+    }
+  }, [navigation, group, isGroup, theme, chatId]);
+
+  const handleSend = useCallback(
+    (text: string) => {
+      if (!currentUser) return;
+
+      const message = MessageEntity.create({
+        chatId,
+        senderId: currentUser.id,
+        type: "text",
+        text,
+        replyTo: replyingTo?.id,
+      });
+
+      // Queue through SyncEngine — it adds to messageStore and sends via WS
+      getSyncEngine().queueMessage(message);
+
+      setReplyingTo(null);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    },
+    [chatId, currentUser, replyingTo, setReplyingTo]
   );
 
-  if (!currentChatData) {
-    return (
-      <View style={styles.container}>
-        <Text 
-          style={styles.loadingText}
-          accessibilityRole="text"
-          accessibilityLabel={t('accessibility.loadingChat')}
-          accessible={true}
-        >
-          {t('general.loading')}
-        </Text>
-      </View>
-    );
-  }
+  const handleLongPress = useCallback((message: Message) => {
+    setSelectedMessage(message);
+    setShowActionSheet(true);
+  }, []);
+
+  const handleReply = useCallback(() => {
+    if (selectedMessage) setReplyingTo(selectedMessage);
+    setShowActionSheet(false);
+  }, [selectedMessage, setReplyingTo]);
+
+  const handleCopy = useCallback(() => {
+    if (selectedMessage?.text) {
+      Clipboard.setString(selectedMessage.text);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      showToast({ type: "success", message: "Copied to clipboard", duration: 1500 });
+    }
+    setShowActionSheet(false);
+  }, [selectedMessage, showToast]);
+
+  const handleDelete = useCallback(() => {
+    if (selectedMessage) {
+      deleteMessage(selectedMessage.id);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      showToast({ type: "success", message: "Message deleted", duration: 1500 });
+    }
+    setShowActionSheet(false);
+  }, [selectedMessage, deleteMessage, showToast]);
+
+  const getReplyToMessage = useCallback(
+    (replyToId?: string) => {
+      if (!replyToId) return undefined;
+      return messages.find((m) => m.id === replyToId);
+    },
+    [messages]
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: Message }) => {
+      const isOwn = item.senderId === currentUser?.id;
+      return (
+        <ChatBubble
+          message={item}
+          isOwn={isOwn}
+          onLongPress={() => handleLongPress(item)}
+          replyToMessage={getReplyToMessage(item.replyTo)}
+        />
+      );
+    },
+    [handleLongPress, getReplyToMessage, currentUser?.id]
+  );
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior="padding">
-      <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => navigation.goBack()}
-          accessibilityRole="button"
-          accessibilityLabel={t('accessibility.backButton')}
-          accessibilityHint={t('accessibility.backButtonHint')}
-          accessible={true}
-          style={{ minHeight: 44, minWidth: 44, justifyContent: 'center' }}
-        >
-          <Text 
-            style={styles.backButton}
-            accessible={false} // Parent TouchableOpacity handles accessibility
-          >
-            {t('chat.back')}
-          </Text>
-        </TouchableOpacity>
-        <Text 
-          style={styles.chatName}
-          accessibilityRole="header"
-          accessibilityLabel={t('accessibility.chatName', { name: currentChatData?.chat?.name || 'Unknown' })}
-          accessible={true}
-        >
-          {currentChatData?.chat?.name || t('chat.messages')}
-        </Text>
-      </View>
-      
-      <FlashList
-        data={messages}
-        renderItem={renderMessage}
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: theme.backgroundRoot }]}
+      behavior="padding"
+      keyboardVerticalOffset={0}
+    >
+      <FlatList
+        data={reversedMessages}
         keyExtractor={(item) => item.id}
-        style={styles.messagesList}
-        inverted
-        accessibilityLabel={t('accessibility.messages')}
-        accessibilityRole="list"
-        accessible={true}
-        // Performance optimizations
-        removeClippedSubviews={true}
-        estimatedItemSize={60}
-        // Memory optimizations
-        getItemType={(item, index) => 'message-item'}
-        // Additional performance settings
-        extraData={{}}
+        renderItem={renderItem}
+        inverted={reversedMessages.length > 0}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingTop: headerHeight + Spacing.md },
+          reversedMessages.length === 0 && styles.emptyListContent,
+        ]}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <EmptyState
+              image={require("../../../../assets/images/empty-chats.png")}
+              title="No messages yet"
+              message="Start the conversation by sending a message"
+            />
+          </View>
+        }
+        showsVerticalScrollIndicator={false}
+        keyboardDismissMode="interactive"
+        keyboardShouldPersistTaps="handled"
       />
-      
-      <View style={styles.inputContainer}>
-        <FeatureGate 
-          flag="enableVoiceMessages" 
-          fallback={
-            <View style={styles.placeholderVoiceButton}>
-              <Text style={styles.placeholderText}>🎤</Text>
-            </View>
+
+      <View style={{ paddingBottom: insets.bottom }}>
+        <MessageInput
+          onSend={handleSend}
+          replyingTo={
+            replyingTo
+              ? { text: replyingTo.text ?? "Media", onCancelReply: () => setReplyingTo(null) }
+              : undefined
           }
-        >
-          <TouchableOpacity
-            style={styles.voiceButton}
-            accessibilityRole="button"
-            accessibilityLabel="Voice message"
-            accessibilityHint="Record a voice message"
-            accessible={true}
-          >
-            <Text style={styles.voiceButtonText}>🎤</Text>
-          </TouchableOpacity>
-        </FeatureGate>
-        
-        <TextInput
-          style={styles.textInput}
-          value={messageText}
-          onChangeText={setMessageText}
-          placeholder={t('chat.inputPlaceholder')}
-          multiline
-          maxLength={500}
-          accessibilityLabel={t('accessibility.messageInput')}
-          accessibilityHint={t('accessibility.messageInputHint')}
-          accessible={true}
-          allowFontScaling={true}
-          importantForAccessibility="auto"
         />
-        <TouchableOpacity
-          style={[styles.sendButton, { minWidth: 44, minHeight: 44, justifyContent: 'center', alignItems: 'center' }]}
-          onPress={handleSendMessage}
-          disabled={!messageText.trim()}
-          accessibilityRole="button"
-          accessibilityLabel={t('accessibility.sendButton')}
-          accessibilityHint={t('accessibility.sendButtonHint')}
-          accessibilityState={{
-            disabled: !messageText.trim(),
-          }}
-          accessible={true}
-        >
-          <Text 
-            style={styles.sendButtonText}
-            accessible={false} // Parent TouchableOpacity handles accessibility
-          >
-            {t('chat.send')}
-          </Text>
-        </TouchableOpacity>
       </View>
+
+      <MessageActionSheet
+        visible={showActionSheet}
+        onClose={() => setShowActionSheet(false)}
+        onReply={handleReply}
+        onCopy={handleCopy}
+        onDelete={handleDelete}
+      />
     </KeyboardAvoidingView>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    backgroundColor: '#ffffff',
-  },
-  backButton: {
-    fontSize: 16,
-    color: '#007AFF',
-    marginRight: 16,
-  },
-  chatName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333333',
-    flex: 1,
-  },
-  messagesList: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  messageContainer: {
-    marginVertical: 4,
-    marginHorizontal: 16,
-    padding: 12,
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    maxWidth: '80%',
-    alignSelf: 'flex-start',
-  },
-  ownMessage: {
-    backgroundColor: '#e3f2fd',
-    alignSelf: 'flex-end',
-  },
-  messageText: {
-    fontSize: 16,
-    color: '#333333',
-    lineHeight: 22,
-  },
-  timestamp: {
-    fontSize: 12,
-    color: '#666666',
-    marginTop: 4,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    backgroundColor: '#ffffff',
-    alignItems: 'flex-end',
-  },
-  voiceButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#007AFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-  },
-  voiceButtonText: {
-    fontSize: 18,
-  },
-  placeholderVoiceButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-    opacity: 0.5,
-  },
-  placeholderText: {
-    fontSize: 18,
-    color: '#999',
-  },
-  textInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    backgroundColor: '#f8f9fa',
-  },
-  sendButton: {
-    marginLeft: 12,
-    backgroundColor: '#007AFF',
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    // Minimum touch target size is handled inline for accessibility
-  },
-  sendButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-    // Ensure sufficient contrast ratio (4.5:1 for normal text)
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#666666',
-    textAlign: 'center',
-    marginTop: 100,
-    // Ensure sufficient contrast ratio (4.5:1 for normal text)
-  },
+  container: { flex: 1 },
+  headerRow: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
+  headerInfo: { flex: 1 },
+  headerTitle: { fontSize: 16, fontWeight: "600" },
+  headerSubtitle: { fontSize: 12 },
+  listContent: { flexGrow: 1, paddingBottom: Spacing.md },
+  emptyListContent: { justifyContent: "center" },
+  emptyContainer: { flex: 1, transform: [{ scaleY: -1 }] },
 });
-
-export default ChatScreen;

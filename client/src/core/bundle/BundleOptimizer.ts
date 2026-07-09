@@ -3,7 +3,7 @@
  * Code splitting, tree shaking, and bundle analysis
  */
 
-import React from 'react';
+import React from "react";
 import { Platform } from "react-native";
 import { logger } from "../logger";
 
@@ -59,7 +59,7 @@ class BundleOptimizerClass {
     return importFn()
       .then((module) => {
         const loadTime = Date.now() - startTime;
-        logger.info("Lazy loaded module", { loadTime });
+        logger.info("Lazy loaded module", "BundleOptimizer", { loadTime });
         return module;
       })
       .catch((error) => {
@@ -78,7 +78,11 @@ class BundleOptimizerClass {
     ];
 
     try {
-      await Promise.all(criticalModules.map((module) => this.lazyLoad(module)));
+      await Promise.all(
+        criticalModules.map((module) =>
+          this.lazyLoad(module as () => Promise<typeof import("@/presentation/stores/authStore")>)
+        )
+      );
       logger.info("Critical modules preloaded");
     } catch (error) {
       logger.error("Failed to preload critical modules:", error);
@@ -137,7 +141,7 @@ class BundleOptimizerClass {
       analysis.recommendations = this.generateRecommendations(analysis);
 
       this.analysis = analysis;
-      logger.info("Bundle analysis completed", analysis);
+      logger.info("Bundle analysis completed", "BundleOptimizer", analysis);
 
       return analysis;
     } catch (error) {
@@ -278,7 +282,7 @@ CONFIGURATION:
   // Update configuration
   public updateConfig = (updates: Partial<BundleConfig>): void => {
     this.config = { ...this.config, ...updates };
-    logger.info("Bundle optimizer config updated", this.config);
+    logger.info("Bundle optimizer config updated", "BundleOptimizer", this.config);
   };
 }
 

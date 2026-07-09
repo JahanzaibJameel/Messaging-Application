@@ -84,7 +84,11 @@ export class WebSocketClient {
       };
 
       this.ws.onerror = (error) => {
-        logger.error("WebSocket error", error as Error, "WebSocketClient");
+        logger.error(
+          "WebSocket error",
+          error instanceof Error ? error : new Error("WebSocket error"),
+          "WebSocketClient"
+        );
         this.setStatus("disconnected");
       };
     } catch (error) {

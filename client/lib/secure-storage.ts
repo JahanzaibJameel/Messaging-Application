@@ -4,6 +4,7 @@
  */
 
 import * as Keychain from "react-native-keychain";
+import { error as logError } from "../src/utils/logger";
 
 export class SecureStorageService {
   private static instance: SecureStorageService;
@@ -29,8 +30,8 @@ export class SecureStorageService {
 
       await Keychain.setInternetCredentials(key, key, value, options);
       return true;
-    } catch (error) {
-      console.error("SecureStorage.setItem error:", error);
+    } catch (error: unknown) {
+      logError("SecureStorage.setItem error", error, "secure_storage");
       return false;
     }
   }
@@ -46,8 +47,8 @@ export class SecureStorageService {
         return credentials.password;
       }
       return null;
-    } catch (error) {
-      console.error("SecureStorage.getItem error:", error);
+    } catch (error: unknown) {
+      logError("SecureStorage.getItem error", error, "secure_storage");
       return null;
     }
   }
@@ -57,10 +58,10 @@ export class SecureStorageService {
    */
   async removeItem(key: string): Promise<boolean> {
     try {
-      await Keychain.resetInternetCredentials(key);
+      await Keychain.resetInternetCredentials({ server: key });
       return true;
-    } catch (error) {
-      console.error("SecureStorage.removeItem error:", error);
+    } catch (error: unknown) {
+      logError("SecureStorage.removeItem error", error, "secure_storage");
       return false;
     }
   }
@@ -72,8 +73,8 @@ export class SecureStorageService {
     try {
       const biometryType = await Keychain.getSupportedBiometryType();
       return biometryType !== null;
-    } catch (error) {
-      console.error("SecureStorage.isBiometryAvailable error:", error);
+    } catch (error: unknown) {
+      logError("SecureStorage.isBiometryAvailable error", error, "secure_storage");
       return false;
     }
   }
@@ -84,8 +85,8 @@ export class SecureStorageService {
   async getBiometryType(): Promise<Keychain.BIOMETRY_TYPE | null> {
     try {
       return await Keychain.getSupportedBiometryType();
-    } catch (error) {
-      console.error("SecureStorage.getBiometryType error:", error);
+    } catch (error: unknown) {
+      logError("SecureStorage.getBiometryType error", error, "secure_storage");
       return null;
     }
   }
@@ -111,8 +112,8 @@ export class SecureStorageService {
 
     try {
       return JSON.parse(authData);
-    } catch (error) {
-      console.error("SecureStorage.getAuthToken parse error:", error);
+    } catch (error: unknown) {
+      logError("SecureStorage.getAuthToken parse error", error, "secure_storage");
       return null;
     }
   }
@@ -185,8 +186,8 @@ export class SecureStorageService {
       }
 
       return true;
-    } catch (error) {
-      console.error("SecureStorage.clearAll error:", error);
+    } catch (error: unknown) {
+      logError("SecureStorage.clearAll error", error, "secure_storage");
       return false;
     }
   }

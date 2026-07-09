@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Unit tests for RemoteApiDataSource
  * Testing remote API data source functionality

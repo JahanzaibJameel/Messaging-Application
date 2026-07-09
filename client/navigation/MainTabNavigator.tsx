@@ -1,21 +1,28 @@
+/**
+ * Main Tab Navigator
+ * ChatsTab uses the new presentation layer screen.
+ * Status, Calls and Settings tabs keep their UI-layer screens.
+ */
+
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { Platform, StyleSheet } from "react-native";
 
-import ChatListScreen from "@/screens/ChatListScreen";
-import StatusScreen from "@/screens/StatusScreen";
-import CallsScreen from "@/screens/CallsScreen";
-import SettingsScreen from "@/screens/SettingsScreen";
+// New presentation-layer screen
+import ChatListScreen from "@/src/presentation/screens/ChatListScreen";
+
+// UI-layer screens (no old-store dependency – they use the new stores after migration)
+import StatusScreen from "@/src/presentation/screens/StatusScreen";
+import CallsScreen from "@/src/presentation/screens/CallsScreen";
+import SettingsScreen from "@/src/presentation/screens/SettingsScreen";
+
 import { useTheme } from "@/hooks/useTheme";
 
-export type MainTabParamList = {
-  ChatsTab: undefined;
-  StatusTab: undefined;
-  CallsTab: undefined;
-  SettingsTab: undefined;
-};
+import type { MainTabParamList } from "@/src/navigation/types";
+
+export type { MainTabParamList };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 

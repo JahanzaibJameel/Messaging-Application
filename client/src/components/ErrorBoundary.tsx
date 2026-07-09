@@ -3,9 +3,9 @@
  * Catches JavaScript errors in component tree and reports to Sentry
  */
 
-import React, { Component, ReactNode } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { captureException } from '../monitoring/sentry';
+import React, { Component, ReactNode } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import { captureException } from "../monitoring/sentry";
 
 interface Props {
   children: ReactNode;
@@ -30,19 +30,19 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
+
     try {
       captureException(error, {
-        action: 'component_render',
-        screen: 'error_boundary',
+        action: "component_render",
+        screen: "error_boundary",
         additionalData: {
           componentStack: errorInfo.componentStack,
           errorBoundary: true,
         },
       });
     } catch (sentryError) {
-      console.error('Failed to report error to Sentry:', sentryError);
+      console.error("Failed to report error to Sentry:", sentryError);
     }
 
     this.props.onError?.(error, errorInfo);
@@ -65,15 +65,15 @@ class ErrorBoundary extends Component<Props, State> {
     if (this.state.error) {
       try {
         captureException(this.state.error, {
-          action: 'user_reported_error',
-          screen: 'error_boundary',
+          action: "user_reported_error",
+          screen: "error_boundary",
           additionalData: {
             userFeedback: true,
             componentStack: this.state.errorInfo?.componentStack,
           },
         });
       } catch (sentryError) {
-        console.error('Failed to report user feedback to Sentry:', sentryError);
+        console.error("Failed to report user feedback to Sentry:", sentryError);
       }
     }
   };
@@ -87,11 +87,20 @@ class ErrorBoundary extends Component<Props, State> {
       return (
         <View style={styles.container}>
           <View style={styles.content}>
-            <Text style={styles.title} accessible={true} accessibilityLabel="Error occurred" accessibilityRole="header">
+            <Text
+              style={styles.title}
+              accessible={true}
+              accessibilityLabel="Error occurred"
+              accessibilityRole="header"
+            >
               Oops! Something went wrong
             </Text>
-            
-            <Text style={styles.message} accessible={true} accessibilityLabel="Error message description">
+
+            <Text
+              style={styles.message}
+              accessible={true}
+              accessibilityLabel="Error message description"
+            >
               We encountered an unexpected error. The issue has been reported to our team.
             </Text>
 
@@ -99,7 +108,7 @@ class ErrorBoundary extends Component<Props, State> {
               <ScrollView style={styles.errorDetails}>
                 <Text style={styles.errorTitle}>Error Details (Development Only):</Text>
                 <Text style={styles.errorText}>{this.state.error.toString()}</Text>
-                
+
                 {this.state.errorInfo && (
                   <>
                     <Text style={styles.errorTitle}>Component Stack:</Text>
@@ -144,18 +153,18 @@ class ErrorBoundary extends Component<Props, State> {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#f8f9fa",
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   content: {
     maxWidth: 400,
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
+    alignItems: "center",
+    backgroundColor: "#ffffff",
     padding: 24,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -163,42 +172,42 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#dc3545',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "#dc3545",
+    textAlign: "center",
     marginBottom: 12,
   },
   message: {
     fontSize: 16,
-    color: '#6c757d',
-    textAlign: 'center',
+    color: "#6c757d",
+    textAlign: "center",
     marginBottom: 20,
     lineHeight: 22,
   },
   errorDetails: {
     maxHeight: 200,
-    width: '100%',
+    width: "100%",
     marginBottom: 20,
     padding: 12,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: "#f8f9fa",
     borderRadius: 8,
   },
   errorTitle: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#495057',
+    fontWeight: "bold",
+    color: "#495057",
     marginBottom: 8,
   },
   errorText: {
     fontSize: 12,
-    color: '#6c757d',
-    fontFamily: 'monospace',
+    color: "#6c757d",
+    fontFamily: "monospace",
     marginBottom: 12,
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
     gap: 12,
   },
   button: {
@@ -206,20 +215,20 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     minHeight: 44,
   },
   retryButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
   },
   reportButton: {
-    backgroundColor: '#28a745',
+    backgroundColor: "#28a745",
   },
   buttonText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 

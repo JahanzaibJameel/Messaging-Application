@@ -18,6 +18,7 @@ export interface Chat {
   isArchived: boolean;
   createdAt: Date;
   updatedAt: Date;
+  metadata?: Record<string, unknown>;
 }
 
 export interface GroupChat extends Chat {
@@ -52,6 +53,7 @@ export class ChatEntity implements Chat {
   isArchived: boolean;
   createdAt: Date;
   updatedAt: Date;
+  metadata?: Record<string, unknown>;
 
   constructor(props: Chat) {
     this.id = props.id;
@@ -64,6 +66,7 @@ export class ChatEntity implements Chat {
     this.isArchived = props.isArchived;
     this.createdAt = props.createdAt;
     this.updatedAt = props.updatedAt;
+    this.metadata = props.metadata;
   }
 
   static createPrivate(participantId: string, currentUserId: string): ChatEntity {

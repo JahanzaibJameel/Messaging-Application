@@ -1,132 +1,113 @@
 /**
  * Performance Regression Tests
- * Tests to ensure the app maintains acceptable performance metrics
- * 
- * Target Performance:
- * - Chat List: >58 FPS when scrolling through 500 items
- * - Message List: >58 FPS when scrolling through 200 messages
- * - Error Threshold: <55 FPS
+ * Measures store operation throughput as a proxy for list-render performance.
+ *
+ * Real render-frame timing requires a physical device via tools like Flashlight
+ * or the React Native Performance Monitor. These tests guard against O(n)
+ * regressions in store selectors that would slow the UI thread.
+ *
+ * Target:
+ * - getSortedChats() over 500 items: <1 ms average
+ * - getMessagesByChatId() over 200 messages: <1 ms average
  */
 
-import { performance } from 'perf_hooks';
-import { renderHook, act } from '@testing-library/react-native';
-import { FlashList } from '@shopify/flash-list';
-import { useMVPStore } from '../presentation/stores/mvpStore';
-import type { Chat, Message } from '../presentation/stores/mvpStore';
+import { performance } from "perf_hooks";
+import { act, renderHook } from "@testing-library/react-native";
+import { useChatStore } from "../presentation/stores/chatStore";
+import { useMessageStore } from "../presentation/stores/messageStore";
+import type { Chat } from "../domain/entities/Chat";
+import type { Message } from "../domain/entities/Message";
 
-// Performance thresholds
-const PERFORMANCE_THRESHOLDS = {
-  TARGET_FPS: 58,
-  MIN_FPS: 55,
-  FRAME_TIME_TARGET: 16.67, // 60 FPS = 16.67ms per frame
-  FRAME_TIME_MAX: 18.18, // 55 FPS = 18.18ms per frame
-};
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
-// Mock performance measurement utilities
-const measurePerformance = (callback: () => void, iterations: number = 100) => {
+const measurePerformance = (callback: () => void, iterations = 100) => {
   const times: number[] = [];
-  
   for (let i = 0; i < iterations; i++) {
     const start = performance.now();
     callback();
     const end = performance.now();
     times.push(end - start);
   }
-  
-  const avgTime = times.reduce((sum, time) => sum + time, 0) / times.length;
-  const minTime = Math.min(...times);
+  const avgTime = times.reduce((s, t) => s + t, 0) / times.length;
   const maxTime = Math.max(...times);
-  
+  return { avgTime, maxTime };
+};
+
+const makeChat = (index: number): Chat => {
+  const now = new Date(Date.now() - index * 1000);
   return {
-    avgTime,
-    minTime,
-    maxTime,
-    avgFPS: 1000 / avgTime,
-    minFPS: 1000 / maxTime,
-    maxFPS: 1000 / minTime,
+    id: `chat-${index}`,
+    type: "private",
+    participantIds: ["currentUser", `user-${index}`],
+    unreadCount: index % 5,
+    isPinned: index % 20 === 0,
+    isMuted: false,
+    isArchived: false,
+    createdAt: now,
+    updatedAt: now,
   };
 };
 
-// Generate test data
-const generateTestChats = (count: number): Chat[] => {
-  return Array.from({ length: count }, (_, index) => ({
-    id: `chat-${index}`,
-    name: `Chat ${index}`,
-    lastMessage: `Last message from chat ${index}`,
-    timestamp: new Date(Date.now() - index * 1000),
-    unreadCount: Math.floor(Math.random() * 10),
-  }));
-};
+const makeMessage = (index: number, chatId = "chat-0"): Message => ({
+  id: `msg-${index}`,
+  chatId,
+  senderId: index % 2 === 0 ? "currentUser" : "user-1",
+  type: "text",
+  text: `Message ${index} — some realistic content to mirror real payloads.`,
+  timestamp: new Date(Date.now() - index * 60_000),
+  status: "delivered",
+  reactions: [],
+  edited: false,
+});
 
-const generateTestMessages = (count: number): Message[] => {
-  return Array.from({ length: count }, (_, index) => ({
-    id: `msg-${index}`,
-    text: `This is message number ${index} with some content to simulate real messages`,
-    senderId: index % 2 === 0 ? 'me' : 'other',
-    timestamp: new Date(Date.now() - index * 60000), // 1 minute apart
-    isOwn: index % 2 === 0,
-  }));
-};
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
 
-describe('Performance Regression Tests', () => {
-  let mockSet: jest.Mock;
-  let mockGetString: jest.Mock;
+describe("Performance Regression Tests", () => {
+  describe("Chat list – getSortedChats()", () => {
+    it("averages under 1 ms over 500 chats across 100 iterations", () => {
+      const chats = Array.from({ length: 500 }, (_, i) => makeChat(i));
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockSet = jest.fn();
-    mockGetString = jest.fn();
-    
-    // Mock MMKV to avoid persistence overhead during performance tests
-    jest.mock('react-native-mmkv', () => ({
-      MMKV: jest.fn().mockImplementation(() => ({
-        getString: mockGetString,
-        set: mockSet,
-        delete: jest.fn(),
-        clearAll: jest.fn(),
-      })),
-    }));
+      const { result } = renderHook(() => useChatStore());
+      act(() => result.current.setChats(chats));
+
+      const { avgTime, maxTime } = measurePerformance(
+        () => result.current.getSortedChats(),
+        100
+      );
+
+      console.log("getSortedChats (500 items):", {
+        avgTime: `${avgTime.toFixed(3)} ms`,
+        maxTime: `${maxTime.toFixed(3)} ms`,
+      });
+
+      expect(avgTime).toBeLessThan(1); // <1 ms average
+    });
   });
 
-  describe('Chat List Performance', () => {
-    it('should maintain >58 FPS when scrolling through 500 chat items', () => {
-      const testChats = generateTestChats(500);
-      
-      const { result } = renderHook(() => useMVPStore());
-      
-      // Load test data
+  describe("Message list – getMessagesByChatId()", () => {
+    it("averages under 1 ms over 200 messages across 100 iterations", () => {
+      const messages = Array.from({ length: 200 }, (_, i) => makeMessage(i));
+
+      const { result } = renderHook(() => useMessageStore());
       act(() => {
-        result.current.setChats(testChats);
+        messages.forEach((m) => result.current.addMessage(m));
       });
-      
-      // Simulate scroll performance test
-      const scrollPerformance = measurePerformance(() => {
-        // Simulate scroll operation - rendering 10 items at a time
-        for (let i = 0; i < 10; i++) {
-          const startIndex = Math.floor(Math.random() * 490);
-          const endIndex = startIndex + 10;
-          const visibleChats = testChats.slice(startIndex, endIndex);
-          
-          // Simulate rendering each visible chat item
-          visibleChats.forEach(chat => {
-            // Simulate the cost of rendering a chat item
-            JSON.stringify(chat);
-          });
-        }
-      }, 50);
-      
-      console.log('Chat List Performance:', {
-        avgFPS: scrollPerformance.avgFPS.toFixed(2),
-        minFPS: scrollPerformance.minFPS.toFixed(2),
-        avgFrameTime: `${scrollPerformance.avgTime.toFixed(2)}ms`,
-        maxFrameTime: `${scrollPerformance.maxTime.toFixed(2)}ms`,
+
+      const { avgTime, maxTime } = measurePerformance(
+        () => result.current.getMessagesByChatId("chat-0"),
+        100
+      );
+
+      console.log("getMessagesByChatId (200 messages):", {
+        avgTime: `${avgTime.toFixed(3)} ms`,
+        maxTime: `${maxTime.toFixed(3)} ms`,
       });
-      
-      // Performance assertions
-      expect(scrollPerformance.avgFPS).toBeGreaterThan(PERFORMANCE_THRESHOLDS.TARGET_FPS);
-      expect(scrollPerformance.minFPS).toBeGreaterThan(PERFORMANCE_THRESHOLDS.MIN_FPS);
-      expect(scrollPerformance.avgTime).toBeLessThan(PERFORMANCE_THRESHOLDS.FRAME_TIME_TARGET);
-      expect(scrollPerformance.maxTime).toBeLessThan(PERFORMANCE_THRESHOLDS.FRAME_TIME_MAX);
+
+      expect(avgTime).toBeLessThan(1); // <1 ms average
     });
   });
 });

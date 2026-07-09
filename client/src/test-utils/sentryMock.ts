@@ -3,7 +3,7 @@
  * Provides mock implementations for Sentry functions in test environment
  */
 
-import { jest, expect } from '@jest/globals';
+import { jest, expect } from "@jest/globals";
 
 export const mockSentry = {
   init: jest.fn(),
@@ -14,11 +14,11 @@ export const mockSentry = {
   withScope: jest.fn(),
   ReactNativeTracing: jest.fn(),
   SeverityLevel: {
-    Fatal: 'fatal',
-    Error: 'error',
-    Warning: 'warning',
-    Info: 'info',
-    Debug: 'debug',
+    Fatal: "fatal",
+    Error: "error",
+    Warning: "warning",
+    Info: "info",
+    Debug: "debug",
   },
 };
 
@@ -36,12 +36,12 @@ export const captureException = jest.fn();
 export const captureMessage = jest.fn();
 
 export const resetSentryMocks = () => {
-  Object.values(mockSentry).forEach(mock => {
+  Object.values(mockSentry).forEach((mock) => {
     if (jest.isMockFunction(mock)) {
       mock.mockReset();
     }
   });
-  
+
   initializeSentry.mockReset();
   configureNavigationTracing.mockReset();
   setUserContext.mockReset();

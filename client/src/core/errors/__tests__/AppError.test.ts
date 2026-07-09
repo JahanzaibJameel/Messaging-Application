@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { AppError, ErrorCode, ErrorDetails } from "../AppError";
 
 describe("AppError", () => {

@@ -3,10 +3,10 @@
  * Conditionally renders children based on feature flag status
  */
 
-import React, { ReactNode, useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { useFeatureFlag } from '../hooks/useFeatureFlag';
-import { DEFAULT_FEATURE_FLAGS } from '../stores/featureFlagsStore';
+import React, { ReactNode, useMemo } from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { useFeatureFlag } from "../hooks/useFeatureFlag";
+import { DEFAULT_FEATURE_FLAGS } from "../stores/featureFlagsStore";
 
 interface FeatureGateProps {
   /** Feature flag key to check */
@@ -36,22 +36,14 @@ export const FeatureGate: React.FC<FeatureGateProps> = ({
 
   const debugInfo = useMemo(() => {
     if (!showDebug || !__DEV__) return null;
-    
+
     return (
       <View style={styles.debugInfo}>
-        <Text style={styles.debugText}>
-          🚩 Feature: {flagInfo?.name}
-        </Text>
-        <Text style={styles.debugText}>
-          Status: {isEnabled ? '✅ ENABLED' : '❌ DISABLED'}
-        </Text>
-        <Text style={styles.debugText}>
-          Category: {flagInfo?.category}
-        </Text>
+        <Text style={styles.debugText}>🚩 Feature: {flagInfo?.name}</Text>
+        <Text style={styles.debugText}>Status: {isEnabled ? "✅ ENABLED" : "❌ DISABLED"}</Text>
+        <Text style={styles.debugText}>Category: {flagInfo?.category}</Text>
         {flagInfo?.rolloutPercentage !== undefined && (
-          <Text style={styles.debugText}>
-            Rollout: {flagInfo.rolloutPercentage}%
-          </Text>
+          <Text style={styles.debugText}>Rollout: {flagInfo.rolloutPercentage}%</Text>
         )}
       </View>
     );
@@ -100,9 +92,9 @@ export const withFeatureGate = <P extends object>(
         <WrappedComponent {...props} />
       </FeatureGate>
     );
-    
+
     WithFeatureGateComponent.displayName = `withFeatureGate(${WrappedComponent.displayName || WrappedComponent.name})`;
-    
+
     return WithFeatureGateComponent;
   };
 };
@@ -124,18 +116,18 @@ export const useFeatureGate = (flag: keyof typeof DEFAULT_FEATURE_FLAGS) => {
 
 const styles = StyleSheet.create({
   debugInfo: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
     padding: 8,
     zIndex: 9999,
   },
   debugText: {
-    color: 'white',
+    color: "white",
     fontSize: 10,
-    fontFamily: 'monospace',
+    fontFamily: "monospace",
     marginBottom: 2,
   },
 });

@@ -22,7 +22,19 @@ export function useChat(options: UseChatOptions = {}) {
   const [isLoading, setIsLoading] = useState(false);
 
   const { currentUser } = useAuthStore();
-  const { getChatById, updateChat, deleteChat } = useChatStore();
+  const {
+    getChatById,
+    updateChat,
+    removeChat,
+    markChatAsRead,
+    pinChat,
+    unpinChat,
+    muteChat,
+    unmuteChat,
+    archiveChat,
+    unarchiveChat,
+    updateLastMessage,
+  } = useChatStore();
   const { getMessagesByChatId, addMessage, updateMessage, deleteMessage } = useMessageStore();
   const { showToast } = useUIStore();
 
@@ -78,11 +90,7 @@ export function useChat(options: UseChatOptions = {}) {
         await chatRepository.saveMessage(message);
 
         // Update chat last message
-        const currentChat = getChatById(chatId);
-        if (currentChat) {
-          currentChat.updateLastMessage(message);
-          updateChat(chatId, currentChat);
-        }
+        updateLastMessage(chatId, message);
 
         return message;
       } catch (error) {
@@ -173,11 +181,7 @@ export function useChat(options: UseChatOptions = {}) {
 
     try {
       await chatRepository.markAsRead(chatId);
-      const currentChat = getChatById(chatId);
-      if (currentChat) {
-        currentChat.markAsRead();
-        updateChat(chatId, currentChat);
-      }
+      markChatAsRead(chatId);
     } catch (error) {
       logger.error("Failed to mark as read", error as Error, "useChat");
     }
@@ -192,12 +196,14 @@ export function useChat(options: UseChatOptions = {}) {
 
     try {
       if (currentChat.isPinned) {
-        currentChat.unpin();
+        unpinChat(chatId);
       } else {
-        currentChat.pin();
+        pinChat(chatId);
       }
-      await chatRepository.save(currentChat);
-      updateChat(chatId, currentChat);
+      const updated = getChatById(chatId);
+      if (updated) {
+        await chatRepository.save(updated);
+      }
     } catch (error) {
       showToast({
         type: "error",
@@ -216,12 +222,14 @@ export function useChat(options: UseChatOptions = {}) {
 
     try {
       if (currentChat.isMuted) {
-        currentChat.unmute();
+        unmuteChat(chatId);
       } else {
-        currentChat.mute();
+        muteChat(chatId);
       }
-      await chatRepository.save(currentChat);
-      updateChat(chatId, currentChat);
+      const updated = getChatById(chatId);
+      if (updated) {
+        await chatRepository.save(updated);
+      }
     } catch (error) {
       showToast({
         type: "error",
@@ -240,12 +248,14 @@ export function useChat(options: UseChatOptions = {}) {
 
     try {
       if (currentChat.isArchived) {
-        currentChat.unarchive();
+        unarchiveChat(chatId);
       } else {
-        currentChat.archive();
+        archiveChat(chatId);
       }
-      await chatRepository.save(currentChat);
-      updateChat(chatId, currentChat);
+      const updated = getChatById(chatId);
+      if (updated) {
+        await chatRepository.save(updated);
+      }
     } catch (error) {
       showToast({
         type: "error",
@@ -261,7 +271,7 @@ export function useChat(options: UseChatOptions = {}) {
 
     try {
       await chatRepository.delete(chatId);
-      deleteChat(chatId);
+      removeChat(chatId);
       showToast({
         type: "success",
         message: "Chat deleted",
@@ -274,7 +284,7 @@ export function useChat(options: UseChatOptions = {}) {
         duration: 3000,
       });
     }
-  }, [chatId, deleteChat, showToast]);
+  }, [chatId, removeChat, showToast]);
 
   // Clear chat history
   const clearHistory = useCallback(async () => {

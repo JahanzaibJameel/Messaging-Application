@@ -5,7 +5,7 @@ import { Feather } from "@expo/vector-icons";
 
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Shadows } from "@/constants/theme";
-import { MessageAttachment } from "@/store/types";
+import type { MessageAttachment } from "@domain/entities/Message";
 
 interface MediaMessageProps {
   attachment: MessageAttachment;

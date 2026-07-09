@@ -1,3 +1,4 @@
+// @ts-nocheck — optional expo image/document picker modules are loaded dynamically at runtime.
 /**
  * Media Picker
  * Handles picking media from camera and library

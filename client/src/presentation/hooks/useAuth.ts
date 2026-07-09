@@ -22,7 +22,7 @@ export function useAuth() {
     step: "phone",
   });
 
-  const { currentUser, setCurrentUser, logout: storeLogout } = useAuthStore();
+  const { currentUser, setUser, logout: storeLogout } = useAuthStore();
   const { showToast } = useUIStore();
 
   const setLoading = useCallback((isLoading: boolean) => {
@@ -90,7 +90,7 @@ export function useAuth() {
           // Get current user from repository
           const user = await userRepository.getCurrentUser();
           if (user) {
-            setCurrentUser(user);
+            setUser(user);
             setStep("complete");
 
             showToast({
@@ -112,7 +112,7 @@ export function useAuth() {
         setLoading(false);
       }
     },
-    [setLoading, setError, setStep, setCurrentUser, showToast]
+    [setLoading, setError, setStep, setUser, showToast]
   );
 
   // Resend OTP
@@ -172,12 +172,14 @@ export function useAuth() {
       setLoading(true);
 
       try {
-        await userRepository.updateProfile(currentUser.id, updates);
+        await userRepository.updateProfile(currentUser.id, {
+          displayName: updates.name,
+        });
 
         // Update local user
         const updatedUser = await userRepository.getCurrentUser();
         if (updatedUser) {
-          setCurrentUser(updatedUser);
+          setUser(updatedUser);
         }
 
         showToast({
@@ -199,7 +201,7 @@ export function useAuth() {
         setLoading(false);
       }
     },
-    [currentUser, setCurrentUser, setLoading, showToast]
+    [currentUser, setUser, setLoading, showToast]
   );
 
   // Check if authenticated
@@ -209,7 +211,7 @@ export function useAuth() {
       if (isAuth) {
         const user = await userRepository.getCurrentUser();
         if (user) {
-          setCurrentUser(user);
+          setUser(user);
           return true;
         }
       }
@@ -218,7 +220,7 @@ export function useAuth() {
       logger.error("Auth check error", error as Error, "useAuth");
       return false;
     }
-  }, [setCurrentUser]);
+  }, [setUser]);
 
   // Reset login state
   const reset = useCallback(() => {

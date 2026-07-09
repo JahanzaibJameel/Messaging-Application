@@ -1,3 +1,8 @@
+/**
+ * OTP Screen
+ * Six-digit verification code entry using useAuthStore.verifyOtp().
+ */
+
 import React, { useState, useRef, useEffect } from "react";
 import { View, StyleSheet, TextInput, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -10,29 +15,27 @@ import Animated, {
   FadeIn,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RouteProp } from "@react-navigation/native";
 
 import { ThemedText } from "@/components/ThemedText";
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { useChatStore } from "@/store/chatStore";
-import { AuthStackParamList } from "@/navigation/AuthStackNavigator";
+import { useAuthStore } from "@presentation/stores";
+import type { OTPNavProp, OTPRouteProp } from "../../../src/navigation/types";
 
-interface OTPScreenProps {
-  navigation: NativeStackNavigationProp<AuthStackParamList, "OTP">;
-  route: RouteProp<AuthStackParamList, "OTP">;
+interface Props {
+  navigation: OTPNavProp;
+  route: OTPRouteProp;
 }
 
 const OTP_LENGTH = 6;
 
-export default function OTPScreen({ navigation, route }: OTPScreenProps) {
+export default function OTPScreen({ navigation, route }: Props) {
   const { phone } = route.params;
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const { theme } = useTheme();
-  const { verifyOtp } = useChatStore();
+  const { verifyOtp } = useAuthStore();
 
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [isVerifying, setIsVerifying] = useState(false);
@@ -45,36 +48,25 @@ export default function OTPScreen({ navigation, route }: OTPScreenProps) {
   }));
 
   const handleChange = (value: string, index: number) => {
+    // Handle paste of full code
     if (value.length > 1) {
       const pastedOtp = value.slice(0, OTP_LENGTH).split("");
       const newOtp = [...otp];
       pastedOtp.forEach((digit, i) => {
-        if (index + i < OTP_LENGTH) {
-          newOtp[index + i] = digit;
-        }
+        if (index + i < OTP_LENGTH) newOtp[index + i] = digit;
       });
       setOtp(newOtp);
-
       const nextIndex = Math.min(index + pastedOtp.length, OTP_LENGTH - 1);
       inputRefs.current[nextIndex]?.focus();
-
-      if (newOtp.every((d) => d !== "")) {
-        verifyCode(newOtp.join(""));
-      }
+      if (newOtp.every((d) => d !== "")) verifyCode(newOtp.join(""));
       return;
     }
 
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-
-    if (value && index < OTP_LENGTH - 1) {
-      inputRefs.current[index + 1]?.focus();
-    }
-
-    if (newOtp.every((d) => d !== "")) {
-      verifyCode(newOtp.join(""));
-    }
+    if (value && index < OTP_LENGTH - 1) inputRefs.current[index + 1]?.focus();
+    if (newOtp.every((d) => d !== "")) verifyCode(newOtp.join(""));
   };
 
   const handleKeyPress = (key: string, index: number) => {
@@ -114,9 +106,8 @@ export default function OTPScreen({ navigation, route }: OTPScreenProps) {
   };
 
   useEffect(() => {
-    setTimeout(() => {
-      inputRefs.current[0]?.focus();
-    }, 500);
+    const timer = setTimeout(() => inputRefs.current[0]?.focus(), 500);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -124,10 +115,7 @@ export default function OTPScreen({ navigation, route }: OTPScreenProps) {
       style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
       contentContainerStyle={[
         styles.container,
-        {
-          paddingTop: headerHeight + Spacing.xl,
-          paddingBottom: insets.bottom + Spacing.xl,
-        },
+        { paddingTop: headerHeight + Spacing.xl, paddingBottom: insets.bottom + Spacing.xl },
       ]}
     >
       <Animated.View entering={FadeIn.duration(500)} style={styles.header}>
@@ -144,9 +132,7 @@ export default function OTPScreen({ navigation, route }: OTPScreenProps) {
         {otp.map((digit, index) => (
           <TextInput
             key={index}
-            ref={(ref) => {
-              inputRefs.current[index] = ref;
-            }}
+            ref={(ref) => { inputRefs.current[index] = ref; }}
             style={[
               styles.otpInput,
               {
@@ -177,31 +163,11 @@ export default function OTPScreen({ navigation, route }: OTPScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    paddingHorizontal: Spacing.xl,
-    alignItems: "center",
-  },
-  header: {
-    alignItems: "center",
-    marginBottom: Spacing["3xl"],
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    marginBottom: Spacing.md,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 15,
-    textAlign: "center",
-    lineHeight: 22,
-  },
-  otpContainer: {
-    flexDirection: "row",
-    gap: Spacing.sm,
-    marginBottom: Spacing["2xl"],
-  },
+  container: { flexGrow: 1, paddingHorizontal: Spacing.xl, alignItems: "center" },
+  header: { alignItems: "center", marginBottom: Spacing["3xl"] },
+  title: { fontSize: 24, fontWeight: "700", marginBottom: Spacing.md, textAlign: "center" },
+  subtitle: { fontSize: 15, textAlign: "center", lineHeight: 22 },
+  otpContainer: { flexDirection: "row", gap: Spacing.sm, marginBottom: Spacing["2xl"] },
   otpInput: {
     width: 48,
     height: 56,
@@ -211,11 +177,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
   },
-  resendButton: {
-    padding: Spacing.md,
-  },
-  resendText: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
+  resendButton: { padding: Spacing.md },
+  resendText: { fontSize: 16, fontWeight: "600" },
 });

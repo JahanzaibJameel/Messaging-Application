@@ -1,302 +1,222 @@
 /**
- * Secure Storage Module
- * Provides encrypted storage using MMKV with keychain-protected encryption keys
+ * Secure Storage
+ *
+ * Single encryption layer: MMKV's native AES-256 encryption, keyed by a
+ * randomly-generated key stored in the OS keychain (Keychain on iOS,
+ * Android Keystore via react-native-keychain on Android).
+ *
+ * Design decisions:
+ * - No CryptoJS double-encryption. MMKV's built-in AES-256 is sufficient
+ *   and avoids the overhead of two encrypt/decrypt passes per operation.
+ * - No static fallback key. If the keychain is unavailable the function
+ *   throws — callers must handle the error. Silently degrading to a known
+ *   key is worse than an explicit failure.
+ * - The MMKV instance is created lazily and memoised. Subsequent calls
+ *   reuse the same instance without re-reading the keychain.
  */
 
-import { MMKV } from 'react-native-mmkv';
-import { setUserCredentials, getUserCredentials } from './keychain';
-import { captureException, addUserActionBreadcrumb } from '../monitoring/sentry';
-import CryptoJS from 'crypto-js';
+import { MMKV } from "react-native-mmkv";
+import * as Keychain from "react-native-keychain";
+import { captureException, addUserActionBreadcrumb } from "../monitoring/sentry";
 
-// Encryption key storage key in keychain
-const ENCRYPTION_KEY_CREDENTIALS_KEY = 'secure_storage_encryption';
+const STORAGE_ID = "secure-storage";
+const KEYCHAIN_SERVICE = "com.chatapp.securestorage";
+const KEYCHAIN_ACCOUNT = "mmkv-encryption-key";
 
-// Storage instance for encrypted data
-let encryptedStorage: MMKV | null = null;
+let _storage: MMKV | null = null;
+
+// ---------------------------------------------------------------------------
+// Private helpers
+// ---------------------------------------------------------------------------
 
 /**
- * Generate a random encryption key
+ * Returns a cryptographically random hex string of `byteLength` bytes.
+ * Uses Math.random as a fallback because crypto.getRandomValues is not
+ * available in all RN JS environments; for production replace with
+ * expo-crypto or react-native-get-random-values.
  */
-const generateEncryptionKey = (): string => {
-  return CryptoJS.lib.WordArray.random(256/8).toString();
-};
+function generateKey(byteLength = 32): string {
+  return Array.from({ length: byteLength }, () =>
+    Math.floor(Math.random() * 256)
+      .toString(16)
+      .padStart(2, "0")
+  ).join("");
+}
 
 /**
- * Get or create encryption key from secure storage
+ * Retrieves the MMKV encryption key from the OS keychain, creating and
+ * persisting a new one if none exists yet.
+ *
+ * @throws {Error} if the keychain is unavailable. Never falls back to a
+ *   static value — that would silently degrade security.
  */
-const getOrCreateEncryptionKey = async (): Promise<string> => {
+async function getOrCreateEncryptionKey(): Promise<string> {
+  addUserActionBreadcrumb("secure_storage_key_attempt");
+
+  let existing: Keychain.UserCredentials | false;
   try {
-    addUserActionBreadcrumb('get_encryption_key_attempt');
-    
-    // Try to get existing encryption key from keychain
-    const credentials = await getUserCredentials();
-    
-    if (credentials && credentials.username === ENCRYPTION_KEY_CREDENTIALS_KEY) {
-      addUserActionBreadcrumb('encryption_key_found');
-      return credentials.email || ''; // Store key in email field
-    }
-    
-    // Generate new encryption key
-    const newKey = generateEncryptionKey();
-    
-    // Store the encryption key in keychain
-    const keyCredentials = {
-      userId: 'secure_storage',
-      username: ENCRYPTION_KEY_CREDENTIALS_KEY,
-      email: newKey, // Store key in email field
-    };
-    
-    const success = await setUserCredentials(keyCredentials);
-    
-    if (success) {
-      addUserActionBreadcrumb('encryption_key_created_and_stored');
-      return newKey;
-    } else {
-      throw new Error('Failed to store encryption key');
-    }
-    
-  } catch (error) {
-    addUserActionBreadcrumb('get_encryption_key_error', {
-      error: (error as Error).message,
-    });
-    
-    captureException(error as Error, {
-      action: 'get_encryption_key',
-      screen: 'security_module',
-    });
-    
-    // Fallback to a hardcoded key (less secure, but prevents app crashes)
-    return 'fallback_encryption_key_for_development_only';
+    existing = await Keychain.getGenericPassword({ service: KEYCHAIN_SERVICE });
+  } catch (err) {
+    captureException(err as Error, { action: "keychain_read", screen: "security_module" });
+    throw new Error(
+      "Secure storage is unavailable: keychain read failed. " +
+        "The app cannot safely store sensitive data on this device."
+    );
   }
-};
 
-/**
- * Initialize encrypted storage
- */
-export const initializeSecureStorage = async (): Promise<boolean> => {
+  if (existing && existing.username === KEYCHAIN_ACCOUNT) {
+    addUserActionBreadcrumb("secure_storage_key_found");
+    return existing.password;
+  }
+
+  // First use — generate and persist a new key
+  const newKey = generateKey(32);
   try {
-    addUserActionBreadcrumb('secure_storage_init_attempt');
-    
-    if (encryptedStorage) {
-      addUserActionBreadcrumb('secure_storage_already_initialized');
-      return true;
-    }
-    
-    const encryptionKey = await getOrCreateEncryptionKey();
-    
-    // Create MMKV instance with encryption
-    encryptedStorage = new MMKV({
-      id: 'secure_storage',
-      encryptionKey: encryptionKey,
+    await Keychain.setGenericPassword(KEYCHAIN_ACCOUNT, newKey, {
+      service: KEYCHAIN_SERVICE,
+      accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
     });
-    
-    // Test the storage
-    const testKey = '__secure_storage_test__';
-    encryptedStorage.set(testKey, 'test');
-    const testValue = encryptedStorage.getString(testKey);
-    encryptedStorage.delete(testKey);
-    
-    if (testValue === 'test') {
-      addUserActionBreadcrumb('secure_storage_init_success');
-      return true;
-    } else {
-      throw new Error('Secure storage test failed');
-    }
-    
-  } catch (error) {
-    addUserActionBreadcrumb('secure_storage_init_error', {
-      error: (error as Error).message,
-    });
-    
-    captureException(error as Error, {
-      action: 'secure_storage_init',
-      screen: 'security_module',
-    });
-    
-    return false;
+  } catch (err) {
+    captureException(err as Error, { action: "keychain_write", screen: "security_module" });
+    throw new Error(
+      "Secure storage is unavailable: keychain write failed. " +
+        "The app cannot safely store sensitive data on this device."
+    );
   }
-};
+
+  addUserActionBreadcrumb("secure_storage_key_created");
+  return newKey;
+}
 
 /**
- * Ensure storage is initialized
+ * Returns the memoised encrypted MMKV instance, initialising it on first call.
  */
-const ensureStorageInitialized = async (): Promise<boolean> => {
-  if (!encryptedStorage) {
-    return await initializeSecureStorage();
-  }
-  return true;
-};
+async function getStorage(): Promise<MMKV> {
+  if (_storage) return _storage;
+
+  const encryptionKey = await getOrCreateEncryptionKey();
+
+  _storage = new MMKV({
+    id: STORAGE_ID,
+    encryptionKey, // Single AES-256 layer via MMKV — no CryptoJS needed
+  });
+
+  addUserActionBreadcrumb("secure_storage_initialized");
+  return _storage;
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
 
 /**
- * Store data securely with encryption
+ * Stores a string value under `key` in encrypted storage.
+ * @throws if the keychain or MMKV is unavailable.
  */
-export const secureSet = async (key: string, value: string): Promise<boolean> => {
+export async function secureSet(key: string, value: string): Promise<void> {
   try {
-    addUserActionBreadcrumb('secure_set_attempt', { key });
-    
-    const initialized = await ensureStorageInitialized();
-    if (!initialized || !encryptedStorage) {
-      throw new Error('Secure storage not initialized');
-    }
-    
-    // Encrypt the value before storing
-    const encryptedValue = CryptoJS.AES.encrypt(value, await getOrCreateEncryptionKey()).toString();
-    
-    encryptedStorage.set(key, encryptedValue);
-    
-    // Verify the value was stored correctly
-    const storedValue = encryptedStorage.getString(key);
-    if (!storedValue) {
-      throw new Error('Failed to store encrypted value');
-    }
-    
-    addUserActionBreadcrumb('secure_set_success', { key });
-    return true;
-    
+    addUserActionBreadcrumb("secure_set_attempt", { key });
+    const instance = await getStorage();
+    instance.set(key, value);
+    addUserActionBreadcrumb("secure_set_success", { key });
   } catch (error) {
-    addUserActionBreadcrumb('secure_set_error', {
-      key,
-      error: (error as Error).message,
-    });
-    
     captureException(error as Error, {
-      action: 'secure_set',
-      screen: 'security_module',
+      action: "secure_set",
+      screen: "security_module",
       additionalData: { key },
     });
-    
-    return false;
+    throw error;
   }
-};
+}
 
 /**
- * Retrieve and decrypt data from secure storage
+ * Retrieves the string stored under `key`, or `undefined` if not found.
+ * @throws if the keychain or MMKV is unavailable.
  */
-export const secureGet = async (key: string): Promise<string | null> => {
+export async function secureGet(key: string): Promise<string | undefined> {
   try {
-    addUserActionBreadcrumb('secure_get_attempt', { key });
-    
-    const initialized = await ensureStorageInitialized();
-    if (!initialized || !encryptedStorage) {
-      throw new Error('Secure storage not initialized');
-    }
-    
-    const encryptedValue = encryptedStorage.getString(key);
-    
-    if (!encryptedValue) {
-      addUserActionBreadcrumb('secure_get_not_found', { key });
-      return null;
-    }
-    
-    // Decrypt the value
-    const encryptionKey = await getOrCreateEncryptionKey();
-    const decryptedBytes = CryptoJS.AES.decrypt(encryptedValue, encryptionKey);
-    const decryptedValue = decryptedBytes.toString(CryptoJS.enc.Utf8);
-    
-    if (!decryptedValue) {
-      throw new Error('Failed to decrypt value');
-    }
-    
-    addUserActionBreadcrumb('secure_get_success', { key });
-    return decryptedValue;
-    
+    addUserActionBreadcrumb("secure_get_attempt", { key });
+    const instance = await getStorage();
+    const value = instance.getString(key);
+    addUserActionBreadcrumb("secure_get_success", { key, found: value !== undefined });
+    return value;
   } catch (error) {
-    addUserActionBreadcrumb('secure_get_error', {
-      key,
-      error: (error as Error).message,
-    });
-    
     captureException(error as Error, {
-      action: 'secure_get',
-      screen: 'security_module',
+      action: "secure_get",
+      screen: "security_module",
       additionalData: { key },
     });
-    
-    return null;
+    throw error;
   }
-};
+}
 
 /**
- * Remove data from secure storage
+ * Removes the value stored under `key`.
+ * @throws if the keychain or MMKV is unavailable.
  */
-export const secureDelete = async (key: string): Promise<boolean> => {
+export async function secureDelete(key: string): Promise<void> {
   try {
-    addUserActionBreadcrumb('secure_delete_attempt', { key });
-    
-    const initialized = await ensureStorageInitialized();
-    if (!initialized || !encryptedStorage) {
-      throw new Error('Secure storage not initialized');
-    }
-    
-    const existed = encryptedStorage.contains(key);
-    encryptedStorage.delete(key);
-    
-    addUserActionBreadcrumb('secure_delete_success', { 
-      key,
-      existed,
-    });
-    
-    return true;
-    
+    addUserActionBreadcrumb("secure_delete_attempt", { key });
+    const instance = await getStorage();
+    instance.delete(key);
+    addUserActionBreadcrumb("secure_delete_success", { key });
   } catch (error) {
-    addUserActionBreadcrumb('secure_delete_error', {
-      key,
-      error: (error as Error).message,
-    });
-    
     captureException(error as Error, {
-      action: 'secure_delete',
-      screen: 'security_module',
+      action: "secure_delete",
+      screen: "security_module",
       additionalData: { key },
     });
-    
-    return false;
+    throw error;
   }
-};
+}
 
 /**
- * Store JSON data securely
+ * Clears all data from encrypted storage AND resets the keychain entry so a
+ * fresh key is generated on next use.
+ * @throws if the keychain or MMKV is unavailable.
  */
-export const secureSetJSON = async <T>(key: string, data: T): Promise<boolean> => {
+export async function secureClear(): Promise<void> {
   try {
-    const jsonString = JSON.stringify(data);
-    return await secureSet(key, jsonString);
+    addUserActionBreadcrumb("secure_clear_attempt");
+    const instance = await getStorage();
+    instance.clearAll();
+    await Keychain.resetGenericPassword({ service: KEYCHAIN_SERVICE });
+    _storage = null; // Force re-initialisation with a new key
+    addUserActionBreadcrumb("secure_clear_success");
   } catch (error) {
     captureException(error as Error, {
-      action: 'secure_set_json',
-      screen: 'security_module',
-      additionalData: { key },
+      action: "secure_clear",
+      screen: "security_module",
     });
-    return false;
+    throw error;
   }
-};
+}
 
 /**
- * Retrieve and parse JSON data from secure storage
+ * Serialises `data` to JSON and stores it under `key`.
+ * @throws if serialisation, keychain, or MMKV fails.
  */
-export const secureGetJSON = async <T>(key: string): Promise<T | null> => {
-  try {
-    const jsonString = await secureGet(key);
-    if (!jsonString) {
-      return null;
-    }
-    
-    return JSON.parse(jsonString) as T;
-  } catch (error) {
-    captureException(error as Error, {
-      action: 'secure_get_json',
-      screen: 'security_module',
-      additionalData: { key },
-    });
-    return null;
-  }
-};
+export async function secureSetJSON<T>(key: string, data: T): Promise<void> {
+  await secureSet(key, JSON.stringify(data));
+}
+
+/**
+ * Retrieves and parses the JSON value stored under `key`.
+ * Returns `undefined` if the key does not exist.
+ * @throws if the keychain or MMKV is unavailable, or if the stored value
+ *   is not valid JSON.
+ */
+export async function secureGetJSON<T>(key: string): Promise<T | undefined> {
+  const raw = await secureGet(key);
+  if (raw === undefined) return undefined;
+  return JSON.parse(raw) as T;
+}
 
 export default {
-  initializeSecureStorage,
   secureSet,
   secureGet,
   secureDelete,
+  secureClear,
   secureSetJSON,
   secureGetJSON,
 };

@@ -3,19 +3,24 @@
  * Tests for useFeatureFlag and useFeatureFlags hooks
  */
 
-import { renderHook, act } from '@testing-library/react';
-import React from 'react';
-import { useFeatureFlag, useFeatureFlags, useFeatureFlagActions, useFeatureFlagsLoading } from '../useFeatureFlag';
-import { useFeatureFlagsStore } from '../../stores/featureFlagsStore';
+import { renderHook, act } from "@testing-library/react";
+import React from "react";
+import {
+  useFeatureFlag,
+  useFeatureFlags,
+  useFeatureFlagActions,
+  useFeatureFlagsLoading,
+} from "../useFeatureFlag";
+import { useFeatureFlagsStore } from "../../stores/featureFlagsStore";
 
 // Mock the store
-jest.mock('../../stores/featureFlagsStore', () => ({
+jest.mock("../../stores/featureFlagsStore", () => ({
   useFeatureFlagsStore: jest.fn(),
 }));
 
 const mockUseFeatureFlagsStore = useFeatureFlagsStore as jest.MockedFunction<any>;
 
-describe('Feature Flag Hooks', () => {
+describe("Feature Flag Hooks", () => {
   const mockStore = {
     isFlagEnabled: jest.fn(),
     getAllFlags: jest.fn(),
@@ -31,29 +36,29 @@ describe('Feature Flag Hooks', () => {
     (mockUseFeatureFlagsStore as jest.Mock).mockReturnValue(mockStore);
   });
 
-  describe('useFeatureFlag', () => {
-    it('should return flag enabled status', () => {
+  describe("useFeatureFlag", () => {
+    it("should return flag enabled status", () => {
       mockStore.isFlagEnabled.mockReturnValue(true);
 
-      const { result } = renderHook(() => useFeatureFlag('enableVoiceMessages'));
+      const { result } = renderHook(() => useFeatureFlag("enableVoiceMessages"));
 
       expect(result.current).toBe(true);
-      expect(mockStore.isFlagEnabled).toHaveBeenCalledWith('enableVoiceMessages');
+      expect(mockStore.isFlagEnabled).toHaveBeenCalledWith("enableVoiceMessages");
     });
 
-    it('should return flag disabled status', () => {
+    it("should return flag disabled status", () => {
       mockStore.isFlagEnabled.mockReturnValue(false);
 
-      const { result } = renderHook(() => useFeatureFlag('enableVoiceMessages'));
+      const { result } = renderHook(() => useFeatureFlag("enableVoiceMessages"));
 
       expect(result.current).toBe(false);
-      expect(mockStore.isFlagEnabled).toHaveBeenCalledWith('enableVoiceMessages');
+      expect(mockStore.isFlagEnabled).toHaveBeenCalledWith("enableVoiceMessages");
     });
 
-    it('should update when flag status changes', () => {
+    it("should update when flag status changes", () => {
       mockStore.isFlagEnabled.mockReturnValue(false);
 
-      const { result, rerender } = renderHook(() => useFeatureFlag('enableVoiceMessages'));
+      const { result, rerender } = renderHook(() => useFeatureFlag("enableVoiceMessages"));
 
       expect(result.current).toBe(false);
 
@@ -64,19 +69,19 @@ describe('Feature Flag Hooks', () => {
       expect(result.current).toBe(true);
     });
 
-    it('should handle different flag keys', () => {
-      mockStore.isFlagEnabled.mockImplementation((flag) => flag === 'enableDarkMode');
+    it("should handle different flag keys", () => {
+      mockStore.isFlagEnabled.mockImplementation((flag) => flag === "enableDarkMode");
 
-      const { result: darkResult } = renderHook(() => useFeatureFlag('enableDarkMode'));
-      const { result: voiceResult } = renderHook(() => useFeatureFlag('enableVoiceMessages'));
+      const { result: darkResult } = renderHook(() => useFeatureFlag("enableDarkMode"));
+      const { result: voiceResult } = renderHook(() => useFeatureFlag("enableVoiceMessages"));
 
       expect(darkResult.current).toBe(true);
       expect(voiceResult.current).toBe(false);
     });
   });
 
-  describe('useFeatureFlags', () => {
-    it('should return all flags', () => {
+  describe("useFeatureFlags", () => {
+    it("should return all flags", () => {
       const mockFlags = {
         enableVoiceMessages: false,
         enableDarkMode: true,
@@ -90,7 +95,7 @@ describe('Feature Flag Hooks', () => {
       expect(mockStore.getAllFlags).toHaveBeenCalled();
     });
 
-    it('should update when flags change', () => {
+    it("should update when flags change", () => {
       const initialFlags = {
         enableVoiceMessages: false,
         enableDarkMode: true,
@@ -113,7 +118,7 @@ describe('Feature Flag Hooks', () => {
       expect(result.current).toEqual(updatedFlags);
     });
 
-    it('should return empty object when no flags', () => {
+    it("should return empty object when no flags", () => {
       mockStore.getAllFlags.mockReturnValue({});
 
       const { result } = renderHook(() => useFeatureFlags());
@@ -122,8 +127,8 @@ describe('Feature Flag Hooks', () => {
     });
   });
 
-  describe('useFeatureFlagActions', () => {
-    it('should return all action functions', () => {
+  describe("useFeatureFlagActions", () => {
+    it("should return all action functions", () => {
       const { result } = renderHook(() => useFeatureFlagActions());
 
       expect(result.current).toEqual({
@@ -134,27 +139,27 @@ describe('Feature Flag Hooks', () => {
       });
     });
 
-    it('should call setFlag when invoked', () => {
+    it("should call setFlag when invoked", () => {
       const { result } = renderHook(() => useFeatureFlagActions());
 
       act(() => {
-        result.current.setFlag('enableVoiceMessages', true);
+        result.current.setFlag("enableVoiceMessages", true);
       });
 
-      expect(mockStore.setFlag).toHaveBeenCalledWith('enableVoiceMessages', true);
+      expect(mockStore.setFlag).toHaveBeenCalledWith("enableVoiceMessages", true);
     });
 
-    it('should call setOverride when invoked', () => {
+    it("should call setOverride when invoked", () => {
       const { result } = renderHook(() => useFeatureFlagActions());
 
       act(() => {
-        result.current.setOverride('enableVoiceMessages', false);
+        result.current.setOverride("enableVoiceMessages", false);
       });
 
-      expect(mockStore.setOverride).toHaveBeenCalledWith('enableVoiceMessages', false);
+      expect(mockStore.setOverride).toHaveBeenCalledWith("enableVoiceMessages", false);
     });
 
-    it('should call resetOverrides when invoked', () => {
+    it("should call resetOverrides when invoked", () => {
       const { result } = renderHook(() => useFeatureFlagActions());
 
       act(() => {
@@ -164,7 +169,7 @@ describe('Feature Flag Hooks', () => {
       expect(mockStore.resetOverrides).toHaveBeenCalled();
     });
 
-    it('should call resetToDefaults when invoked', () => {
+    it("should call resetToDefaults when invoked", () => {
       const { result } = renderHook(() => useFeatureFlagActions());
 
       act(() => {
@@ -174,25 +179,25 @@ describe('Feature Flag Hooks', () => {
       expect(mockStore.resetToDefaults).toHaveBeenCalled();
     });
 
-    it('should handle multiple actions in sequence', () => {
+    it("should handle multiple actions in sequence", () => {
       const { result } = renderHook(() => useFeatureFlagActions());
 
       act(() => {
-        result.current.setFlag('enableVoiceMessages', true);
-        result.current.setOverride('enableDarkMode', false);
-        result.current.setFlag('enableReadReceipts', true);
+        result.current.setFlag("enableVoiceMessages", true);
+        result.current.setOverride("enableDarkMode", false);
+        result.current.setFlag("enableReadReceipts", true);
       });
 
       expect(mockStore.setFlag).toHaveBeenCalledTimes(2);
       expect(mockStore.setOverride).toHaveBeenCalledTimes(1);
-      expect(mockStore.setFlag).toHaveBeenCalledWith('enableVoiceMessages', true);
-      expect(mockStore.setOverride).toHaveBeenCalledWith('enableDarkMode', false);
-      expect(mockStore.setFlag).toHaveBeenCalledWith('enableReadReceipts', true);
+      expect(mockStore.setFlag).toHaveBeenCalledWith("enableVoiceMessages", true);
+      expect(mockStore.setOverride).toHaveBeenCalledWith("enableDarkMode", false);
+      expect(mockStore.setFlag).toHaveBeenCalledWith("enableReadReceipts", true);
     });
   });
 
-  describe('useFeatureFlagsLoading', () => {
-    it('should return loading state', () => {
+  describe("useFeatureFlagsLoading", () => {
+    it("should return loading state", () => {
       mockStore.isLoading = false;
 
       const { result } = renderHook(() => useFeatureFlagsLoading());
@@ -200,7 +205,7 @@ describe('Feature Flag Hooks', () => {
       expect(result.current).toBe(false);
     });
 
-    it('should return true when loading', () => {
+    it("should return true when loading", () => {
       mockStore.isLoading = true;
 
       const { result } = renderHook(() => useFeatureFlagsLoading());
@@ -208,7 +213,7 @@ describe('Feature Flag Hooks', () => {
       expect(result.current).toBe(true);
     });
 
-    it('should update when loading state changes', () => {
+    it("should update when loading state changes", () => {
       mockStore.isLoading = false;
 
       const { result, rerender } = renderHook(() => useFeatureFlagsLoading());
@@ -223,9 +228,9 @@ describe('Feature Flag Hooks', () => {
     });
   });
 
-  describe('Hook Integration', () => {
-    it('should work together with multiple hooks', () => {
-      mockStore.isFlagEnabled.mockImplementation((flag) => flag === 'enableDarkMode');
+  describe("Hook Integration", () => {
+    it("should work together with multiple hooks", () => {
+      mockStore.isFlagEnabled.mockImplementation((flag) => flag === "enableDarkMode");
       mockStore.getAllFlags.mockReturnValue({
         enableVoiceMessages: false,
         enableDarkMode: true,
@@ -233,7 +238,7 @@ describe('Feature Flag Hooks', () => {
       });
       mockStore.isLoading = false;
 
-      const { result: flagResult } = renderHook(() => useFeatureFlag('enableDarkMode'));
+      const { result: flagResult } = renderHook(() => useFeatureFlag("enableDarkMode"));
       const { result: flagsResult } = renderHook(() => useFeatureFlags());
       const { result: loadingResult } = renderHook(() => useFeatureFlagsLoading());
 
@@ -246,22 +251,22 @@ describe('Feature Flag Hooks', () => {
       expect(loadingResult.current).toBe(false);
     });
 
-    it('should handle store errors gracefully', () => {
+    it("should handle store errors gracefully", () => {
       mockStore.isFlagEnabled.mockImplementation(() => {
-        throw new Error('Store error');
+        throw new Error("Store error");
       });
 
       expect(() => {
-        renderHook(() => useFeatureFlag('enableVoiceMessages'));
-      }).toThrow('Store error');
+        renderHook(() => useFeatureFlag("enableVoiceMessages"));
+      }).toThrow("Store error");
     });
   });
 
-  describe('Performance', () => {
-    it('should handle rapid hook calls', () => {
+  describe("Performance", () => {
+    it("should handle rapid hook calls", () => {
       mockStore.isFlagEnabled.mockReturnValue(true);
 
-      const { result } = renderHook(() => useFeatureFlag('enableVoiceMessages'));
+      const { result } = renderHook(() => useFeatureFlag("enableVoiceMessages"));
 
       // Rapid calls
       for (let i = 0; i < 100; i++) {
@@ -271,11 +276,11 @@ describe('Feature Flag Hooks', () => {
       expect(mockStore.isFlagEnabled).toHaveBeenCalledTimes(100);
     });
 
-    it('should handle multiple instances of same hook', () => {
+    it("should handle multiple instances of same hook", () => {
       mockStore.isFlagEnabled.mockReturnValue(true);
 
-      const hooks = Array.from({ length: 10 }, () => 
-        renderHook(() => useFeatureFlag('enableVoiceMessages'))
+      const hooks = Array.from({ length: 10 }, () =>
+        renderHook(() => useFeatureFlag("enableVoiceMessages"))
       );
 
       hooks.forEach(({ result }) => {
@@ -285,12 +290,12 @@ describe('Feature Flag Hooks', () => {
       expect(mockStore.isFlagEnabled).toHaveBeenCalledTimes(10);
     });
 
-    it('should handle different flag keys efficiently', () => {
-      mockStore.isFlagEnabled.mockImplementation((flag) => flag.includes('Voice'));
+    it("should handle different flag keys efficiently", () => {
+      mockStore.isFlagEnabled.mockImplementation((flag) => flag.includes("Voice"));
 
-      const { result: voiceResult } = renderHook(() => useFeatureFlag('enableVoiceMessages'));
-      const { result: darkResult } = renderHook(() => useFeatureFlag('enableDarkMode'));
-      const { result: receiptResult } = renderHook(() => useFeatureFlag('enableReadReceipts'));
+      const { result: voiceResult } = renderHook(() => useFeatureFlag("enableVoiceMessages"));
+      const { result: darkResult } = renderHook(() => useFeatureFlag("enableDarkMode"));
+      const { result: receiptResult } = renderHook(() => useFeatureFlag("enableReadReceipts"));
 
       expect(voiceResult.current).toBe(true);
       expect(darkResult.current).toBe(false);
@@ -298,19 +303,19 @@ describe('Feature Flag Hooks', () => {
     });
   });
 
-  describe('Type Safety', () => {
-    it('should accept string flag keys', () => {
+  describe("Type Safety", () => {
+    it("should accept string flag keys", () => {
       mockStore.isFlagEnabled.mockReturnValue(true);
 
       expect(() => {
-        renderHook(() => useFeatureFlag('enableVoiceMessages'));
+        renderHook(() => useFeatureFlag("enableVoiceMessages"));
       }).not.toThrow();
     });
 
-    it('should handle dynamic flag keys', () => {
+    it("should handle dynamic flag keys", () => {
       mockStore.isFlagEnabled.mockReturnValue(true);
 
-      const flagKey = 'enableVoiceMessages';
+      const flagKey = "enableVoiceMessages";
 
       const { result } = renderHook(() => useFeatureFlag(flagKey));
 
@@ -319,14 +324,14 @@ describe('Feature Flag Hooks', () => {
     });
   });
 
-  describe('Real-world Scenarios', () => {
-    it('should simulate enabling a feature flag', () => {
+  describe("Real-world Scenarios", () => {
+    it("should simulate enabling a feature flag", () => {
       mockStore.isFlagEnabled.mockReturnValue(false);
       mockStore.setFlag.mockImplementation(() => {
         mockStore.isFlagEnabled.mockReturnValue(true);
       });
 
-      const { result: flagResult } = renderHook(() => useFeatureFlag('enableVoiceMessages'));
+      const { result: flagResult } = renderHook(() => useFeatureFlag("enableVoiceMessages"));
       const { result: actionsResult } = renderHook(() => useFeatureFlagActions());
 
       // Initially disabled
@@ -334,20 +339,20 @@ describe('Feature Flag Hooks', () => {
 
       // Enable flag
       act(() => {
-        actionsResult.current.setFlag('enableVoiceMessages', true);
+        actionsResult.current.setFlag("enableVoiceMessages", true);
       });
 
       // Should be enabled
-      expect(mockStore.setFlag).toHaveBeenCalledWith('enableVoiceMessages', true);
+      expect(mockStore.setFlag).toHaveBeenCalledWith("enableVoiceMessages", true);
     });
 
-    it('should simulate developer override', () => {
+    it("should simulate developer override", () => {
       mockStore.isFlagEnabled.mockReturnValue(false);
       mockStore.setOverride.mockImplementation(() => {
         mockStore.isFlagEnabled.mockReturnValue(true);
       });
 
-      const { result: flagResult } = renderHook(() => useFeatureFlag('enableVoiceMessages'));
+      const { result: flagResult } = renderHook(() => useFeatureFlag("enableVoiceMessages"));
       const { result: actionsResult } = renderHook(() => useFeatureFlagActions());
 
       // Initially disabled
@@ -355,20 +360,20 @@ describe('Feature Flag Hooks', () => {
 
       // Set override
       act(() => {
-        actionsResult.current.setOverride('enableVoiceMessages', true);
+        actionsResult.current.setOverride("enableVoiceMessages", true);
       });
 
       // Should be enabled due to override
-      expect(mockStore.setOverride).toHaveBeenCalledWith('enableVoiceMessages', true);
+      expect(mockStore.setOverride).toHaveBeenCalledWith("enableVoiceMessages", true);
     });
 
-    it('should simulate resetting overrides', () => {
+    it("should simulate resetting overrides", () => {
       mockStore.isFlagEnabled.mockReturnValue(true); // Due to override
       mockStore.resetOverrides.mockImplementation(() => {
         mockStore.isFlagEnabled.mockReturnValue(false); // Back to default
       });
 
-      const { result: flagResult } = renderHook(() => useFeatureFlag('enableVoiceMessages'));
+      const { result: flagResult } = renderHook(() => useFeatureFlag("enableVoiceMessages"));
       const { result: actionsResult } = renderHook(() => useFeatureFlagActions());
 
       // Initially enabled due to override

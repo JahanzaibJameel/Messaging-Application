@@ -1,23 +1,28 @@
+/**
+ * Root Stack Navigator
+ * Single navigation tree – all screens live under
+ * client/src/presentation/screens/.
+ */
+
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import SplashScreen from "@/screens/SplashScreen";
-import LoginScreen from "@/screens/LoginScreen";
-import OTPScreen from "@/screens/OTPScreen";
+// Auth + chat screens (new presentation layer)
+import SplashScreen from "@/src/presentation/screens/SplashScreen";
+import LoginScreen from "@/src/presentation/screens/LoginScreen";
+import OTPScreen from "@/src/presentation/screens/OTPScreen";
+import ChatScreen from "@/src/presentation/screens/ChatScreen";
+import GroupInfoScreen from "@/src/presentation/screens/GroupInfoScreen";
+
+// Tab navigator (contains Calls, Status, Settings tab screens)
 import MainTabNavigator from "@/navigation/MainTabNavigator";
-import ChatScreen from "@/screens/ChatScreen";
-import GroupInfoScreen from "@/screens/GroupInfoScreen";
+
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 import { useTheme } from "@/hooks/useTheme";
 
-export type RootStackParamList = {
-  Splash: undefined;
-  Login: undefined;
-  OTP: { phone: string };
-  Main: undefined;
-  Chat: { chatId: string; participantId: string; isGroup?: boolean };
-  GroupInfo: { groupId: string };
-};
+import type { RootStackParamList } from "@/src/navigation/types";
+
+export type { RootStackParamList };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -32,10 +37,7 @@ export default function RootStackNavigator() {
       <Stack.Screen
         name="OTP"
         component={OTPScreen}
-        options={{
-          headerTitle: "",
-          headerBackTitle: "Back",
-        }}
+        options={{ headerTitle: "", headerBackTitle: "Back" }}
       />
       <Stack.Screen name="Main" component={MainTabNavigator} options={{ headerShown: false }} />
       <Stack.Screen
@@ -43,9 +45,7 @@ export default function RootStackNavigator() {
         component={ChatScreen}
         options={{
           headerTransparent: false,
-          headerStyle: {
-            backgroundColor: theme.backgroundRoot,
-          },
+          headerStyle: { backgroundColor: theme.backgroundRoot },
         }}
       />
       <Stack.Screen
@@ -54,9 +54,7 @@ export default function RootStackNavigator() {
         options={{
           headerTitle: "Group Info",
           headerTransparent: false,
-          headerStyle: {
-            backgroundColor: theme.backgroundRoot,
-          },
+          headerStyle: { backgroundColor: theme.backgroundRoot },
         }}
       />
     </Stack.Navigator>

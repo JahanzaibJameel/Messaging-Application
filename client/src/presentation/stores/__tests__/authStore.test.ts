@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Unit tests for authStore
  * Testing authentication state management and business logic

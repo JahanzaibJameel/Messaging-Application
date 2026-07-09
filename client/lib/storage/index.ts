@@ -5,6 +5,7 @@
  */
 
 import { MMKV } from "react-native-mmkv";
+import { error as logError } from "../../src/utils/logger";
 
 const storage = new MMKV();
 
@@ -16,8 +17,8 @@ export const StorageService = {
     try {
       const jsonString = JSON.stringify(value);
       storage.set(key, jsonString);
-    } catch (error) {
-      console.error(`Storage: Failed to set item ${key}:`, error);
+    } catch (error: unknown) {
+      logError(`Storage: Failed to set item ${key}`, error, "storage");
     }
   },
 
@@ -34,8 +35,8 @@ export const StorageService = {
       } catch {
         return value;
       }
-    } catch (error) {
-      console.error(`Storage: Failed to get item ${key}:`, error);
+    } catch (error: unknown) {
+      logError(`Storage: Failed to get item ${key}`, error, "storage");
       return null;
     }
   },
@@ -46,8 +47,8 @@ export const StorageService = {
   getString: (key: string): string | undefined => {
     try {
       return storage.getString(key);
-    } catch (error) {
-      console.error(`Storage: Failed to get string ${key}:`, error);
+    } catch (error: unknown) {
+      logError(`Storage: Failed to get string ${key}`, error, "storage");
       return undefined;
     }
   },
@@ -58,8 +59,8 @@ export const StorageService = {
   removeItem: (key: string): void => {
     try {
       storage.delete(key);
-    } catch (error) {
-      console.error(`Storage: Failed to remove item ${key}:`, error);
+    } catch (error: unknown) {
+      logError(`Storage: Failed to remove item ${key}`, error, "storage");
     }
   },
 
@@ -69,8 +70,8 @@ export const StorageService = {
   clear: (): void => {
     try {
       storage.clearAll();
-    } catch (error) {
-      console.error("Storage: Failed to clear all:", error);
+    } catch (error: unknown) {
+      logError("Storage: Failed to clear all", error, "storage");
     }
   },
 
@@ -80,8 +81,8 @@ export const StorageService = {
   getAllKeys: (): string[] => {
     try {
       return storage.getAllKeys();
-    } catch (error) {
-      console.error("Storage: Failed to get all keys:", error);
+    } catch (error: unknown) {
+      logError("Storage: Failed to get all keys", error, "storage");
       return [];
     }
   },
@@ -92,8 +93,8 @@ export const StorageService = {
   hasKey: (key: string): boolean => {
     try {
       return storage.contains(key);
-    } catch (error) {
-      console.error(`Storage: Failed to check key ${key}:`, error);
+    } catch (error: unknown) {
+      logError(`Storage: Failed to check key ${key}`, error, "storage");
       return false;
     }
   },
