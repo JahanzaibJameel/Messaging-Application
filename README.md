@@ -1,427 +1,125 @@
-# ChatApp 2026 - Enterprise-Grade Messaging Platform
+# ChatApp
 
-[![React Native](https://img.shields.io/badge/React%20Native-0.82-blue.svg)](https://reactnative.dev/)
-[![Expo](https://img.shields.io/badge/Expo-54.0-black.svg)](https://expo.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
-[![Zustand](https://img.shields.io/badge/Zustand-5.0-orange.svg)](https://github.com/pmndrs/zustand)
-[![Security](https://img.shields.io/badge/Security-Enterprise-green.svg)](SECURITY.md)
-[![CI/CD](https://github.com/your-org/chatapp/workflows/CI%20Pipeline/badge.svg)](https://github.com/your-org/chatapp/actions)
-[![Coverage](https://codecov.io/gh/your-org/chatapp/branch/main/graph/badge.svg)](https://codecov.io/gh/your-org/chatapp)
-[![Bundle Size](https://img.shields.io/badge/Bundle%20Size-1.2%20MB-brightgreen.svg)](https://github.com/your-org/chatapp/actions)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+A React Native + Expo messaging application with a client/server structure, strict TypeScript, and a security-focused codebase.
 
-A production-ready, offline-first messaging application built with React Native, featuring Clean Architecture, enterprise-grade security, and a premium WhatsApp-level user experience.
+## Project Overview
 
-## 🔒 Security Features
+This repository includes a working Expo client app and a minimal Express/WebSocket server. The app is organized with a clean architecture intent, but several production-level integrations are still scaffolding or require hardening.
 
-- **Secure Authentication**: Encrypted token storage using iOS Keychain/Android Keystore
-- **SSL Pinning**: Certificate pinning to prevent man-in-the-middle attacks
-- **Encrypted Storage**: AES-256 encrypted local storage for sensitive data
-- **Device Security**: Jailbreak/root detection with configurable policies
-- **Secure Logging**: Production-safe logging with Sentry integration
-- **Network Security**: HTTPS-only connections with certificate validation
+## What is implemented
 
-*See [SECURITY.md](SECURITY.md) for comprehensive security documentation.*
+- Expo-managed client app under `client/`
+- App entry point in `client/src/App.tsx`
+- Navigation using `@react-navigation/native` and native stack navigator
+- React Query configuration in `client/lib/query-client.ts`
+- Localized UI support using `react-i18next` with English and Arabic resources
+- Encrypted storage helpers in `client/src/security/secureStorage.ts`
+- Keychain helpers in `client/src/security/keychain.ts`
+- SSL pinning configuration scaffolding in `client/src/security/sslPinningConfig.ts`
+- Sentry integration helpers in `client/src/monitoring/sentry.ts`
+- WebSocket server implementation with JWT auth in `server/websocket.ts`
+- TypeScript strict mode, ESLint, Prettier, Jest, and lint-staged configured
 
-## Features
+## Important observations
 
-### Core Capabilities
-- **Real-time Messaging**: Instant message delivery with typing indicators
-- **Offline-First**: Full functionality without network, automatic sync when online
-- **Group Chats**: Create and manage groups with admin controls
-- **Media Sharing**: Support for images, videos, audio, and documents
-- **Message Reactions**: React to messages with emojis
-- **Reply to Messages**: Thread-based conversations
-- **Read Receipts**: Know when messages are delivered and read
+- `server/routes.ts` is effectively empty. There are no defined REST routes in this codebase.
+- `client/src/security/sslPinningConfig.ts` currently contains placeholder certificate hashes and must be replaced before production.
+- `client/src/security/keychain.ts` uses identical Keychain calls for access and refresh tokens, which is likely incorrect.
+- `client/src/security/secureStorage.ts` uses `Math.random()` as a fallback for key generation; that is not cryptographically secure for production.
+- `server/index.ts` falls back to a hard-coded `JWT_SECRET` when none is provided.
+- `app.json` includes local network ATS exceptions for iOS and development-only hostname exceptions; review these before publishing.
+- `package.json` includes a `clean` script using `rm -rf`, which is not Windows-native.
+- The current README claims features such as 15+ languages, voice messages, full message search, and production feature flags/A-B testing that are not clearly implemented in the current source.
+- The client environment variable usage is inconsistent with the old README claims. `client/lib/query-client.ts` expects `EXPO_PUBLIC_DOMAIN`, not `EXPO_PUBLIC_API_URL`.
 
-### Architecture Highlights
-- **Clean Architecture**: Separation of concerns across domain, data, and presentation layers
-- **Normalized State**: Efficient state management with Zustand
-- **Sync Engine**: Robust offline message queue with retry logic
-- **Error Boundaries**: Graceful error handling throughout the app
-- **Type Safety**: Strict TypeScript with zero implicit any
-
-### UI/UX Excellence
-- **Premium Design**: Modern 2026 design language with glassmorphism
-- **Smooth Animations**: 60fps animations using Reanimated
-- **Dark/Light Mode**: Automatic theme switching
-- **Toast Notifications**: Non-intrusive feedback system
-- **Skeleton Loaders**: Perceived performance optimization
-
-## Project Structure
-
-```
-client/src/
-├── core/                    # Core infrastructure
-│   ├── sync/               # Offline sync engine
-│   │   ├── SyncEngine.ts   # Main sync orchestrator
-│   │   ├── NetworkMonitor.ts
-│   │   └── index.ts
-│   ├── errors/             # Error handling
-│   │   ├── AppError.ts
-│   │   └── index.ts
-│   ├── di/                 # Dependency injection
-│   ├── network/            # Network layer
-│   └── storage/            # Storage abstractions
-│
-├── domain/                  # Business logic
-│   ├── entities/           # Domain entities
-│   │   ├── User.ts
-│   │   ├── Message.ts
-│   │   ├── Chat.ts
-│   │   └── index.ts
-│   ├── repositories/       # Repository interfaces
-│   │   ├── ChatRepository.ts
-│   │   ├── UserRepository.ts
-│   │   └── index.ts
-│   ├── usecases/           # Use cases (interactors)
-│   └── events/             # Domain events
-│
-├── data/                    # Data layer
-│   ├── models/             # Data models
-│   │   └── MessageModel.ts
-│   ├── repositories/       # Repository implementations
-│   ├── datasources/        # Local/Remote data sources
-│   └── mappers/            # Data mappers
-│       ├── MessageMapper.ts
-│       ├── ChatMapper.ts
-│       ├── UserMapper.ts
-│       └── index.ts
-│
-├── presentation/            # Presentation layer
-│   ├── components/         # UI components
-│   │   └── ui/
-│   │       └── Toast.tsx
-│   ├── screens/            # Screen components
-│   ├── navigation/         # Navigation setup
-│   ├── hooks/              # Custom hooks
-│   ├── stores/             # Zustand stores
-│   │   ├── types.ts
-│   │   ├── authStore.ts
-│   │   ├── chatStore.ts
-│   │   ├── messageStore.ts
-│   │   ├── uiStore.ts
-│   │   ├── syncStore.ts
-│   │   └── index.ts
-│   └── theme/              # Theme configuration
-│
-├── services/               # External services
-│   ├── websocket/          # WebSocket client (future)
-│   ├── notifications/      # Push notifications (future)
-│   └── media/              # Media handling (future)
-│
-└── shared/                 # Shared utilities
-    ├── constants/
-    ├── utils/
-    └── types/
-```
-
-## Getting Started
+## Quick start
 
 ### Prerequisites
-- Node.js >= 18.0.0
-- npm >= 9.0.0
-- Expo CLI
-- iOS Simulator (Mac) or Android Emulator
 
-### Installation
+- Node.js >= 18
+- npm >= 9
+- Expo CLI installed or use `npx expo`
+- Android Studio / Xcode for device/emulator testing
+- Git
+
+### Install dependencies
 
 ```bash
-# Clone the repository
 git clone <repository-url>
-cd chatapp-project
-
-# Install dependencies
+cd Messaging-Application
 npm install
-
-# Install iOS dependencies (Mac only)
-cd ios && pod install && cd ..
-
-# Start the development server
-npm run dev
-```
-
-### Environment Setup
-
-Create a `.env` file in the root directory:
-
-```env
-EXPO_PUBLIC_DOMAIN=your-api-domain.com
-EXPO_PUBLIC_API_URL=https://your-api-domain.com
-EXPO_PUBLIC_WS_URL=wss://your-api-domain.com/ws
-```
-
-## Development
-
-### Available Scripts
-
-```bash
-# Start development server
-npm run dev
-
-# Run on specific platform
-npm run android
-npm run ios
-npm run web
-
-# Code quality
-npm run lint          # Run ESLint
-npm run lint:fix      # Fix ESLint issues
-npm run format        # Format with Prettier
-npm run format:check  # Check formatting
-npm run type-check    # TypeScript type checking
-npm run validate      # Run all checks
-
-# Build
-npm run build:web     # Build for web
-```
-
-### Architecture Patterns
-
-#### Clean Architecture
-The app follows Clean Architecture principles with clear separation:
-
-1. **Domain Layer**: Contains business logic, entities, and repository interfaces
-2. **Data Layer**: Implements repositories, handles data sources and mapping
-3. **Presentation Layer**: UI components, screens, and state management
-
-#### State Management
-Uses Zustand with the following stores:
-- `authStore`: Authentication state
-- `chatStore`: Chat list state (normalized)
-- `messageStore`: Message state (normalized)
-- `uiStore`: UI state (toasts, modals)
-- `syncStore`: Offline sync state
-
-#### Offline-First Sync
-The sync engine provides:
-- Message queue for pending messages
-- Automatic retry with exponential backoff
-- Network state monitoring
-- Conflict resolution
-- Deduplication
-
-### Code Style
-
-- **ESLint**: Strict TypeScript rules with React best practices
-- **Prettier**: Consistent formatting
-- **TypeScript**: Strict mode enabled
-
-## Key Features Implementation
-
-### Offline-First Messaging
-
-```typescript
-// Send message (works offline)
-const sendMessage = async (chatId: string, text: string) => {
-  const message = MessageEntity.create({
-    chatId,
-    senderId: currentUser.id,
-    type: 'text',
-    text,
-  });
-
-  // Queue for sync
-  syncEngine.queueMessage(message);
-};
-```
-
-### Normalized State
-
-```typescript
-// Store structure
-{
-  messages: {
-    ids: ['msg1', 'msg2', 'msg3'],
-    entities: {
-      msg1: { id: 'msg1', text: 'Hello' },
-      msg2: { id: 'msg2', text: 'World' },
-      // ...
-    }
-  }
-}
-```
-
-### Error Handling
-
-```typescript
-try {
-  await someAsyncOperation();
-} catch (error) {
-  const appError = handleError(error);
-  showToast({
-    type: 'error',
-    message: appError.message,
-  });
-}
-```
-
-## Performance Optimizations
-
-- **FlashList**: High-performance list rendering
-- **React.memo**: Strategic memoization
-- **Zustand Selectors**: Minimize re-renders
-- **Lazy Loading**: Code splitting by route
-- **Image Optimization**: Lazy loading and caching
-
-## Security
-
-- Secure storage for sensitive data (MMKV)
-- Input validation with Zod
-- Error boundary protection
-- No sensitive data in logs
-
-## Future Enhancements
-
-### Phase 2: Real-time
-- WebSocket integration
-- Push notifications
-- Presence indicators
-
-### Phase 3: Media
-- Image compression
-- Video streaming
-- File encryption
-
-### Phase 4: Scale
-- Pagination
-- Virtual scrolling
-- Message search
-
-## 🚀 CI/CD Pipeline
-
-This project uses GitHub Actions for continuous integration and deployment with comprehensive quality gates.
-
-### CI Pipeline (Pull Requests)
-
-Runs on every pull request to `main` and `develop` branches:
-
-- **TypeScript Type Check**: Strict mode with zero errors policy
-- **ESLint**: Code quality with zero warnings policy
-- **Prettier**: Code formatting validation
-- **Unit Tests**: Jest with 85%+ coverage threshold
-- **Bundle Size**: Fails if main bundle exceeds 1.5MB
-- **Console Log Check**: Ensures no console.log in production code
-- **Security Audit**: npm audit (fails on high/critical vulnerabilities)
-- **Environment Validation**: Validates all required environment variables
-- **Network Security**: Validates Android/iOS security configurations
-- **Build Tests**: Multi-platform build validation
-
-### CD Pipeline (Main Branch)
-
-Runs on every push to `main` branch:
-
-- **All CI Checks**: Runs complete CI pipeline first
-- **Sentry Release**: Creates new release with source maps
-- **iOS Build**: Builds and uploads to TestFlight (production)
-- **Android Build**: Builds and uploads to Play Store (production)
-- **Web Deploy**: Deploys to Firebase Hosting
-- **GitHub Releases**: Creates tagged releases with build artifacts
-- **Rollback**: Automatic rollback on deployment failures
-
-### Local Development Setup
-
-#### Pre-commit Hooks
-
-The project uses Husky and lint-staged for pre-commit hooks:
-
-```bash
-# Install dependencies
-npm install
-
-# Setup pre-commit hooks
 npm run prepare
 ```
 
-Pre-commit hooks run automatically on staged files:
-- ESLint with auto-fix
-- Prettier formatting
-- TypeScript type checking
-
-#### Local Verification
-
-Before creating a pull request, run:
+### Run the client
 
 ```bash
-# Run all checks
-npm run validate
-
-# Run tests with coverage
-npm run test:coverage
-
-# Check bundle size
-npm run bundle:analyze
-
-# Check for console logs
-npm run check:console
-
-# Security audit
-npm run security:check
-
-# Environment validation
-npm run validate:env
+npm run dev
 ```
 
-### Required Environment Variables
-
-Set these in your GitHub repository secrets:
+### Run the server
 
 ```bash
-# Sentry
-SENTRY_AUTH_TOKEN=your-sentry-auth-token
-SENTRY_ORG=your-sentry-org
-SENTRY_PROJECT=your-sentry-project
-SENTRY_DSN=your-sentry-dsn
-
-# API
-API_BASE_URL=your-api-base-url
-APP_VERSION=your-app-version
-BUILD_NUMBER=your-build-number
-
-# Expo
-EXPO_TOKEN=your-expo-token
-
-# Firebase
-FIREBASE_SERVICE_ACCOUNT_STAGING=your-firebase-staging-key
-FIREBASE_SERVICE_ACCOUNT_PROD=your-firebase-prod-key
-
-# Slack (optional)
-SLACK_WEBHOOK_URL=your-slack-webhook-url
+npm run server:dev
 ```
 
-### Pipeline Status
+### Run on targeted platforms
 
-- ✅ **CI Pipeline**: All checks passing
-- ✅ **Coverage**: 85%+ coverage maintained
-- ✅ **Bundle Size**: Under 1.5MB limit
-- ✅ **Security**: No high/critical vulnerabilities
+```bash
+npm run android
+npm run ios
+npm run web
+```
 
-## Contributing
+## Environment variables
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Create a `.env` file in the repository root with values such as:
 
-### Commit Convention
+```env
+EXPO_PUBLIC_DOMAIN=localhost:5000
+EXPO_PUBLIC_SENTRY_DSN=your-sentry-dsn
+EXPO_PUBLIC_VERSION=1.0.0
+EXPO_PUBLIC_BUILD_NUMBER=1
+EXPO_PUBLIC_APP_NAME=ChatApp
+JWT_SECRET=replace-with-strong-secret
+REPLIT_DEV_DOMAIN=optional-dev-domain
+REPLIT_DOMAINS=optional-domain-list
+```
 
-- `feat:` New feature
-- `fix:` Bug fix
-- `docs:` Documentation
-- `style:` Formatting
-- `refactor:` Code restructuring
-- `test:` Tests
-- `chore:` Maintenance
+## Scripts
 
-## License
+- `npm run dev` — start Expo development server
+- `npm run web` — launch Expo web
+- `npm run android` — open Android emulator/device
+- `npm run ios` — open iOS simulator/device
+- `npm run server:dev` — start server in development
+- `npm run lint` — run ESLint
+- `npm run lint:fix` — fix lint issues
+- `npm run format` — run Prettier
+- `npm run type-check` — run TypeScript checks
+- `npm test` — run Jest tests
+- `npm run test:coverage` — run tests with coverage
+- `npm run validate` — run type-check, lint, and format:check
 
-MIT License - see LICENSE file for details
+## Repo layout
 
-## Support
+- `client/` — Expo client app source
+- `server/` — Express server and WebSocket manager
+- `shared/` — shared schema/types
+- `assets/` — images, fonts, static assets
+- `docs/` — architecture and documentation files
+- `scripts/` — validation and utility scripts
 
-For support, email support@chatapp.com or join our Slack channel.
+## Recommended next steps
 
----
+1. Fix token storage logic in `client/src/security/keychain.ts`.
+2. Replace placeholder SSL pin hashes in `client/src/security/sslPinningConfig.ts`.
+3. Add actual routes to `server/routes.ts` if you need REST endpoints.
+4. Ensure `JWT_SECRET` is provided through secure environment configuration.
+5. Replace the insecure random fallback in `client/src/security/secureStorage.ts` with a secure random source.
+6. Validate mobile network security settings in `app.json` before releasing.
 
-Built with passion for the React Native community.
+## Notes
+
+This README now reflects the current implementation and highlights hardening tasks required before production use.
+''''}
