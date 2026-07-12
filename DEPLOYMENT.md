@@ -19,6 +19,386 @@ This is a **production-ready**, **TypeScript-strict**, **zero-ESLint-warnings** 
 
 ## Prerequisites
 
+### Development Environment
+
+- **Node.js** >= 18.0.0
+- **npm** >= 9.0.0
+- **Expo CLI** latest version
+- **Git** for version control
+
+### Platform Requirements
+
+- **iOS**: Xcode 14+, iOS 12+ target
+- **Android**: Android Studio, API Level 21+ (Android 5.0+)
+- **Web**: Modern browsers with ES2020 support
+
+## Environment Variables
+
+### Required Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+# API Configuration
+EXPO_PUBLIC_API_URL=https://api.chatapp.com
+EXPO_PUBLIC_WS_URL=wss://api.chatapp.com/ws
+EXPO_PUBLIC_APP_VERSION=3.0.0
+EXPO_PUBLIC_BUILD_NUMBER=1
+
+# Sentry Configuration
+EXPO_PUBLIC_SENTRY_DSN=https://your-sentry-dsn@sentry.io/project-id
+
+# Feature Flags
+EXPO_PUBLIC_ENABLE_FEATURE_FLAGS=true
+
+# Development Only
+EXPO_PUBLIC_DEV_MODE=false
+```
+
+### GitHub Repository Secrets
+
+Set these in your GitHub repository settings:
+
+```bash
+# Sentry
+SENTRY_AUTH_TOKEN=your-sentry-auth-token
+SENTRY_ORG=your-sentry-org
+SENTRY_PROJECT=your-sentry-project
+
+# Expo
+EXPO_TOKEN=your-expo-token
+
+# Firebase
+FIREBASE_SERVICE_ACCOUNT_STAGING=your-firebase-staging-key
+FIREBASE_SERVICE_ACCOUNT_PROD=your-firebase-prod-key
+
+# Slack (optional)
+SLACK_WEBHOOK_URL=your-slack-webhook-url
+
+# API Keys
+API_BASE_URL=https://api.chatapp.com
+APP_VERSION=3.0.0
+BUILD_NUMBER=1
+```
+
+## Production Readiness Checklist
+
+### ✅ Code Quality
+
+- [ ] **TypeScript**: No type errors, strict mode enabled
+- [ ] **ESLint**: Zero warnings, all rules passing
+- [ ] **Prettier**: Code formatted consistently
+- [ ] **Tests**: 85%+ coverage across all metrics
+- [ ] **Bundle Size**: Under 1.5MB limit
+- [ ] **Console Logs**: No console.log in production code
+- [ ] **Dead Code**: No commented-out code blocks
+
+### ✅ Security
+
+- [ ] **SSL Pinning**: Certificates configured and validated
+- [ ] **Keychain/Keystore**: Sensitive data stored securely
+- [ ] **Device Security**: Jailbreak/root detection enabled
+- [ ] **Input Validation**: All inputs validated with Zod
+- [ ] **Dependency Audit**: No high/critical vulnerabilities
+- [ ] **Environment Variables**: No secrets in bundle
+- [ ] **Network Security**: HTTPS-only connections
+
+### ✅ Performance
+
+- [ ] **Bundle Analysis**: Optimized imports and code splitting
+- [ ] **Image Optimization**: Compressed and lazy-loaded
+- [ ] **List Performance**: FlashList implemented for large lists
+- [ ] **Animation Performance**: 60fps animations with Reanimated
+- [ ] **Memory Management**: No memory leaks, proper cleanup
+- [ ] **Startup Time**: App launches within 3 seconds
+
+### ✅ Accessibility
+
+- [ ] **WCAG 2.1 AA**: All components accessible
+- [ ] **Screen Reader**: VoiceOver/TalkBack support
+- [ ] **Color Contrast**: Minimum 4.5:1 for normal text
+- [ ] **Touch Targets**: Minimum 44x44 points
+- [ ] **Keyboard Navigation**: All interactive elements accessible
+- [ ] **RTL Support**: Right-to-left languages supported
+
+### ✅ Internationalization
+
+- [ ] **String Externalization**: All user-facing strings externalized
+- [ ] **Translation Files**: Complete translations for target languages
+- [ ] **RTL Layout**: Proper layout for RTL languages
+- [ ] **Date/Time Formatting**: Locale-appropriate formatting
+- [ ] **Number Formatting**: Locale-appropriate formatting
+- [ ] **Testing**: Tested with different locales
+
+### ✅ Testing
+
+- [ ] **Unit Tests**: All business logic tested
+- [ ] **Component Tests**: UI components tested with React Testing Library
+- [ ] **Integration Tests**: Store interactions tested
+- [ ] **E2E Tests**: Critical user journeys tested
+- [ ] **Accessibility Tests**: Screen reader testing completed
+- [ ] **Performance Tests**: Bundle size and load time tested
+
+## Deployment Process
+
+### 1. Pre-deployment Checks
+
+```bash
+# Run all quality checks
+npm run validate
+
+# Run tests with coverage
+npm run test:coverage
+
+# Check bundle size
+npm run bundle:analyze
+
+# Security audit
+npm run security:check
+
+# Console log check
+npm run check:console
+```
+
+### 2. Build Applications
+
+#### iOS Build
+
+```bash
+# Build for iOS using EAS
+eas build --platform ios --profile production
+
+# Or manual build
+npx expo export --platform ios
+```
+
+#### Android Build
+
+```bash
+# Build for Android using EAS
+eas build --platform android --profile production
+
+# Or manual build
+npx expo export --platform android
+```
+
+#### Web Build
+
+```bash
+# Build for web
+npm run build:web
+
+# Deploy to Firebase (staging)
+firebase deploy --only hosting:staging
+
+# Deploy to Firebase (production)
+firebase deploy --only hosting:prod
+```
+
+### 3. Sentry Release Management
+
+```bash
+# Create Sentry release
+npx sentry-cli releases new --version $APP_VERSION
+
+# Upload source maps
+npx sentry-cli releases files $APP_VERSION \
+  --dist dist \
+  --url-prefix ~/ \
+  dist/main.jsbundle dist/main.jsbundle.map
+
+# Finalize release
+npx sentry-cli releases finalize $APP_VERSION
+
+# Associate commits
+npx sentry-cli releases set-commits --auto $APP_VERSION
+```
+
+### 4. App Store Submission
+
+#### iOS App Store
+
+1. **Prepare Assets**:
+   - App icon: 1024x1024 PNG
+   - Screenshots: All device sizes (iPhone, iPad)
+   - Privacy Policy URL
+   - Support URL
+   - Marketing URL
+
+2. **App Store Connect**:
+   - Create new app version
+   - Upload build from EAS
+   - Fill metadata: description, keywords, categories
+   - Set pricing and availability
+   - Submit for review
+
+3. **Required Information**:
+   ```
+   App Name: ChatApp 2026
+   Category: Social Networking
+   Content Rating: 12+ (messaging app)
+   Privacy Policy: https://chatapp.com/privacy
+   Support: https://chatapp.com/support
+   ```
+
+#### Google Play Store
+
+1. **Prepare Assets**:
+   - App icon: 512x512 PNG
+   - Feature graphic: 1024x500 PNG
+   - Screenshots: Phone and tablet sizes
+   - Privacy Policy URL
+   - Support URL
+
+2. **Google Play Console**:
+   - Create new release
+   - Upload AAB from EAS build
+   - Fill store listing: description, changelog
+   - Set content rating and target audience
+   - Roll out to production
+
+3. **Required Information**:
+   ```
+   App Name: ChatApp 2026
+   Category: Communication
+   Content Rating: Everyone (messaging app)
+   Privacy Policy: https://chatapp.com/privacy
+   Support: https://chatapp.com/support
+   ```
+
+## Monitoring and Maintenance
+
+### Production Monitoring
+
+1. **Sentry**: Error tracking and performance monitoring
+2. **Firebase Analytics**: User behavior and crash analytics
+3. **App Store Analytics**: Downloads, ratings, and reviews
+4. **Custom Analytics**: Feature usage and business metrics
+5. **Performance Monitoring**: Bundle size, load times, memory usage
+
+### Health Checks
+
+```bash
+# Monitor app health
+npm run health:check
+
+# Check bundle size
+npm run bundle:size
+
+# Security audit
+npm run security:audit
+
+# Dependency updates
+npm audit fix
+npm update
+```
+
+## Rollback Procedures
+
+### Immediate Rollback
+
+1. **App Stores**:
+   - iOS: Remove from sale or issue urgent update
+   - Android: Roll back to previous version
+
+2. **Web Deployment**:
+   ```bash
+   # Rollback to previous version
+   firebase deploy --only hosting:prod --version previous
+   ```
+
+3. **API Issues**:
+   - Enable maintenance mode
+   - Switch to backup API endpoints
+   - Monitor error rates
+
+### Communication
+
+1. **Internal Team**: Slack notifications for all deployments
+2. **Users**: In-app notifications for maintenance
+3. **Stakeholders**: Email summary of incident and resolution
+
+## Troubleshooting
+
+### Common Issues
+
+#### Build Failures
+
+```bash
+# Clear Expo cache
+npx expo start --clear
+
+# Reset node modules
+rm -rf node_modules
+npm install
+
+# Clear watchman cache
+watchman watch-del-all
+```
+
+#### Deployment Issues
+
+```bash
+# Check EAS build status
+eas build:list
+
+# View build logs
+eas build:view --build-id <id>
+
+# Check Sentry releases
+npx sentry-cli releases list
+```
+
+#### Performance Issues
+
+```bash
+# Analyze bundle size
+npm run bundle:analyze
+
+# Check memory usage
+npx react-native-bundle-visualizer
+
+# Profile performance
+npx expo start --dev-client
+```
+
+## Support
+
+### Documentation
+- **[README.md](README.md)**: Getting started guide
+- **[ARCHITECTURE.md](ARCHITECTURE.md)**: System architecture
+- **[CONTRIBUTING.md](CONTRIBUTING.md)**: Development guidelines
+- **[SECURITY.md](SECURITY.md)**: Security implementation
+
+### Contact
+- **Development Team**: dev-team@chatapp.com
+- **DevOps Team**: devops@chatapp.com
+- **Security**: security@chatapp.com
+
+---
+
+## Deployment Checklist Summary
+
+- [ ] **Environment**: All variables configured
+- [ ] **Code Quality**: All checks passing
+- [ ] **Security**: Audit completed
+- [ ] **Testing**: Coverage requirements met
+- [ ] **Build**: All platforms built successfully
+- [ ] **Sentry**: Release created and source maps uploaded
+- [ ] **Documentation**: Updated with version info
+- [ ] **Monitoring**: Alerts configured
+- [ ] **Rollback Plan**: Prepared and tested
+
+## Version History
+
+- **v3.0.0**: Initial production release with full feature set
+- **v2.x.x**: Legacy versions (deprecated)
+- **v1.x.x**: Initial development versions (deprecated)
+
+---
+
+**This deployment guide ensures ChatApp meets enterprise-grade standards for production deployment.**
+
 - **Node.js** >= 18.0.0
 - **npm** >= 9.0.0
 - **Expo CLI** (installed globally)
@@ -200,7 +580,7 @@ Create `.env.local` (not committed to git):
 
 ```env
 # Optional: API endpoints
-EXPO_PUBLIC_API_BASE_URL=https://api.example.com
+EXPO_PUBLIC_API_URL=https://api.example.com
 EXPO_PUBLIC_WS_URL=wss://ws.example.com
 
 # Analytics (optional)
