@@ -7,7 +7,7 @@ on:
 env:
   NODE_VERSION: '18.x'
   CACHE_VERSION: v2
-  BUNDLE_SIZE_LIMIT: 1536 # 1.5 MB in KB
+  BUNDLE_SIZE_LIMIT: 12288 # ~12 MB (web export dist); adjust after profiling
 
 jobs:
   setup:
@@ -225,26 +225,29 @@ jobs:
         run: npm ci --legacy-peer-deps
         if: needs.setup.outputs.cache-hit != 'true'
 
-      - name: Generate bundle analysis
+      - name: Measure Expo web export size
+        env:
+          EXPO_PUBLIC_API_URL: https://ci.invalid
+          EXPO_PUBLIC_WS_URL: wss://ci.invalid/ws
+          EXPO_PUBLIC_SENTRY_DSN: https://00000000000000000000000000000000@o000000.ingest.sentry.io/0
         run: |
-          npm run bundle:analyze
-          # Create dist directory if it doesn't exist
-          mkdir -p dist
-          # Generate a dummy bundle for size checking
-          echo "dummy bundle content" > dist/bundle.js
-          # Calculate actual bundle size
-          BUNDLE_SIZE=$(du -sk dist/ | cut -f1)
-          echo "Bundle size: ${BUNDLE_SIZE} KB"
-          echo "bundle-size=${BUNDLE_SIZE}" >> $GITHUB_OUTPUT
+          rm -rf dist
+          npx expo export --platform web
+          if [ ! -d dist ]; then
+            echo "❌ expo export did not produce a dist/ directory"
+            exit 1
+          fi
+          BUNDLE_SIZE_KB=$(du -sk dist | cut -f1)
+          echo "Web export size (dist/): ${BUNDLE_SIZE_KB} KB"
 
       - name: Check bundle size limit
         run: |
-          BUNDLE_SIZE=$(du -sk dist/ | cut -f1)
+          BUNDLE_SIZE=$(du -sk dist | cut -f1)
           if [ "$BUNDLE_SIZE" -gt "${{ env.BUNDLE_SIZE_LIMIT }}" ]; then
-            echo "❌ Bundle size ${BUNDLE_SIZE}KB exceeds limit of ${{ env.BUNDLE_SIZE_LIMIT }}KB (1.5MB)"
+            echo "❌ Expo web export size ${BUNDLE_SIZE}KB exceeds limit of ${{ env.BUNDLE_SIZE_LIMIT }}KB"
             exit 1
           else
-            echo "✅ Bundle size ${BUNDLE_SIZE}KB is within limit of ${{ env.BUNDLE_SIZE_LIMIT }}KB (1.5MB)"
+            echo "✅ Expo web export size ${BUNDLE_SIZE}KB is within limit of ${{ env.BUNDLE_SIZE_LIMIT }}KB"
           fi
 
   console-check:
@@ -318,7 +321,8 @@ jobs:
         env:
           NODE_ENV: production
           EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-          EXPO_PUBLIC_API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          EXPO_PUBLIC_API_URL: ${{ secrets.API_BASE_URL }}
+          EXPO_PUBLIC_WS_URL: ${{ secrets.WS_URL }}
           EXPO_PUBLIC_VERSION: ${{ secrets.APP_VERSION }}
           EXPO_PUBLIC_BUILD_NUMBER: ${{ secrets.BUILD_NUMBER }}
 
