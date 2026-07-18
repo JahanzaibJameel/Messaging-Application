@@ -8,17 +8,21 @@ module.exports = function (api) {
         {
           root: ["./"],
           alias: {
+            // New clean-arch aliases (src-relative)
+            "@domain": "./client/src/domain",
+            "@data": "./client/src/data",
+            "@core": "./client/src/core",
+            "@presentation": "./client/src/presentation",
+            "@services": "./client/src/services",
+            "@shared": "./client/src/shared",
+            // Legacy UI layer aliases (still used by components/hooks/constants)
             "@": "./client",
             "@components": "./client/components",
-            "@screens": "./client/screens",
-            "@navigation": "./client/navigation",
             "@hooks": "./client/hooks",
-            "@store": "./client/store",
             "@utils": "./client/utils",
             "@constants": "./client/constants",
             "@types": "./client/types",
-            "@services": "./client/services",
-            "@shared": "./shared",
+            "@theme": "./client/theme",
           },
           extensions: [
             ".ios.ts",

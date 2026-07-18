@@ -34,10 +34,11 @@ jest.mock("react-native-ssl-pinning", () => ({
   fetch: jest.fn(() => Promise.resolve({ status: 200, data: {} })),
 }));
 
-// Mock react-native-gesture-handler
+// Mock react-native-gesture-handler (single mock: RootView + handler stubs)
 jest.mock("react-native-gesture-handler", () => {
   const View = require("react-native/Libraries/Components/View/View");
   return {
+    GestureHandlerRootView: ({ children }) => children,
     Swipeable: View,
     DrawerLayout: View,
     State: {},
@@ -99,11 +100,6 @@ jest.mock("@react-navigation/native", () => ({
   }),
 }));
 
-// Mock GestureHandlerRootView
-jest.mock("react-native-gesture-handler", () => ({
-  GestureHandlerRootView: ({ children }) => children,
-}));
-
 // Mock MMKV
 jest.mock("react-native-mmkv", () => ({
   MMKV: jest.fn().mockImplementation(() => ({
@@ -117,27 +113,33 @@ jest.mock("react-native-mmkv", () => ({
   })),
 }));
 
-// Mock immer for Zustand middleware
-jest.mock("immer", () => ({
-  produce: jest.fn((base, recipe) => recipe(base)),
-  original: jest.fn((value) => value),
-  enableAllPlugins: jest.fn(),
-}));
+// Use real immer for Zustand immer middleware (mock breaks store updates)
 
 // Mock Sentry
-jest.mock("@sentry/react-native", () => ({
-  init: jest.fn(),
-  captureException: jest.fn(),
-  captureMessage: jest.fn(),
-  setUser: jest.fn(),
-  clearUser: jest.fn(),
-  addBreadcrumb: jest.fn(),
-  startTransaction: jest.fn(() => ({
-    finish: jest.fn(),
+jest.mock("@sentry/react-native", () => {
+  const mockScope = {
     setTag: jest.fn(),
-  })),
-  ErrorBoundary: ({ children }) => children,
-}));
+    setUser: jest.fn(),
+    setContext: jest.fn(),
+    setLevel: jest.fn(),
+  };
+  return {
+    init: jest.fn(),
+    captureException: jest.fn(),
+    captureMessage: jest.fn(),
+    setUser: jest.fn(),
+    clearUser: jest.fn(),
+    addBreadcrumb: jest.fn(),
+    withScope: jest.fn((callback) => callback(mockScope)),
+    configureScope: jest.fn((callback) => callback(mockScope)),
+    startTransaction: jest.fn(() => ({
+      finish: jest.fn(),
+      setTag: jest.fn(),
+    })),
+    reactNavigationIntegration: jest.fn(() => ({})),
+    ErrorBoundary: ({ children }) => children,
+  };
+});
 
 // Mock react-native-device-info
 jest.mock('react-native-device-info', () => ({
