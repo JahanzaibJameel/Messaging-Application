@@ -3,8 +3,7 @@
  * Feature Flags Store Tests
  * Tests for Zustand store with MMKV persistence and A/B testing
  */
-
-import { renderHook, act } from "@testing-library/react-hooks";
+import { renderHook, act } from "@testing-library/react";
 import { useFeatureFlagsStore, DEFAULT_FEATURE_FLAGS } from "../featureFlagsStore";
 import { MMKV } from "react-native-mmkv";
 
