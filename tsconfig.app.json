@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["client/**/*.ts", "client/**/*.tsx", "client/**/*.d.ts", "shared/**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    ".expo",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/__tests__/**",
+    "client/src/test-utils/**"
+  ]
+}
