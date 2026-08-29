@@ -3,21 +3,18 @@
  */
 
 module.exports = {
-  preset: 'jest-expo',
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  testMatch: [
-    '**/__tests__/**/*.(ts|tsx|js)',
-    '**/*.(test|spec).(ts|tsx|js)',
-  ],
+  preset: "jest-expo",
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
+  testMatch: ["**/__tests__/**/*.(ts|tsx|js)", "**/*.(test|spec).(ts|tsx|js)"],
   collectCoverageFrom: [
-    'client/**/*.{ts,tsx}',
-    '!client/**/*.d.ts',
-    '!client/**/*.stories.{ts,tsx}',
-    '!client/**/__tests__/**',
-    '!client/**/node_modules/**',
+    "client/**/*.{ts,tsx}",
+    "!client/**/*.d.ts",
+    "!client/**/*.stories.{ts,tsx}",
+    "!client/**/__tests__/**",
+    "!client/**/node_modules/**",
   ],
-  coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'html'],
+  coverageDirectory: "coverage",
+  coverageReporters: ["text", "lcov", "html"],
   coverageThreshold: {
     global: {
       branches: 85,
@@ -27,21 +24,20 @@ module.exports = {
     },
   },
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/client/$1',
-    '^~/(.*)$': '<rootDir>/client/$1',
-    '^react-native-mmkv$': '<rootDir>/client/src/test-utils/mocks/mmkvMock.ts',
-    '^react-native-keychain$': '<rootDir>/client/src/test-utils/mocks/keychainMock.ts',
-    '^react-native-device-info$': '<rootDir>/client/src/test-utils/mocks/deviceInfoMock.ts',
+    "^@/(.*)$": "<rootDir>/client/src/$1",
+    "^react-native-mmkv$": "<rootDir>/client/src/test-utils/mocks/mmkvMock.ts",
+    "^react-native-keychain$": "<rootDir>/client/src/test-utils/mocks/keychainMock.ts",
+    "^react-native-device-info$": "<rootDir>/client/src/test-utils/mocks/deviceInfoMock.ts",
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(jest-)?react-native|react-clone|@react-native|expo|@expo|@react-navigation|zustand|immer)',
+    "node_modules/(?!(jest-)?react-native|react-clone|@react-native|expo|@expo|@react-navigation|zustand|immer)",
   ],
-  testEnvironment: 'jsdom',
+  testEnvironment: "jsdom",
   resetMocks: false,
   restoreMocks: false,
   clearMocks: false,
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
   transform: {
-    '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
+    "^.+\\.(js|jsx|ts|tsx)$": "babel-jest",
   },
 };
