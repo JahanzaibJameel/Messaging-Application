@@ -1,4 +1,3 @@
-// @ts-expect-error drizzle-kit not installed for frontend-only build
 import { defineConfig } from "drizzle-kit";
 
 if (!process.env.DATABASE_URL) {
