@@ -33,7 +33,11 @@ describe("Feature Flag Hooks", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (mockUseFeatureFlagsStore as jest.Mock).mockReturnValue(mockStore);
+    // The store hook receives a selector; apply it to the mock state.
+    (mockUseFeatureFlagsStore as jest.Mock).mockImplementation(
+      (selector?: (state: typeof mockStore) => unknown) =>
+        selector ? selector(mockStore) : mockStore
+    );
   });
 
   describe("useFeatureFlag", () => {
@@ -268,12 +272,14 @@ describe("Feature Flag Hooks", () => {
 
       const { result } = renderHook(() => useFeatureFlag("enableVoiceMessages"));
 
-      // Rapid calls
+      // Selector runs on render; cached results stay stable across reads
+      const callsAfterRender = mockStore.isFlagEnabled.mock.calls.length;
+
       for (let i = 0; i < 100; i++) {
         expect(result.current).toBe(true);
       }
 
-      expect(mockStore.isFlagEnabled).toHaveBeenCalledTimes(100);
+      expect(mockStore.isFlagEnabled).toHaveBeenCalledTimes(callsAfterRender);
     });
 
     it("should handle multiple instances of same hook", () => {
