@@ -14,8 +14,8 @@ import { Button } from "@/components/Button";
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { useAuthStore } from "@presentation/stores";
-import type { LoginNavProp } from "../../../src/navigation/types";
+import { useAuthStore } from "@/presentation/stores";
+import type { LoginNavProp } from "@/navigation/types";
 
 interface Props {
   navigation: LoginNavProp;

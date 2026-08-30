@@ -10,7 +10,7 @@ import { render, fireEvent, screen } from "@testing-library/react-native";
 import ChatListScreen from "../ChatListScreen";
 import { useChatStore } from "../../stores/chatStore";
 import { useUIStore } from "../../stores/uiStore";
-import type { Chat } from "@domain/entities/Chat";
+import type { Chat } from "@/domain/entities/Chat";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 

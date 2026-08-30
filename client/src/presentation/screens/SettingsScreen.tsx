@@ -18,8 +18,8 @@ import { ThemedText } from "@/components/ThemedText";
 import { SettingsItem } from "@/components/SettingsItem";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { useAuthStore } from "@presentation/stores";
-import type { RootStackParamList } from "../../../src/navigation/types";
+import { useAuthStore } from "@/presentation/stores";
+import type { RootStackParamList } from "@/navigation/types";
 
 interface Props {
   navigation: NativeStackNavigationProp<RootStackParamList>;

@@ -20,8 +20,8 @@ import { ThemedText } from "@/components/ThemedText";
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { useAuthStore } from "@presentation/stores";
-import type { OTPNavProp, OTPRouteProp } from "../../../src/navigation/types";
+import { useAuthStore } from "@/presentation/stores";
+import type { OTPNavProp, OTPRouteProp } from "@/navigation/types";
 
 interface Props {
   navigation: OTPNavProp;

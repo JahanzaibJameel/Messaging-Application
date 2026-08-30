@@ -15,8 +15,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
-import { useAuthStore } from "@presentation/stores";
-import type { SplashNavProp } from "../../../src/navigation/types";
+import { useAuthStore } from "@/presentation/stores";
+import type { SplashNavProp } from "@/navigation/types";
 
 interface Props {
   navigation: SplashNavProp;
@@ -47,6 +47,7 @@ export default function SplashScreen({ navigation }: Props) {
       }, 1500);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isLoading, isAuthenticated, navigation]);
 
   const logoStyle = useAnimatedStyle(() => ({

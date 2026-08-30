@@ -16,9 +16,9 @@ import { ThemedText } from "@/components/ThemedText";
 import { SettingsItem } from "@/components/SettingsItem";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { useChatStore, useAuthStore } from "@presentation/stores";
-import type { GroupChat } from "@domain/entities/Chat";
-import type { GroupInfoNavProp, GroupInfoRouteProp } from "../../../src/navigation/types";
+import { useChatStore, useAuthStore } from "@/presentation/stores";
+import type { GroupChat } from "@/domain/entities/Chat";
+import type { GroupInfoNavProp, GroupInfoRouteProp } from "@/navigation/types";
 
 interface Props {
   navigation: GroupInfoNavProp;

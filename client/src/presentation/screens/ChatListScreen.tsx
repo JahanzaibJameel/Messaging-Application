@@ -25,9 +25,9 @@ import { EmptyState } from "@/components/EmptyState";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { useChatStore, useUIStore } from "@presentation/stores";
-import type { Chat, GroupChat } from "@domain/entities/Chat";
-import type { NavigationProp } from "../../../src/navigation/types";
+import { useChatStore, useUIStore } from "@/presentation/stores";
+import type { Chat, GroupChat } from "@/domain/entities/Chat";
+import type { NavigationProp } from "@/navigation/types";
 
 function isGroupChat(chat: Chat | GroupChat): chat is GroupChat {
   return chat.type === "group";

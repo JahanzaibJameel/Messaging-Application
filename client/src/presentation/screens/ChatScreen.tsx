@@ -35,12 +35,12 @@ import {
   useMessageStore,
   useUIStore,
   useAuthStore,
-} from "@presentation/stores";
-import { MessageEntity } from "@domain/entities/Message";
-import type { Message } from "@domain/entities/Message";
-import type { GroupChat } from "@domain/entities/Chat";
-import { getSyncEngine } from "@core/sync";
-import type { ChatNavProp, ChatRouteProp } from "../../../src/navigation/types";
+} from "@/presentation/stores";
+import { MessageEntity } from "@/domain/entities/Message";
+import type { Message } from "@/domain/entities/Message";
+import type { GroupChat } from "@/domain/entities/Chat";
+import { getSyncEngine } from "@/core/sync";
+import type { ChatNavProp, ChatRouteProp } from "@/navigation/types";
 
 interface Props {
   navigation: ChatNavProp;
