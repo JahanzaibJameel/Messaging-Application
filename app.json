@@ -6,15 +6,6 @@
     "runtimeVersion": "2.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "splashScreen": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FFFFFF",
-      "dark": {
-        "image": "./assets/images/splash-dark.png",
-        "backgroundColor": "#0B141A"
-      }
-    },
     "icon": "./assets/images/icon.png",
     "favicon": "./assets/images/favicon.png",
     "scheme": "chatapp",
@@ -23,9 +14,16 @@
     "jsEngine": "hermes",
     "plugins": [
       [
-        "expo-font",
+        "expo-splash-screen",
         {
-          "fonts": ["./assets/fonts/Inter-Regular.ttf", "./assets/fonts/Inter-Bold.ttf"]
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#FFFFFF",
+          "dark": {
+            "image": "./assets/images/splash-icon.png",
+            "backgroundColor": "#0B141A"
+          }
         }
       ]
     ],
@@ -66,7 +64,9 @@
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#25D366",
-        "foregroundImage": "./assets/images/icon.png"
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
       "permissions": [
@@ -81,9 +81,6 @@
       "bundler": "metro"
     },
     "extra": {
-      "eas": {
-        "projectId": "chatapp-2026"
-      },
       "router": {
         "origin": false
       }
