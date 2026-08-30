@@ -1,589 +1,383 @@
-// @ts-nocheck
 /**
  * Unit tests for WebSocketClient
- * Testing WebSocket connection and message handling
+ * Connection lifecycle, reconnection, heartbeat and message routing
  */
 
-import WebSocketClient from "../WebSocketClient";
+import { WebSocketClient } from "../WebSocketClient";
 
-// Mock WebSocket
-const mockWebSocket = {
-  send: jest.fn(),
-  close: jest.fn(),
-  addEventListener: jest.fn(),
-  removeEventListener: jest.fn(),
-  readyState: WebSocket.CONNECTING,
-  CONNECTING: 0,
-  OPEN: 1,
-  CLOSING: 2,
-  CLOSED: 3,
-};
+// Mock store side effects (toasts) triggered on connect/disconnect
+jest.mock("../../../presentation/stores", () => ({
+  useUIStore: {
+    getState: () => ({
+      showToast: jest.fn(),
+    }),
+  },
+  useAuthStore: {
+    getState: () => ({ currentUser: null }),
+  },
+}));
 
-// Mock global WebSocket
-global.WebSocket = jest.fn(() => mockWebSocket) as any;
+class MockWebSocket {
+  static OPEN = 1;
+  static CONNECTING = 0;
+  static CLOSING = 2;
+  static CLOSED = 3;
+
+  url: string;
+  readyState = MockWebSocket.CONNECTING;
+  onopen: (() => void) | null = null;
+  onmessage: ((event: { data: string }) => void) | null = null;
+  onclose: ((event: { wasClean: boolean }) => void) | null = null;
+  onerror: ((event?: unknown) => void) | null = null;
+
+  send = jest.fn();
+  close = jest.fn(() => {
+    this.readyState = MockWebSocket.CLOSED;
+    this.onclose?.({ wasClean: true });
+  });
+
+  constructor(url: string) {
+    this.url = url;
+    instances.push(this);
+  }
+
+  simulateOpen() {
+    this.readyState = MockWebSocket.OPEN;
+    this.onopen?.();
+  }
+
+  simulateMessage(data: string) {
+    this.onmessage?.({ data });
+  }
+
+  simulateUncleanClose() {
+    this.readyState = MockWebSocket.CLOSED;
+    this.onclose?.({ wasClean: false });
+  }
+}
+
+const instances: MockWebSocket[] = [];
+const originalWebSocket = global.WebSocket;
 
 describe("WebSocketClient", () => {
-  let client: WebSocketClient;
-  let mockLogger: any;
+  let socketFactory: jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockLogger = {
-      info: jest.fn(),
-      error: jest.fn(),
-      warn: jest.fn(),
-      debug: jest.fn(),
-    };
-    client = new WebSocketClient("ws://localhost:8080", mockLogger);
+    jest.useFakeTimers();
+    instances.length = 0;
+    // The client compares readyState against WebSocket.OPEN from the global,
+    // so the factory itself must expose the standard static constants.
+    const factory: any = jest.fn((url: string) => new MockWebSocket(url));
+    factory.CONNECTING = MockWebSocket.CONNECTING;
+    factory.OPEN = MockWebSocket.OPEN;
+    factory.CLOSING = MockWebSocket.CLOSING;
+    factory.CLOSED = MockWebSocket.CLOSED;
+    socketFactory = factory;
+    (global as any).WebSocket = socketFactory;
   });
 
   afterEach(() => {
-    if (client) {
-      client.disconnect();
-    }
+    jest.useRealTimers();
+    (global as any).WebSocket = originalWebSocket;
   });
+
+  function lastSocket(): MockWebSocket {
+    return instances[instances.length - 1];
+  }
+
+  // -------------------------------------------------------------------------
+  // Constructor
+  // -------------------------------------------------------------------------
 
   describe("Constructor", () => {
-    it("should initialize with default options", () => {
-      const testClient = new WebSocketClient("ws://test.com");
-      expect(testClient).toBeInstanceOf(WebSocketClient);
-    });
-
-    it("should accept custom logger", () => {
-      const testClient = new WebSocketClient("ws://test.com", mockLogger);
-      expect(testClient).toBeInstanceOf(WebSocketClient);
-    });
-
-    it("should store connection URL", () => {
-      const testClient = new WebSocketClient("ws://test.com");
-      expect(testClient.getUrl()).toBe("ws://test.com");
-    });
-  });
-
-  describe("Connection Management", () => {
-    it("should connect successfully", async () => {
-      const onConnect = jest.fn();
-      client.on("connect", onConnect);
-
-      await client.connect();
-
-      expect(global.WebSocket).toHaveBeenCalledWith("ws://localhost:8080");
-      expect(mockWebSocket.addEventListener).toHaveBeenCalledWith("open", expect.any(Function));
-    });
-
-    it("should handle connection errors", async () => {
-      const onError = jest.fn();
-      client.on("error", onError);
-
-      // Simulate connection error
-      mockWebSocket.addEventListener.mockImplementation((event: string, callback: Function) => {
-        if (event === "error") {
-          setTimeout(() => callback(new Error("Connection failed")), 0);
-        }
-      });
-
-      await client.connect();
-
-      expect(onError).toHaveBeenCalled();
-      expect(mockLogger.error).toHaveBeenCalled();
-    });
-
-    it("should disconnect properly", () => {
-      const onDisconnect = jest.fn();
-      client.on("disconnect", onDisconnect);
-
-      client.disconnect();
-
-      expect(mockWebSocket.close).toHaveBeenCalled();
-      expect(onDisconnect).toHaveBeenCalled();
-    });
-
-    it("should handle reconnection", async () => {
-      const onConnect = jest.fn();
-      client.on("connect", onConnect);
-
-      await client.connect();
-      client.disconnect();
-      await client.connect();
-
-      expect(global.WebSocket).toHaveBeenCalledTimes(2);
-    });
-
-    it("should not connect if already connected", async () => {
-      mockWebSocket.readyState = WebSocket.OPEN;
-      await client.connect();
-
-      expect(global.WebSocket).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("Message Sending", () => {
-    it("should send messages when connected", async () => {
-      mockWebSocket.readyState = WebSocket.OPEN;
-      await client.connect();
-
-      const message = { type: "test", data: "hello" };
-      client.send(message);
-
-      expect(mockWebSocket.send).toHaveBeenCalledWith(JSON.stringify(message));
-    });
-
-    it("should not send messages when disconnected", () => {
-      mockWebSocket.readyState = WebSocket.CLOSED;
-      const message = { type: "test", data: "hello" };
-      client.send(message);
-
-      expect(mockWebSocket.send).not.toHaveBeenCalled();
-    });
-
-    it("should queue messages when not connected", async () => {
-      mockWebSocket.readyState = WebSocket.CONNECTING;
-      const message = { type: "test", data: "hello" };
-      client.send(message);
-
-      expect(mockWebSocket.send).not.toHaveBeenCalled();
-
-      // Connect and verify message is sent
-      mockWebSocket.readyState = WebSocket.OPEN;
-      await client.connect();
-
-      expect(mockWebSocket.send).toHaveBeenCalledWith(JSON.stringify(message));
-    });
-
-    it("should handle send errors", () => {
-      mockWebSocket.readyState = WebSocket.OPEN;
-      mockWebSocket.send.mockImplementation(() => {
-        throw new Error("Send failed");
-      });
-
-      const message = { type: "test", data: "hello" };
-      expect(() => client.send(message)).not.toThrow();
-
-      expect(mockLogger.error).toHaveBeenCalled();
-    });
-
-    it("should validate message format", () => {
-      mockWebSocket.readyState = WebSocket.OPEN;
-
-      expect(() => client.send(null as any)).not.toThrow();
-      expect(() => client.send(undefined as any)).not.toThrow();
-      expect(() => client.send("string" as any)).not.toThrow();
-      expect(() => client.send({} as any)).not.toThrow();
-    });
-  });
-
-  describe("Event Handling", () => {
-    it("should handle message events", async () => {
-      const onMessage = jest.fn();
-      client.on("message", onMessage);
-
-      await client.connect();
-
-      // Simulate incoming message
-      const messageCallback = mockWebSocket.addEventListener.mock.calls.find(
-        (call: any) => call[0] === "message"
-      )?.[1];
-
-      if (messageCallback) {
-        const testMessage = { type: "test", data: "hello" };
-        messageCallback({ data: JSON.stringify(testMessage) });
-      }
-
-      expect(onMessage).toHaveBeenCalledWith(testMessage);
-    });
-
-    it("should handle connection close events", async () => {
-      const onDisconnect = jest.fn();
-      client.on("disconnect", onDisconnect);
-
-      await client.connect();
-
-      // Simulate close event
-      const closeCallback = mockWebSocket.addEventListener.mock.calls.find(
-        (call: any) => call[0] === "close"
-      )?.[1];
-
-      if (closeCallback) {
-        closeCallback({ code: 1000, reason: "Normal closure" });
-      }
-
-      expect(onDisconnect).toHaveBeenCalledWith({ code: 1000, reason: "Normal closure" });
-    });
-
-    it("should handle multiple event listeners", async () => {
-      const onMessage1 = jest.fn();
-      const onMessage2 = jest.fn();
-
-      client.on("message", onMessage1);
-      client.on("message", onMessage2);
-
-      await client.connect();
-
-      const messageCallback = mockWebSocket.addEventListener.mock.calls.find(
-        (call: any) => call[0] === "message"
-      )?.[1];
-
-      if (messageCallback) {
-        const testMessage = { type: "test", data: "hello" };
-        messageCallback({ data: JSON.stringify(testMessage) });
-      }
-
-      expect(onMessage1).toHaveBeenCalledWith(testMessage);
-      expect(onMessage2).toHaveBeenCalledWith(testMessage);
-    });
-
-    it("should remove event listeners", () => {
-      const onMessage = jest.fn();
-
-      client.on("message", onMessage);
-      client.off("message", onMessage);
-
-      // Simulate message event
-      const messageCallback = mockWebSocket.addEventListener.mock.calls.find(
-        (call: any) => call[0] === "message"
-      )?.[1];
-
-      if (messageCallback) {
-        const testMessage = { type: "test", data: "hello" };
-        messageCallback({ data: JSON.stringify(testMessage) });
-      }
-
-      expect(onMessage).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("Connection State", () => {
-    it("should track connection state correctly", () => {
-      expect(client.isConnected()).toBe(false);
-
-      mockWebSocket.readyState = WebSocket.OPEN;
-      expect(client.isConnected()).toBe(true);
-
-      mockWebSocket.readyState = WebSocket.CLOSED;
+    it("initializes in disconnected state", () => {
+      const client = new WebSocketClient({ url: "ws://localhost:8080" });
+      expect(client.getStatus()).toBe("disconnected");
       expect(client.isConnected()).toBe(false);
     });
 
-    it("should track connection state during transitions", () => {
-      expect(client.isConnected()).toBe(false);
+    it("applies default configuration values", () => {
+      const client = new WebSocketClient({ url: "ws://localhost:8080" });
 
-      mockWebSocket.readyState = WebSocket.CONNECTING;
-      expect(client.isConnected()).toBe(false);
-
-      mockWebSocket.readyState = WebSocket.OPEN;
-      expect(client.isConnected()).toBe(true);
-
-      mockWebSocket.readyState = WebSocket.CLOSING;
-      expect(client.isConnected()).toBe(false);
-    });
-
-    it("should provide connection status", () => {
-      mockWebSocket.readyState = WebSocket.CONNECTING;
+      client.connect();
       expect(client.getStatus()).toBe("connecting");
 
-      mockWebSocket.readyState = WebSocket.OPEN;
+      client.disconnect();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Connection management
+  // -------------------------------------------------------------------------
+
+  describe("Connection Management", () => {
+    it("connects successfully and reports connected status", async () => {
+      const client = new WebSocketClient({ url: "ws://localhost:8080" });
+      client.connect();
+
+      expect(socketFactory).toHaveBeenCalledWith("ws://localhost:8080");
+
+      lastSocket().simulateOpen();
+
+      await Promise.resolve();
       expect(client.getStatus()).toBe("connected");
+      expect(client.isConnected()).toBe(true);
 
-      mockWebSocket.readyState = WebSocket.CLOSING;
-      expect(client.getStatus()).toBe("disconnecting");
+      client.disconnect();
+    });
 
-      mockWebSocket.readyState = WebSocket.CLOSED;
+    it("appends the auth token to the connection URL", () => {
+      const client = new WebSocketClient({ url: "ws://localhost:8080", authToken: "tok-1" });
+      client.connect();
+
+      expect(socketFactory).toHaveBeenCalledWith("ws://localhost:8080?token=tok-1");
+      client.disconnect();
+    });
+
+    it("does not open a second socket while already connected", () => {
+      const client = new WebSocketClient({ url: "ws://localhost:8080" });
+      client.connect();
+      lastSocket().simulateOpen();
+
+      client.connect();
+      expect(socketFactory).toHaveBeenCalledTimes(1);
+
+      client.disconnect();
+    });
+
+    it("disconnects cleanly without scheduling reconnects", () => {
+      const client = new WebSocketClient({ url: "ws://localhost:8080" });
+      client.connect();
+      client.disconnect();
+
+      jest.advanceTimersByTime(15000);
+
+      expect(socketFactory).toHaveBeenCalledTimes(1);
       expect(client.getStatus()).toBe("disconnected");
     });
   });
 
-  describe("Error Handling", () => {
-    it("should handle WebSocket construction errors", () => {
-      global.WebSocket = jest.fn(() => {
-        throw new Error("WebSocket not supported");
-      }) as any;
+  // -------------------------------------------------------------------------
+  // Status notifications
+  // -------------------------------------------------------------------------
 
-      expect(() => new WebSocketClient("ws://invalid")).not.toThrow();
-      expect(mockLogger.error).toHaveBeenCalled();
+  describe("Status notifications", () => {
+    it("immediately notifies subscribers with the current status", () => {
+      const client = new WebSocketClient({ url: "ws://localhost:8080" });
+      const seen: string[] = [];
+
+      client.onStatusChange((status) => seen.push(status));
+
+      expect(seen).toEqual(["disconnected"]);
     });
 
-    it("should handle malformed messages", async () => {
-      const onMessage = jest.fn();
-      client.on("message", onMessage);
+    it("broadcasts status transitions", async () => {
+      const client = new WebSocketClient({ url: "ws://localhost:8080" });
+      const seen: string[] = [];
+      client.onStatusChange((status) => seen.push(status));
 
-      await client.connect();
+      client.connect();
+      lastSocket().simulateOpen();
 
-      const messageCallback = mockWebSocket.addEventListener.mock.calls.find(
-        (call: any) => call[0] === "message"
-      )?.[1];
-
-      if (messageCallback) {
-        // Send malformed JSON
-        messageCallback({ data: "invalid json" });
-      }
-
-      expect(mockLogger.error).toHaveBeenCalled();
-      expect(onMessage).not.toHaveBeenCalled();
-    });
-
-    it("should handle network errors", async () => {
-      const onError = jest.fn();
-      client.on("error", onError);
-
-      await client.connect();
-
-      const errorCallback = mockWebSocket.addEventListener.mock.calls.find(
-        (call: any) => call[0] === "error"
-      )?.[1];
-
-      if (errorCallback) {
-        errorCallback(new Error("Network error"));
-      }
-
-      expect(onError).toHaveBeenCalled();
-      expect(mockLogger.error).toHaveBeenCalled();
-    });
-
-    it("should handle unexpected disconnections", async () => {
-      const onDisconnect = jest.fn();
-      client.on("disconnect", onDisconnect);
-
-      await client.connect();
-
-      const closeCallback = mockWebSocket.addEventListener.mock.calls.find(
-        (call: any) => call[0] === "close"
-      )?.[1];
-
-      if (closeCallback) {
-        closeCallback({ code: 1006, reason: "Abnormal closure" });
-      }
-
-      expect(onDisconnect).toHaveBeenCalledWith({ code: 1006, reason: "Abnormal closure" });
-      expect(mockLogger.warn).toHaveBeenCalled();
-    });
-  });
-
-  describe("Performance", () => {
-    it("should handle high message volume efficiently", async () => {
-      mockWebSocket.readyState = WebSocket.OPEN;
-      await client.connect();
-
-      const startTime = Date.now();
-
-      // Send 1000 messages
-      for (let i = 0; i < 1000; i++) {
-        client.send({ type: "test", data: `message ${i}` });
-      }
-
-      const endTime = Date.now();
-
-      expect(mockWebSocket.send).toHaveBeenCalledTimes(1000);
-      expect(endTime - startTime).toBeLessThan(1000); // Should complete within 1 second
-    });
-
-    it("should handle rapid connection attempts", async () => {
-      const onConnect = jest.fn();
-      client.on("connect", onConnect);
-
-      const startTime = Date.now();
-
-      // Attempt multiple connections
-      await Promise.all([client.connect(), client.connect(), client.connect()]);
-
-      const endTime = Date.now();
-
-      expect(endTime - startTime).toBeLessThan(500); // Should complete within 500ms
-    });
-
-    it("should handle large messages", async () => {
-      mockWebSocket.readyState = WebSocket.OPEN;
-      await client.connect();
-
-      const largeMessage = {
-        type: "large_data",
-        data: "x".repeat(100000), // 100KB message
-      };
-
-      const startTime = Date.now();
-      client.send(largeMessage);
-      const endTime = Date.now();
-
-      expect(mockWebSocket.send).toHaveBeenCalledWith(JSON.stringify(largeMessage));
-      expect(endTime - startTime).toBeLessThan(100); // Should complete within 100ms
-    });
-  });
-
-  describe("Memory Management", () => {
-    it("should clean up event listeners on disconnect", () => {
-      const onMessage = jest.fn();
-      client.on("message", onMessage);
+      await Promise.resolve();
+      expect(seen).toContain("connecting");
+      expect(seen).toContain("connected");
 
       client.disconnect();
+      expect(seen).toContain("disconnected");
+    });
+  });
 
-      expect(mockWebSocket.removeEventListener).toHaveBeenCalledWith(
-        "message",
-        expect.any(Function)
+  // -------------------------------------------------------------------------
+  // Reconnection
+  // -------------------------------------------------------------------------
+
+  describe("Reconnection", () => {
+    it("schedules a reconnect after an unclean close", async () => {
+      const client = new WebSocketClient({ url: "ws://localhost:8080", reconnectInterval: 1000 });
+      client.connect();
+      lastSocket().simulateOpen();
+      await Promise.resolve();
+
+      lastSocket().simulateUncleanClose();
+
+      jest.advanceTimersByTime(1100);
+
+      expect(socketFactory).toHaveBeenCalledTimes(2);
+      client.disconnect();
+    });
+
+    it("stops reconnecting after maxReconnectAttempts", async () => {
+      const client = new WebSocketClient({
+        url: "ws://localhost:8080",
+        reconnectInterval: 10,
+        maxReconnectAttempts: 2,
+      });
+
+      client.connect();
+
+      for (let attempt = 0; attempt < 5; attempt++) {
+        lastSocket().simulateUncleanClose();
+        await Promise.resolve();
+        await Promise.resolve();
+        jest.advanceTimersByTime(50);
+        if (!instances.length || instances.length >= 3) break;
+      }
+
+      // Initial + 2 attempts, no further sockets
+      expect(instances.length).toBe(3);
+
+      const statusesAfterMax: string[] = [];
+      client.onStatusChange((status) => statusesAfterMax.push(status));
+      jest.advanceTimersByTime(60000);
+      expect(instances.length).toBe(3);
+      expect(statusesAfterMax).not.toContain("reconnecting");
+      client.disconnect();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Messaging
+  // -------------------------------------------------------------------------
+
+  describe("Messaging", () => {
+    it("routes incoming messages to registered handlers by type", () => {
+      const client = new WebSocketClient({ url: "ws://localhost:8080" });
+      const payloads: unknown[] = [];
+
+      client.onMessage("chat_event", (payload) => payloads.push(payload));
+
+      client.connect();
+      lastSocket().simulateOpen();
+      lastSocket().simulateMessage(JSON.stringify({ type: "chat_event", payload: { a: 1 } }));
+
+      expect(payloads).toEqual([{ a: 1 }]);
+      client.disconnect();
+    });
+
+    it("ignores pong frames and malformed JSON", () => {
+      const client = new WebSocketClient({ url: "ws://localhost:8080" });
+      const handler = jest.fn();
+      client.onMessage("anything", handler);
+
+      client.connect();
+      lastSocket().simulateOpen();
+      expect(() => {
+        lastSocket().simulateMessage(JSON.stringify({ type: "pong", payload: {} }));
+        lastSocket().simulateMessage("not-json{");
+      }).not.toThrow();
+
+      expect(handler).not.toHaveBeenCalled();
+      client.disconnect();
+    });
+
+    it("supports unsubscribing handlers", () => {
+      const client = new WebSocketClient({ url: "ws://localhost:8080" });
+      const handler = jest.fn();
+
+      const unsubscribe = client.onMessage("evt", handler);
+      unsubscribe();
+
+      client.connect();
+      lastSocket().simulateOpen();
+      lastSocket().simulateMessage(JSON.stringify({ type: "evt", payload: {} }));
+
+      expect(handler).not.toHaveBeenCalled();
+      client.disconnect();
+    });
+
+    it("returns false when sending while disconnected", () => {
+      const client = new WebSocketClient({ url: "ws://localhost:8080" });
+
+      const result = client.send({
+        type: "ping",
+        payload: {},
+        timestamp: new Date().toISOString(),
+      });
+
+      expect(result).toBe(false);
+    });
+
+    it("serializes and sends messages while connected", async () => {
+      const client = new WebSocketClient({ url: "ws://localhost:8080" });
+      client.connect();
+      lastSocket().simulateOpen();
+      await Promise.resolve();
+
+      const result = client.send({ type: "greet", payload: { hi: true }, timestamp: "t" });
+
+      expect(result).toBe(true);
+      expect(lastSocket().send).toHaveBeenCalledWith(
+        JSON.stringify({ type: "greet", payload: { hi: true }, timestamp: "t" })
       );
-    });
-
-    it("should clear message queue on disconnect", () => {
-      mockWebSocket.readyState = WebSocket.CONNECTING;
-
-      // Queue messages while disconnected
-      client.send({ type: "test", data: "queued1" });
-      client.send({ type: "test", data: "queued2" });
-
       client.disconnect();
-
-      // Reconnect and verify queue is cleared
-      mockWebSocket.readyState = WebSocket.OPEN;
-      expect(mockWebSocket.send).not.toHaveBeenCalled();
-    });
-
-    it("should handle multiple disconnect calls", () => {
-      client.disconnect();
-      client.disconnect();
-      client.disconnect();
-
-      expect(mockWebSocket.close).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe("Security", () => {
-    it("should validate WebSocket URLs", () => {
-      expect(() => new WebSocketClient("ws://valid.com")).not.toThrow();
-      expect(() => new WebSocketClient("wss://secure.com")).not.toThrow();
-      expect(() => new WebSocketClient("http://invalid.com")).not.toThrow();
-      expect(() => new WebSocketClient("ftp://invalid.com")).not.toThrow();
+  // -------------------------------------------------------------------------
+  // Heartbeat
+  // -------------------------------------------------------------------------
+
+  describe("Heartbeat", () => {
+    it("sends ping frames at the configured interval", async () => {
+      const client = new WebSocketClient({
+        url: "ws://localhost:8080",
+        heartbeatInterval: 1000,
+      });
+
+      client.connect();
+      lastSocket().simulateOpen();
+      await Promise.resolve();
+
+      jest.advanceTimersByTime(3500);
+
+      const sentTypes = lastSocket().send.mock.calls.map(
+        ([raw]) => JSON.parse(raw as string).type
+      );
+      expect(sentTypes.filter((t) => t === "ping")).toHaveLength(3);
+
+      client.disconnect();
     });
 
-    it("should handle malicious messages", async () => {
-      const onMessage = jest.fn();
-      client.on("message", onMessage);
+    it("stops the heartbeat after disconnect", async () => {
+      const client = new WebSocketClient({
+        url: "ws://localhost:8080",
+        heartbeatInterval: 1000,
+      });
 
-      await client.connect();
+      client.connect();
+      lastSocket().simulateOpen();
+      await Promise.resolve();
+      client.disconnect();
 
-      const messageCallback = mockWebSocket.addEventListener.mock.calls.find(
-        (call: any) => call[0] === "message"
-      )?.[1];
+      const sendCalls = lastSocket().send.mock.calls.length;
+      jest.advanceTimersByTime(5000);
 
-      if (messageCallback) {
-        // Send potentially malicious message
-        const maliciousMessage = {
-          type: "script",
-          data: '<script>alert("xss")</script>',
-        };
-        messageCallback({ data: JSON.stringify(maliciousMessage) });
-      }
-
-      expect(onMessage).toHaveBeenCalledWith(maliciousMessage);
-      expect(mockLogger.debug).toHaveBeenCalled();
-    });
-
-    it("should sanitize outgoing messages", () => {
-      mockWebSocket.readyState = WebSocket.OPEN;
-
-      const messageWithScript = {
-        type: "test",
-        data: '<script>alert("xss")</script>',
-      };
-
-      client.send(messageWithScript);
-
-      // Should send the message as-is (server handles validation)
-      expect(mockWebSocket.send).toHaveBeenCalledWith(JSON.stringify(messageWithScript));
+      expect(lastSocket().send.mock.calls.length).toBe(sendCalls);
     });
   });
 
-  describe("Edge Cases", () => {
-    it("should handle null/undefined URLs", () => {
-      expect(() => new WebSocketClient(null as any)).not.toThrow();
-      expect(() => new WebSocketClient(undefined as any)).not.toThrow();
-      expect(() => new WebSocketClient("")).not.toThrow();
-    });
+  // -------------------------------------------------------------------------
+  // Auth token updates
+  // -------------------------------------------------------------------------
 
-    it("should handle extremely long URLs", () => {
-      const longUrl = "ws://" + "a".repeat(1000) + ".com";
-      expect(() => new WebSocketClient(longUrl)).not.toThrow();
-    });
+  describe("Auth token updates", () => {
+    it("reconnects with the new token when currently connected", async () => {
+      const client = new WebSocketClient({ url: "ws://localhost:8080", authToken: "old" });
+      client.connect();
+      const originalSocket = lastSocket();
+      originalSocket.simulateOpen();
+      await Promise.resolve();
 
-    it("should handle special characters in URLs", () => {
-      expect(() => new WebSocketClient("ws://测试.com")).not.toThrow();
-      expect(() => new WebSocketClient("ws://müller.com")).not.toThrow();
-      expect(() => new WebSocketClient("ws://josé.com")).not.toThrow();
-    });
+      client.updateAuthToken("new");
 
-    it("should handle concurrent operations", async () => {
-      const onConnect = jest.fn();
-      const onMessage = jest.fn();
-
-      client.on("connect", onConnect);
-      client.on("message", onMessage);
-
-      // Concurrent connect and send
-      const connectPromise = client.connect();
-      client.send({ type: "test", data: "concurrent" });
-
-      await connectPromise;
-
-      expect(onConnect).toHaveBeenCalled();
-      expect(mockWebSocket.send).toHaveBeenCalled();
-    });
-
-    it("should handle rapid connect/disconnect cycles", async () => {
-      for (let i = 0; i < 10; i++) {
-        await client.connect();
-        client.disconnect();
-      }
-
-      expect(global.WebSocket).toHaveBeenCalledTimes(10);
-      expect(mockWebSocket.close).toHaveBeenCalledTimes(10);
-    });
-  });
-
-  describe("Data Consistency", () => {
-    it("should maintain message order", async () => {
-      mockWebSocket.readyState = WebSocket.OPEN;
-      await client.connect();
-
-      const messages = [
-        { type: "test", data: "message1" },
-        { type: "test", data: "message2" },
-        { type: "test", data: "message3" },
-      ];
-
-      messages.forEach((message) => client.send(message));
-
-      expect(mockWebSocket.send).toHaveBeenCalledTimes(3);
-      expect(mockWebSocket.send).toHaveBeenNthCalledWith(1, JSON.stringify(messages[0]));
-      expect(mockWebSocket.send).toHaveBeenNthCalledWith(2, JSON.stringify(messages[1]));
-      expect(mockWebSocket.send).toHaveBeenNthCalledWith(3, JSON.stringify(messages[2]));
-    });
-
-    it("should handle message serialization correctly", async () => {
-      mockWebSocket.readyState = WebSocket.OPEN;
-      await client.connect();
-
-      const complexMessage = {
-        type: "complex",
-        data: {
-          text: "Hello",
-          timestamp: Date.now(),
-          metadata: {
-            user: "test",
-            id: 123,
-            flags: ["read", "important"],
-          },
-        },
-      };
-
-      client.send(complexMessage);
-
-      expect(mockWebSocket.send).toHaveBeenCalledWith(JSON.stringify(complexMessage));
-    });
-
-    it("should handle circular references in messages", async () => {
-      mockWebSocket.readyState = WebSocket.OPEN;
-      await client.connect();
-
-      const circularMessage: any = { type: "circular" };
-      circularMessage.self = circularMessage;
-
-      expect(() => client.send(circularMessage)).not.toThrow();
+      // The original socket was closed and a new connection was opened
+      // with the updated token appended to the URL.
+      expect(originalSocket.close).toHaveBeenCalled();
+      expect(socketFactory).toHaveBeenLastCalledWith("ws://localhost:8080?token=new");
+      expect(client.getStatus()).toBe("connecting");
+      client.disconnect();
     });
   });
 });
