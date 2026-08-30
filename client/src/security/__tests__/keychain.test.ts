@@ -3,7 +3,6 @@
  * Tests for secure keychain storage functionality
  */
 
-import * as Keychain from "react-native-keychain";
 import {
   getToken,
   setToken,
@@ -12,19 +11,39 @@ import {
   getUserCredentials,
   resetUserCredentials,
 } from "../keychain";
-import {
-  setupSecurityMocks,
-  resetSecurityMocks,
-  expectKeychainCall,
-} from "../../test-utils/securityMocks";
 
-// Mock the keychain module
-jest.mock("react-native-keychain");
-const mockedKeychain = Keychain as jest.Mocked<typeof Keychain> & {
+// Inline keychain mock (avoids stale moduleNameMapper transform caching)
+const getGenericPassword = jest.fn();
+const setGenericPassword = jest.fn();
+const resetGenericPassword = jest.fn();
+
+jest.mock("react-native-keychain", () => {
+  const ggp = jest.fn();
+  const sgp = jest.fn();
+  const rgp = jest.fn();
+  return {
+    __esModule: true,
+    default: { getGenericPassword: ggp, setGenericPassword: sgp, resetGenericPassword: rgp },
+    getGenericPassword: ggp,
+    setGenericPassword: sgp,
+    resetGenericPassword: rgp,
+    ACCESS_CONTROL: {},
+    AUTHENTICATION_TYPE: {},
+    BIOMETRY_TYPE: {},
+    ACCESSIBLE: {},
+    STORAGE_TYPE: {},
+  };
+});
+
+// Re-import the mocked module to obtain references to the same jest.fn instances
+const mockedKeychain = jest.requireMock("react-native-keychain") as {
   getGenericPassword: jest.Mock;
   setGenericPassword: jest.Mock;
   resetGenericPassword: jest.Mock;
 };
+void getGenericPassword;
+void setGenericPassword;
+void resetGenericPassword;
 
 // Mock Sentry
 jest.mock("../../monitoring/sentry", () => ({
@@ -33,12 +52,11 @@ jest.mock("../../monitoring/sentry", () => ({
 }));
 
 describe("Keychain Security", () => {
-  beforeEach(() => {
-    setupSecurityMocks();
-  });
-
   afterEach(() => {
-    resetSecurityMocks();
+    const kc = jest.requireMock("react-native-keychain") as Record<string, jest.Mock>;
+    kc.getGenericPassword?.mockReset();
+    kc.setGenericPassword?.mockReset();
+    kc.resetGenericPassword?.mockReset();
   });
 
   describe("Token Management", () => {

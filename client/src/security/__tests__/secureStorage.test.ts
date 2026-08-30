@@ -93,8 +93,7 @@ describe("Encryption key management", () => {
       username: "mmkv-encryption-key",
       password: "existing-key-abc123",
       service: "com.chatapp.securestorage",
-      storage: "",
-      server: "",
+      storage: Keychain.STORAGE_TYPE.AES_GCM,
     });
 
     await secureSet("k", "v");
@@ -243,13 +242,12 @@ describe("secureSetJSON / secureGetJSON", () => {
 
 describe("CryptoJS is not used", () => {
   it("does not import or reference crypto-js", () => {
-    // The module graph should not pull in CryptoJS at all.
-    // If this assertion fails it means double-encryption was re-introduced.
-    expect(() => require("crypto-js")).not.toThrow(); // package may exist
+    // CryptoJS was removed from the dependency tree; requiring it must fail,
+    // proving the module graph cannot pull it back in.
+    expect(() => require("crypto-js")).toThrow();
+
     const secureStorageModule = require("../secureStorage");
-    // Verify the module doesn't call any CryptoJS encrypt/decrypt
-    // by checking the source doesn't reference it — done statically above;
-    // here we just confirm the module loaded without the CryptoJS mock.
+    // Verify the module loaded without any CryptoJS dependency.
     expect(secureStorageModule).toBeDefined();
   });
 });
