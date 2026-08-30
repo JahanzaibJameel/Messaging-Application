@@ -51,7 +51,7 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Run TypeScript type check
@@ -83,39 +83,46 @@ jobs:
             echo "Statements: $STATEMENTS%"
             
             if (( $(echo "$LINES < 85" | bc -l) )); then
-              echo "❌ Lines coverage $LINES% is below 85%"
+              echo "Ã¢ÂÅ’ Lines coverage $LINES% is below 85%"
               exit 1
             fi
             if (( $(echo "$BRANCHES < 85" | bc -l) )); then
-              echo "❌ Branches coverage $BRANCHES% is below 85%"
+              echo "Ã¢ÂÅ’ Branches coverage $BRANCHES% is below 85%"
               exit 1
             fi
             if (( $(echo "$FUNCTIONS < 85" | bc -l) )); then
-              echo "❌ Functions coverage $FUNCTIONS% is below 85%"
+              echo "Ã¢ÂÅ’ Functions coverage $FUNCTIONS% is below 85%"
               exit 1
             fi
             if (( $(echo "$STATEMENTS < 85" | bc -l) )); then
-              echo "❌ Statements coverage $STATEMENTS% is below 85%"
+              echo "Ã¢ÂÅ’ Statements coverage $STATEMENTS% is below 85%"
               exit 1
             fi
             
-            echo "✅ All coverage thresholds met (≥85%)"
+            echo "Ã¢Å“â€¦ All coverage thresholds met (Ã¢â€°Â¥85%)"
           else
-            echo "❌ Coverage file not found"
+            echo "Ã¢ÂÅ’ Coverage file not found"
             exit 1
           fi
 
       - name: Check bundle size limit
+        env:
+          EXPO_PUBLIC_API_URL: https://ci.invalid
+          EXPO_PUBLIC_WS_URL: wss://ci.invalid/ws
+          EXPO_PUBLIC_SENTRY_DSN: https://00000000000000000000000000000000@o000000.ingest.sentry.io/0
         run: |
-          npm run bundle:analyze
-          mkdir -p dist
-          echo "dummy bundle content" > dist/bundle.js
-          BUNDLE_SIZE=$(du -sk dist/ | cut -f1)
-          if [ "$BUNDLE_SIZE" -gt "1536" ]; then
-            echo "❌ Bundle size ${BUNDLE_SIZE}KB exceeds limit of 1536KB (1.5MB)"
+          rm -rf dist
+          npx expo export --platform web
+          if [ ! -d dist ]; then
+            echo "âŒ expo export did not produce a dist/ directory"
+            exit 1
+          fi
+          BUNDLE_SIZE=$(du -sk dist | cut -f1)
+          if [ "$BUNDLE_SIZE" -gt "12288" ]; then
+            echo "âŒ Expo web export size ${BUNDLE_SIZE}KB exceeds limit of 12288KB"
             exit 1
           else
-            echo "✅ Bundle size ${BUNDLE_SIZE}KB is within limit of 1536KB (1.5MB)"
+            echo "âœ… Expo web export size ${BUNDLE_SIZE}KB is within limit of 12288KB"
           fi
 
       - name: Check for console.log in production code
@@ -154,7 +161,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       - name: Create Sentry release
         id: release
@@ -196,11 +203,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
-      - name: Setup Expo CLI
-        run: npm install -g @expo/cli
-
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       - name: Setup Expo
         uses: expo/expo-github-action@v8
@@ -275,11 +279,8 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Expo CLI
-        run: npm install -g @expo/cli
-
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       - name: Setup Expo
         uses: expo/expo-github-action@v8
@@ -349,7 +350,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       - name: Build web
         run: npm run build:web
@@ -448,7 +449,7 @@ jobs:
     steps:
       - name: Rollback deployment
         run: |
-          echo "🚨 Deployment failed, initiating rollback..."
+          echo "Ã°Å¸Å¡Â¨ Deployment failed, initiating rollback..."
           echo "Failed jobs:"
           echo "- CI Checks: ${{ needs.ci-checks.result }}"
           echo "- Sentry Release: ${{ needs.sentry-release.result }}"
@@ -471,6 +472,6 @@ jobs:
         if: env.SLACK_WEBHOOK_URL != ''
         with:
           status: 'failure'
-          text: '🚨 Deployment failed and rollback initiated for version ${{ needs.sentry-release.outputs.release-version }}'
+          text: 'Ã°Å¸Å¡Â¨ Deployment failed and rollback initiated for version ${{ needs.sentry-release.outputs.release-version }}'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
