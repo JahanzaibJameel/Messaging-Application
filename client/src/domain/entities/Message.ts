@@ -126,22 +126,31 @@ export class MessageEntity implements Message {
   localOnly?: boolean;
   retryCount?: number;
 
-  constructor(props: Message) {
+  constructor(props: Partial<Message> & Pick<Message, "id" | "chatId" | "senderId" | "type">) {
     this.id = props.id;
     this.chatId = props.chatId;
     this.senderId = props.senderId;
     this.type = props.type;
     this.text = props.text;
     this.attachment = props.attachment;
-    this.timestamp = props.timestamp;
-    this.status = props.status;
+    this.timestamp =
+      props.timestamp instanceof Date ? props.timestamp : new Date(props.timestamp ?? Date.now());
+    this.status = props.status ?? "sending";
     this.replyTo = props.replyTo;
-    this.reactions = props.reactions || [];
-    this.edited = props.edited || false;
-    this.editedAt = props.editedAt;
+    this.reactions = (props.reactions ?? []).map((r) => ({
+      ...r,
+      createdAt: r.createdAt instanceof Date ? r.createdAt : new Date(r.createdAt),
+    }));
+    this.edited = props.edited ?? false;
+    this.editedAt =
+      props.editedAt instanceof Date
+        ? props.editedAt
+        : props.editedAt
+          ? new Date(props.editedAt)
+          : undefined;
     this.metadata = props.metadata;
-    this.localOnly = props.localOnly;
-    this.retryCount = props.retryCount || 0;
+    this.localOnly = props.localOnly ?? false;
+    this.retryCount = props.retryCount ?? 0;
   }
 
   static create(input: CreateMessageInput): MessageEntity {
@@ -164,6 +173,97 @@ export class MessageEntity implements Message {
 
   isOwn(userId: string): boolean {
     return this.senderId === userId;
+  }
+
+  isFromUser(userId: string): boolean {
+    return this.isOwn(userId);
+  }
+
+  isTextMessage(): boolean {
+    return this.type === "text";
+  }
+
+  isMediaMessage(): boolean {
+    return this.type === "image" || this.type === "video" || this.type === "audio";
+  }
+
+  isImageMessage(): boolean {
+    return this.type === "image";
+  }
+
+  isVideoMessage(): boolean {
+    return this.type === "video";
+  }
+
+  isAudioMessage(): boolean {
+    return this.type === "audio";
+  }
+
+  isDocumentMessage(): boolean {
+    return this.type === "document";
+  }
+
+  isSent(): boolean {
+    return this.status === "sent";
+  }
+
+  isDelivered(): boolean {
+    return this.status === "delivered";
+  }
+
+  isRead(): boolean {
+    return this.status === "read";
+  }
+
+  isFailed(): boolean {
+    return this.status === "failed" || this.status === "error";
+  }
+
+  isEdited(): boolean {
+    return this.edited;
+  }
+
+  hasReactionFromUser(userId: string): boolean {
+    return this.reactions.some((reaction) => reaction.userId === userId);
+  }
+
+  /**
+   * Age of the message in milliseconds relative to `now` (default: current
+   * time). Never negative.
+   */
+  getAge(now: Date | string = new Date()): number {
+    const reference = now instanceof Date ? now : new Date(now);
+    return Math.max(0, reference.getTime() - this.timestamp.getTime());
+  }
+
+  /** Plain-text representation used in chat bubbles and notifications. */
+  toDisplayText(): string {
+    return this.getPreviewText();
+  }
+
+  /** Serializes the entity to a plain JSON-compatible object. */
+  toJSON(): Record<string, unknown> {
+    return {
+      id: this.id,
+      chatId: this.chatId,
+      senderId: this.senderId,
+      type: this.type,
+      text: this.text,
+      attachment: this.attachment,
+      timestamp: this.timestamp.toISOString(),
+      status: this.status,
+      replyTo: this.replyTo,
+      reactions: this.reactions.map((r) => ({
+        userId: r.userId,
+        emoji: r.emoji,
+        createdAt: r.createdAt.toISOString(),
+      })),
+      edited: this.edited,
+      editedAt: this.editedAt ? this.editedAt.toISOString() : undefined,
+      metadata: this.metadata,
+      localOnly: this.localOnly,
+      retryCount: this.retryCount,
+    };
   }
 
   hasAttachment(): boolean {
