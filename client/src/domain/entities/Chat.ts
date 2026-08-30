@@ -54,19 +54,40 @@ export class ChatEntity implements Chat {
   createdAt: Date;
   updatedAt: Date;
   metadata?: Record<string, unknown>;
+  // Group-only fields
+  name?: string;
+  description?: string;
+  avatar?: string;
+  adminIds?: string[];
+  createdBy?: string;
+  // Private-chat convenience field
+  participantId?: string;
 
-  constructor(props: Chat) {
+  constructor(props: Partial<Chat> & Pick<Chat, "id" | "type" | "participantIds">) {
     this.id = props.id;
     this.type = props.type;
     this.participantIds = props.participantIds;
     this.lastMessage = props.lastMessage;
-    this.unreadCount = props.unreadCount;
-    this.isPinned = props.isPinned;
-    this.isMuted = props.isMuted;
-    this.isArchived = props.isArchived;
-    this.createdAt = props.createdAt;
-    this.updatedAt = props.updatedAt;
+    this.unreadCount = props.unreadCount ?? 0;
+    this.isPinned = props.isPinned ?? false;
+    this.isMuted = props.isMuted ?? false;
+    this.isArchived = props.isArchived ?? false;
+    this.createdAt = props.createdAt ?? new Date();
+    this.updatedAt = props.updatedAt ?? new Date();
     this.metadata = props.metadata;
+
+    if (this.type === "group") {
+      const group = props as Partial<GroupChat>;
+      this.name = group.name;
+      this.description = group.description;
+      this.avatar = group.avatar;
+      this.adminIds = group.adminIds ?? [];
+      this.createdBy = group.createdBy ?? this.participantIds[0];
+    } else {
+      const priv = props as Partial<PrivateChat>;
+      // For private chats the "other" participant defaults to the second id
+      this.participantId = priv.participantId ?? this.participantIds[1];
+    }
   }
 
   static createPrivate(participantId: string, currentUserId: string): ChatEntity {
