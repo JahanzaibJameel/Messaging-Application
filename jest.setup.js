@@ -11,11 +11,6 @@ jest.mock("react-native-reanimated", () => {
   return Reanimated;
 });
 
-// Mock AsyncStorage
-jest.mock("@react-native-async-storage/async-storage", () =>
-  require("@react-native-async-storage/async-storage/jest/async-storage-mock")
-);
-
 // Mock NetInfo
 jest.mock("@react-native-community/netinfo", () => ({
   fetch: jest.fn(() => Promise.resolve({ isConnected: true, type: "wifi" })),
@@ -142,50 +137,34 @@ jest.mock("@sentry/react-native", () => {
 });
 
 // Mock react-native-device-info
-jest.mock('react-native-device-info', () => ({
-  getUniqueId: jest.fn().mockResolvedValue('test-device-id'),
-  getVersion: jest.fn().mockResolvedValue('1.0.0'),
-  getBuildNumber: jest.fn().mockResolvedValue('1'),
-  getSystemName: jest.fn().mockResolvedValue('iOS'),
-  getSystemVersion: jest.fn().mockResolvedValue('14.0'),
-  getModel: jest.fn().mockResolvedValue('iPhone'),
-  getBrand: jest.fn().mockResolvedValue('Apple'),
-  getDeviceId: jest.fn().mockResolvedValue('iPhone123'),
+jest.mock("react-native-device-info", () => ({
+  getUniqueId: jest.fn().mockResolvedValue("test-device-id"),
+  getVersion: jest.fn().mockResolvedValue("1.0.0"),
+  getBuildNumber: jest.fn().mockResolvedValue("1"),
+  getSystemName: jest.fn().mockResolvedValue("iOS"),
+  getSystemVersion: jest.fn().mockResolvedValue("14.0"),
+  getModel: jest.fn().mockResolvedValue("iPhone"),
+  getBrand: jest.fn().mockResolvedValue("Apple"),
+  getDeviceId: jest.fn().mockResolvedValue("iPhone123"),
   isEmulator: jest.fn().mockResolvedValue(false),
   isJailBroken: jest.fn().mockResolvedValue(false),
   isRooted: jest.fn().mockResolvedValue(false),
 }));
 
-// Mock crypto-js
-jest.mock('crypto-js', () => ({
-  lib: {
-    WordArray: {
-      random: jest.fn(() => ({ toString: () => 'mock-encryption-key' })),
-    },
-  },
-  AES: {
-    encrypt: jest.fn(() => ({ toString: () => 'encrypted-data' })),
-    decrypt: jest.fn(() => ({ toString: (format: any) => format === 'Utf8' ? 'decrypted-data' : '' })),
-  },
-  enc: {
-    Utf8: 'utf8',
-  },
-}));
-
 // Mock react-i18next
-jest.mock('react-i18next', () => ({
+jest.mock("react-i18next", () => ({
   useTranslation: jest.fn(() => ({
     t: jest.fn((key) => key),
     i18n: {
-      language: 'en',
+      language: "en",
       changeLanguage: jest.fn(),
     },
   })),
 }));
 
 // Mock @shopify/flash-list
-jest.mock('@shopify/flash-list', () => ({
-  FlashList: 'FlashList',
+jest.mock("@shopify/flash-list", () => ({
+  FlashList: "FlashList",
 }));
 
 // Global test utilities
