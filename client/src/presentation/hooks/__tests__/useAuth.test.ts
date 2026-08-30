@@ -1,812 +1,340 @@
 /**
  * Unit tests for useAuth hook
- * Testing authentication hook business logic
+ * Tests authentication hook business logic against the real implementation,
+ * which delegates to userRepository and the presentation stores.
  */
 
 import { renderHook, act } from "@testing-library/react-native";
 import { useAuth } from "../useAuth";
+import { UserEntity } from "../../../domain/entities/User";
 
-// Mock dependencies
-jest.mock("../stores/authStore", () => ({
-  useAuthStore: jest.fn(),
-}));
+// Mock the presentation stores barrel used by the hook
+const mockSetUser = jest.fn();
+const mockStoreLogout = jest.fn();
+const mockShowToast = jest.fn();
 
-jest.mock("../../data/repositories/UserRepositoryImpl", () => ({
-  UserRepositoryImpl: jest.fn().mockImplementation(() => ({
-    login: jest.fn(),
-    verifyOtp: jest.fn(),
-    logout: jest.fn(),
-    getCurrentUser: jest.fn(),
-    updateProfile: jest.fn(),
-    isAuthenticated: jest.fn(),
+jest.mock("../../stores", () => ({
+  useAuthStore: jest.fn(() => ({
+    currentUser: null,
+    setUser: mockSetUser,
+    logout: mockStoreLogout,
+  })),
+  useUIStore: jest.fn(() => ({
+    showToast: mockShowToast,
   })),
 }));
 
-jest.mock("../stores/uiStore", () => ({
-  useUIStore: jest.fn(),
-}));
+// Mock the repositories barrel used by the hook
+const mockLogin = jest.fn();
+const mockVerifyOtp = jest.fn();
+const mockRepoLogout = jest.fn();
+const mockGetCurrentUser = jest.fn();
+const mockUpdateProfile = jest.fn();
+const mockIsAuthenticated = jest.fn();
 
-jest.mock("../../core/logger", () => ({
-  logger: {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
+jest.mock("../../../data/repositories", () => ({
+  userRepository: {
+    login: (...args: unknown[]) => mockLogin(...args),
+    verifyOtp: (...args: unknown[]) => mockVerifyOtp(...args),
+    logout: (...args: unknown[]) => mockRepoLogout(...args),
+    getCurrentUser: (...args: unknown[]) => mockGetCurrentUser(...args),
+    updateProfile: (...args: unknown[]) => mockUpdateProfile(...args),
+    isAuthenticated: (...args: unknown[]) => mockIsAuthenticated(...args),
   },
 }));
 
-describe("useAuth", () => {
-  let mockUseAuthStore: any;
-  let mockUserRepository: any;
-  let mockUseUIStore: any;
+jest.mock("../../../core/logger", () => ({
+  logger: {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
 
+function makeUser(overrides: Partial<UserEntity> = {}): UserEntity {
+  return {
+    id: "user_123",
+    name: "John Doe",
+    phone: "+1234567890",
+    avatar: "",
+    status: "available",
+    lastSeen: new Date(),
+    isOnline: true,
+    createdAt: new Date("2024-01-01T10:00:00Z"),
+    updatedAt: new Date("2024-01-01T10:00:00Z"),
+    ...overrides,
+  } as UserEntity;
+}
+
+describe("useAuth", () => {
   beforeEach(() => {
-    mockUseAuthStore = require("../stores/authStore").useAuthStore;
-    mockUserRepository = require("../../data/repositories/UserRepositoryImpl").UserRepositoryImpl;
-    mockUseUIStore = require("../stores/uiStore").useUIStore;
     jest.clearAllMocks();
+
+    // Restore pristine store defaults (mock return values persist across tests)
+    const { useAuthStore, useUIStore } = require("../../stores");
+    (useAuthStore as jest.Mock).mockImplementation(() => ({
+      currentUser: null,
+      setUser: mockSetUser,
+      logout: mockStoreLogout,
+    }));
+    (useUIStore as jest.Mock).mockImplementation(() => ({
+      showToast: mockShowToast,
+    }));
   });
 
   describe("Initial State", () => {
-    it("should return authentication state from store", () => {
-      const mockState = {
-        currentUser: {
-          id: "user_123",
-          name: "John Doe",
-          phone: "+1234567890",
-          isOnline: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        isAuthenticated: true,
-        requestOtp: jest.fn(),
-        verifyOtp: jest.fn(),
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: jest.fn(),
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
-
+    it("exposes loading, error and step defaults plus store-derived auth state", () => {
       const { result } = renderHook(() => useAuth());
 
-      expect(result.current.currentUser).toEqual(mockState.currentUser);
-      expect(result.current.isAuthenticated).toBe(mockState.isAuthenticated);
-    });
-
-    it("should handle null current user", () => {
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: jest.fn(),
-        verifyOtp: jest.fn(),
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: jest.fn(),
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
-
-      const { result } = renderHook(() => useAuth());
-
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.error).toBeNull();
+      expect(result.current.step).toBe("phone");
       expect(result.current.currentUser).toBeNull();
       expect(result.current.isAuthenticated).toBe(false);
+    });
+
+    it("reflects the current user from the store", () => {
+      const { useAuthStore } = require("../../stores");
+      const user = makeUser();
+      (useAuthStore as jest.Mock).mockReturnValue({
+        currentUser: user,
+        setUser: mockSetUser,
+        logout: mockStoreLogout,
+      });
+
+      const { result } = renderHook(() => useAuth());
+
+      expect(result.current.currentUser).toEqual(user);
+      expect(result.current.isAuthenticated).toBe(true);
     });
   });
 
   describe("Request OTP", () => {
-    it("should call requestOtp function", async () => {
-      const mockRequestOtp = jest.fn().mockResolvedValue(true);
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: mockRequestOtp,
-        verifyOtp: jest.fn(),
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: jest.fn(),
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
+    it("sends a normalized phone number and moves to the OTP step", async () => {
+      mockLogin.mockResolvedValue(undefined);
 
       const { result } = renderHook(() => useAuth());
-
+      let ok = false;
       await act(async () => {
-        await result.current.requestOtp("+1234567890");
+        ok = await result.current.requestOtp("+1 (234) 567-8901");
       });
 
-      expect(mockRequestOtp).toHaveBeenCalledWith("+1234567890");
+      expect(ok).toBe(true);
+      expect(mockLogin).toHaveBeenCalledWith("+12345678901");
+      expect(mockShowToast).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "success" })
+      );
+      expect(result.current.step).toBe("otp");
     });
 
-    it("should handle requestOtp errors", async () => {
-      const mockError = new Error("Request failed");
-      const mockRequestOtp = jest.fn().mockRejectedValue(mockError);
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: mockRequestOtp,
-        verifyOtp: jest.fn(),
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: jest.fn(),
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
-
+    it("rejects phone numbers shorter than 10 digits without calling the repository", async () => {
       const { result } = renderHook(() => useAuth());
-
+      let ok = true;
       await act(async () => {
-        await result.current.requestOtp("+1234567890");
+        ok = await result.current.requestOtp("12345");
       });
 
-      expect(mockRequestOtp).toHaveBeenCalledWith("+1234567890");
+      expect(ok).toBe(false);
+      expect(mockLogin).not.toHaveBeenCalled();
+      expect(result.current.error).toBe("Please enter a valid phone number");
     });
 
-    it("should handle empty phone number", async () => {
-      const mockRequestOtp = jest.fn().mockResolvedValue(true);
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: mockRequestOtp,
-        verifyOtp: jest.fn(),
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: jest.fn(),
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
+    it("surfaces repository errors as hook errors", async () => {
+      mockLogin.mockRejectedValue(new Error("Network down"));
 
       const { result } = renderHook(() => useAuth());
-
+      let ok = true;
       await act(async () => {
-        await result.current.requestOtp("");
+        ok = await result.current.requestOtp("+1234567890");
       });
 
-      expect(mockRequestOtp).toHaveBeenCalledWith("");
+      expect(ok).toBe(false);
+      expect(result.current.error).toBe("Network down");
+      expect(result.current.isLoading).toBe(false);
     });
   });
 
   describe("Verify OTP", () => {
-    it("should call verifyOtp function", async () => {
-      const mockVerifyOtp = jest.fn().mockResolvedValue(true);
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: jest.fn(),
-        verifyOtp: mockVerifyOtp,
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: jest.fn(),
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
-
+    it("rejects malformed OTP codes before hitting the repository", async () => {
       const { result } = renderHook(() => useAuth());
-
+      let ok = true;
       await act(async () => {
-        await result.current.verifyOtp("123456");
+        ok = await result.current.verifyOtp("12ab");
       });
 
+      expect(ok).toBe(false);
+      expect(mockVerifyOtp).not.toHaveBeenCalled();
+      expect(result.current.error).toContain("valid 6-digit OTP");
+    });
+
+    it("completes login when the code verifies and a user is returned", async () => {
+      const user = makeUser();
+      mockVerifyOtp.mockResolvedValue(true);
+      mockGetCurrentUser.mockResolvedValue(user);
+
+      const { result } = renderHook(() => useAuth());
+      let ok = false;
+      await act(async () => {
+        ok = await result.current.verifyOtp("123456");
+      });
+
+      expect(ok).toBe(true);
       expect(mockVerifyOtp).toHaveBeenCalledWith("123456");
+      expect(mockSetUser).toHaveBeenCalledWith(user);
+      expect(result.current.step).toBe("complete");
+      expect(mockShowToast).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "success" })
+      );
     });
 
-    it("should handle OTP verification errors", async () => {
-      const mockError = new Error("Invalid OTP");
-      const mockVerifyOtp = jest.fn().mockRejectedValue(mockError);
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: jest.fn(),
-        verifyOtp: mockVerifyOtp,
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: jest.fn(),
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
+    it("reports invalid codes when verification fails", async () => {
+      mockVerifyOtp.mockResolvedValue(false);
 
       const { result } = renderHook(() => useAuth());
-
+      let ok = true;
       await act(async () => {
-        await result.current.verifyOtp("000000");
+        ok = await result.current.verifyOtp("999999");
       });
 
-      expect(mockVerifyOtp).toHaveBeenCalledWith("000000");
-    });
-
-    it("should handle invalid OTP format", async () => {
-      const mockVerifyOtp = jest.fn().mockResolvedValue(true);
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: jest.fn(),
-        verifyOtp: mockVerifyOtp,
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: jest.fn(),
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
-
-      const { result } = renderHook(() => useAuth());
-
-      await act(async () => {
-        await result.current.verifyOtp("invalid");
-      });
-
-      expect(mockVerifyOtp).toHaveBeenCalledWith("invalid");
+      expect(ok).toBe(false);
+      expect(result.current.error).toBe("Invalid OTP. Please try again.");
     });
   });
 
   describe("Resend OTP", () => {
-    it("should call resendOtp function", async () => {
-      const mockResendOtp = jest.fn().mockResolvedValue(true);
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: jest.fn(),
-        verifyOtp: jest.fn(),
-        resendOtp: mockResendOtp,
-        logout: jest.fn(),
-        updateProfile: jest.fn(),
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
+    it("requests a fresh OTP for the given phone", async () => {
+      mockLogin.mockResolvedValue(undefined);
 
       const { result } = renderHook(() => useAuth());
-
+      let ok = false;
       await act(async () => {
-        await result.current.resendOtp("+1234567890");
+        ok = await result.current.resendOtp("+1234567890");
       });
 
-      expect(mockResendOtp).toHaveBeenCalledWith("+1234567890");
+      expect(ok).toBe(true);
+      expect(mockLogin).toHaveBeenCalledWith("+1234567890");
     });
   });
 
   describe("Logout", () => {
-    it("should call logout function", async () => {
-      const mockLogout = jest.fn().mockResolvedValue();
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: jest.fn(),
-        verifyOtp: jest.fn(),
-        resendOtp: jest.fn(),
-        logout: mockLogout,
-        updateProfile: jest.fn(),
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
+    it("clears local session even when the server call fails", async () => {
+      mockRepoLogout.mockRejectedValue(new Error("Server unreachable"));
 
       const { result } = renderHook(() => useAuth());
-
       await act(async () => {
         await result.current.logout();
       });
 
-      expect(mockLogout).toHaveBeenCalled();
+      expect(mockStoreLogout).toHaveBeenCalled();
+      expect(result.current.isLoading).toBe(false);
     });
 
-    it("should handle logout errors", async () => {
-      const mockError = new Error("Logout failed");
-      const mockLogout = jest.fn().mockRejectedValue(mockError);
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: jest.fn(),
-        verifyOtp: jest.fn(),
-        resendOtp: jest.fn(),
-        logout: mockLogout,
-        updateProfile: jest.fn(),
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
+    it("logs out through the repository and the store on success", async () => {
+      mockRepoLogout.mockResolvedValue(undefined);
 
       const { result } = renderHook(() => useAuth());
-
       await act(async () => {
         await result.current.logout();
       });
 
-      expect(mockLogout).toHaveBeenCalled();
+      expect(mockRepoLogout).toHaveBeenCalled();
+      expect(mockStoreLogout).toHaveBeenCalled();
+      expect(mockShowToast).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "success" })
+      );
     });
   });
 
   describe("Update Profile", () => {
-    it("should call updateProfile function", async () => {
-      const mockUpdateProfile = jest.fn().mockResolvedValue(true);
-      const mockState = {
-        currentUser: {
-          id: "user_123",
-          name: "John Doe",
-          phone: "+1234567890",
-          isOnline: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        isAuthenticated: true,
-        requestOtp: jest.fn(),
-        verifyOtp: jest.fn(),
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: mockUpdateProfile,
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
-
+    it("returns false when there is no current user", async () => {
       const { result } = renderHook(() => useAuth());
-
+      let ok = true;
       await act(async () => {
-        await result.current.updateProfile({ name: "Updated Name" });
+        ok = await result.current.updateProfile({ name: "New Name" });
       });
 
-      expect(mockUpdateProfile).toHaveBeenCalledWith("user_123", { name: "Updated Name" });
-    });
-
-    it("should handle update profile errors", async () => {
-      const mockError = new Error("Update failed");
-      const mockUpdateProfile = jest.fn().mockRejectedValue(mockError);
-      const mockState = {
-        currentUser: {
-          id: "user_123",
-          name: "John Doe",
-          phone: "+1234567890",
-          isOnline: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        isAuthenticated: true,
-        requestOtp: jest.fn(),
-        verifyOtp: jest.fn(),
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: mockUpdateProfile,
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
-
-      const { result } = renderHook(() => useAuth());
-
-      await act(async () => {
-        await result.current.updateProfile({ name: "Updated Name" });
-      });
-
-      expect(mockUpdateProfile).toHaveBeenCalledWith("user_123", { name: "Updated Name" });
-    });
-
-    it("should handle update profile without current user", async () => {
-      const mockUpdateProfile = jest.fn().mockResolvedValue(false);
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: jest.fn(),
-        verifyOtp: jest.fn(),
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: mockUpdateProfile,
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
-
-      const { result } = renderHook(() => useAuth());
-
-      await act(async () => {
-        await result.current.updateProfile({ name: "Updated Name" });
-      });
-
+      expect(ok).toBe(false);
       expect(mockUpdateProfile).not.toHaveBeenCalled();
+    });
+
+    it("pushes updates and refreshes the stored user", async () => {
+      const user = makeUser();
+      const updated = makeUser({ name: "Updated Name" });
+      const { useAuthStore } = require("../../stores");
+      (useAuthStore as jest.Mock).mockReturnValue({
+        currentUser: user,
+        setUser: mockSetUser,
+        logout: mockStoreLogout,
+      });
+      mockUpdateProfile.mockResolvedValue(undefined);
+      mockGetCurrentUser.mockResolvedValue(updated);
+
+      const { result } = renderHook(() => useAuth());
+      let ok = false;
+      await act(async () => {
+        ok = await result.current.updateProfile({ name: "Updated Name" });
+      });
+
+      expect(ok).toBe(true);
+      expect(mockUpdateProfile).toHaveBeenCalledWith(user.id, { displayName: "Updated Name" });
+      expect(mockSetUser).toHaveBeenCalledWith(updated);
     });
   });
 
   describe("Check Auth", () => {
-    it("should call checkAuth function", async () => {
-      const mockCheckAuth = jest.fn().mockResolvedValue(true);
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: jest.fn(),
-        verifyOtp: jest.fn(),
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: jest.fn(),
-        checkAuth: mockCheckAuth,
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
+    it("restores the session when the repository reports authentication", async () => {
+      const user = makeUser();
+      mockIsAuthenticated.mockResolvedValue(true);
+      mockGetCurrentUser.mockResolvedValue(user);
 
       const { result } = renderHook(() => useAuth());
-
+      let ok = false;
       await act(async () => {
-        const isAuth = await result.current.checkAuth();
-        expect(isAuth).toBe(true);
+        ok = await result.current.checkAuth();
       });
 
-      expect(mockCheckAuth).toHaveBeenCalled();
+      expect(ok).toBe(true);
+      expect(mockSetUser).toHaveBeenCalledWith(user);
     });
 
-    it("should handle checkAuth errors", async () => {
-      const mockError = new Error("Check failed");
-      const mockCheckAuth = jest.fn().mockRejectedValue(mockError);
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: jest.fn(),
-        verifyOtp: jest.fn(),
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: jest.fn(),
-        checkAuth: mockCheckAuth,
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
+    it("returns false when not authenticated or on errors", async () => {
+      mockIsAuthenticated.mockResolvedValue(false);
 
       const { result } = renderHook(() => useAuth());
-
+      let ok = true;
       await act(async () => {
-        await result.current.checkAuth();
+        ok = await result.current.checkAuth();
       });
+      expect(ok).toBe(false);
 
-      expect(mockCheckAuth).toHaveBeenCalled();
+      mockIsAuthenticated.mockRejectedValue(new Error("boom"));
+      let ok2 = true;
+      await act(async () => {
+        ok2 = await result.current.checkAuth();
+      });
+      expect(ok2).toBe(false);
+      expect(mockSetUser).not.toHaveBeenCalled();
     });
   });
 
   describe("Reset", () => {
-    it("should call reset function", () => {
-      const mockReset = jest.fn();
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: jest.fn(),
-        verifyOtp: jest.fn(),
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: jest.fn(),
-        checkAuth: jest.fn(),
-        reset: mockReset,
-      };
-
-      mockUseAuthStore(mockState);
+    it("restores the default login state", async () => {
+      mockLogin.mockResolvedValue(undefined);
 
       const { result } = renderHook(() => useAuth());
-
-      act(() => {
-        result.current.reset();
-      });
-
-      expect(mockReset).toHaveBeenCalled();
-    });
-  });
-
-  describe("Security", () => {
-    it("should not expose sensitive data", () => {
-      const mockState = {
-        currentUser: {
-          id: "user_123",
-          name: "John Doe",
-          phone: "+1234567890",
-          isOnline: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        isAuthenticated: true,
-        requestOtp: jest.fn(),
-        verifyOtp: jest.fn(),
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: jest.fn(),
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
-
-      const { result } = renderHook(() => useAuth());
-
-      // Verify that sensitive data is not directly exposed
-      expect(result.current).not.toHaveProperty("password");
-      expect(result.current).not.toHaveProperty("token");
-      expect(result.current).not.toHaveProperty("secret");
-    });
-  });
-
-  describe("Phone Number Validation", () => {
-    it("should validate phone number format", async () => {
-      const mockRequestOtp = jest.fn().mockResolvedValue(true);
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: mockRequestOtp,
-        verifyOtp: jest.fn(),
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: jest.fn(),
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
-
-      const { result } = renderHook(() => useAuth());
-
-      await act(async () => {
-        await result.current.requestOtp("1234567890");
-      });
-
-      expect(mockRequestOtp).toHaveBeenCalledWith("1234567890");
-    });
-
-    it("should handle international phone numbers", async () => {
-      const mockRequestOtp = jest.fn().mockResolvedValue(true);
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: mockRequestOtp,
-        verifyOtp: jest.fn(),
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: jest.fn(),
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
-
-      const { result } = renderHook(() => useAuth());
-
-      await act(async () => {
-        await result.current.requestOtp("+44 20 7946 000");
-      });
-
-      expect(mockRequestOtp).toHaveBeenCalledWith("+44 20 7946 000");
-    });
-
-    it("should handle invalid phone numbers", async () => {
-      const mockRequestOtp = jest.fn().mockResolvedValue(true);
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: mockRequestOtp,
-        verifyOtp: jest.fn(),
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: jest.fn(),
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
-
-      const { result } = renderHook(() => useAuth());
-
-      await act(async () => {
-        await result.current.requestOtp("invalid");
-      });
-
-      expect(mockRequestOtp).toHaveBeenCalledWith("invalid");
-    });
-  });
-
-  describe("OTP Validation", () => {
-    it("should validate OTP format", async () => {
-      const mockVerifyOtp = jest.fn().mockResolvedValue(true);
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: jest.fn(),
-        verifyOtp: mockVerifyOtp,
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: jest.fn(),
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
-
-      const { result } = renderHook(() => useAuth());
-
-      await act(async () => {
-        await result.current.verifyOtp("123456");
-      });
-
-      expect(mockVerifyOtp).toHaveBeenCalledWith("123456");
-    });
-
-    it("should handle OTP of wrong length", async () => {
-      const mockVerifyOtp = jest.fn().mockResolvedValue(true);
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: jest.fn(),
-        verifyOtp: mockVerifyOtp,
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: jest.fn(),
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
-
-      const { result } = renderHook(() => useAuth());
-
-      await act(async () => {
-        await result.current.verifyOtp("1234");
-      });
-
-      expect(mockVerifyOtp).toHaveBeenCalledWith("1234");
-    });
-
-    it("should handle empty OTP", async () => {
-      const mockVerifyOtp = jest.fn().mockResolvedValue(true);
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: jest.fn(),
-        verifyOtp: mockVerifyOtp,
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: jest.fn(),
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
-
-      const { result } = renderHook(() => useAuth());
-
-      await act(async () => {
-        await result.current.verifyOtp("");
-      });
-
-      expect(mockVerifyOtp).toHaveBeenCalledWith("");
-    });
-  });
-
-  describe("Concurrent Operations", () => {
-    it("should handle concurrent operations", async () => {
-      const mockRequestOtp = jest.fn().mockResolvedValue(true);
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: mockRequestOtp,
-        verifyOtp: jest.fn(),
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: jest.fn(),
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
-
-      const { result } = renderHook(() => useAuth());
-
-      await act(async () => {
-        await Promise.all([
-          result.current.requestOtp("+1234567890"),
-          result.current.requestOtp("+0987654321"),
-          result.current.requestOtp("+5551234567"),
-        ]);
-      });
-
-      expect(mockRequestOtp).toHaveBeenCalledTimes(3);
-    });
-  });
-
-  describe("Edge Cases", () => {
-    it("should handle rapid state changes", () => {
-      const mockReset = jest.fn();
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: jest.fn(),
-        verifyOtp: jest.fn(),
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: jest.fn(),
-        checkAuth: jest.fn(),
-        reset: mockReset,
-      };
-
-      mockUseAuthStore(mockState);
-
-      const { result } = renderHook(() => useAuth());
-
-      act(() => {
-        result.current.reset();
-        result.current.reset();
-        result.current.reset();
-      });
-
-      expect(mockReset).toHaveBeenCalledTimes(3);
-    });
-
-    it("should handle malformed user data", () => {
-      const mockUpdateProfile = jest.fn().mockResolvedValue(true);
-      const mockState = {
-        currentUser: {
-          id: "user_123",
-          name: "John Doe",
-          phone: "+1234567890",
-          isOnline: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        isAuthenticated: true,
-        requestOtp: jest.fn(),
-        verifyOtp: jest.fn(),
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: mockUpdateProfile,
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
-
-      const { result } = renderHook(() => useAuth());
-
-      act(async () => {
-        await result.current.updateProfile({ name: null } as any);
-      });
-
-      expect(mockUpdateProfile).toHaveBeenCalledWith("user_123", { name: null });
-    });
-
-    it("should handle network errors", async () => {
-      const mockError = new Error("Network unavailable");
-      const mockRequestOtp = jest.fn().mockRejectedValue(mockError);
-      const mockState = {
-        currentUser: null,
-        isAuthenticated: false,
-        requestOtp: mockRequestOtp,
-        verifyOtp: jest.fn(),
-        resendOtp: jest.fn(),
-        logout: jest.fn(),
-        updateProfile: jest.fn(),
-        checkAuth: jest.fn(),
-        reset: jest.fn(),
-      };
-
-      mockUseAuthStore(mockState);
-
-      const { result } = renderHook(() => useAuth());
-
       await act(async () => {
         await result.current.requestOtp("+1234567890");
       });
+      expect(result.current.step).toBe("otp");
 
-      expect(mockRequestOtp).toHaveBeenCalledWith("+1234567890");
+      act(() => {
+        result.current.reset();
+      });
+
+      expect(result.current.step).toBe("phone");
+      expect(result.current.error).toBeNull();
+      expect(result.current.isLoading).toBe(false);
     });
   });
 });
