@@ -6,7 +6,7 @@
 import { useEffect, useCallback, useState, useRef } from "react";
 import { getWebSocketClient, resetWebSocketClient, type WebSocketStatus } from "./WebSocketClient";
 import { getMessageHandler, resetMessageHandler } from "./MessageHandler";
-import type { Message } from "@domain/entities/Message";
+import type { Message } from "@/domain/entities/Message";
 
 interface UseWebSocketOptions {
   autoConnect?: boolean;

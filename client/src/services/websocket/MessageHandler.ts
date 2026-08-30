@@ -7,7 +7,7 @@ import type { WebSocketClient } from "./WebSocketClient";
 import { logger } from "../../core/logger";
 import { useMessageStore, useChatStore, useUIStore } from "../../presentation/stores";
 import type { Message } from "../../domain/entities/Message";
-import type { Chat, GroupChat } from "../../domain/entities/Chat";
+import type { Chat } from "../../domain/entities/Chat";
 import type { User } from "../../domain/entities/User";
 
 // Message Types
@@ -218,14 +218,10 @@ export class MessageHandler {
     const uiStore = useUIStore.getState();
 
     const chat = chatStore.getChatById(payload.chatId);
-    if (chat?.type === "group") {
-      const groupChat = chat as GroupChat;
-      if (!groupChat.participantIds.includes(payload.user.id)) {
-        groupChat.participantIds.push(payload.user.id);
-        chatStore.updateChat(payload.chatId, {
-          participantIds: groupChat.participantIds,
-        });
-      }
+    if (chat?.type === "group" && !chat.participantIds.includes(payload.user.id)) {
+      chatStore.updateChat(payload.chatId, {
+        participantIds: [...chat.participantIds, payload.user.id],
+      });
     }
 
     uiStore.showToast({
@@ -239,11 +235,9 @@ export class MessageHandler {
     const chatStore = useChatStore.getState();
 
     const chat = chatStore.getChatById(payload.chatId);
-    if (chat?.type === "group") {
-      const groupChat = chat as GroupChat;
-      groupChat.participantIds = groupChat.participantIds.filter((id) => id !== payload.userId);
+    if (chat?.type === "group" && chat.participantIds.includes(payload.userId)) {
       chatStore.updateChat(payload.chatId, {
-        participantIds: groupChat.participantIds,
+        participantIds: chat.participantIds.filter((id) => id !== payload.userId),
       });
     }
   }
