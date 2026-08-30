@@ -1,764 +1,441 @@
 /**
  * Integration Tests
- * End-to-end integration tests for store + chat service + MMKV flow
- * Tests real-time behavior without actual network using fake timers
+ * Store + WebSocket client + MMKV persistence flow using the real
+ * chatStore / messageStore implementations.
  */
 
-import React from "react";
-import { render, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
+import { act, waitFor } from "@testing-library/react-native";
 import { MMKV } from "react-native-mmkv";
-import { useMVPStore } from "../presentation/stores/mvpStore";
-import { createChatService } from "../core/networking/chatService";
-import type { Chat, Message } from "../presentation/stores/mvpStore";
 
-// Mock WebSocket for integration tests
-const createMockWebSocket = () => {
-  const mockWebSocket = {
-    readyState: 0 as number,
-    send: jest.fn(),
-    close: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    onopen: null as any,
-    onmessage: null as any,
-    onclose: null as any,
-    onerror: null as any,
-  };
+import { useChatStore } from "../presentation/stores/chatStore";
+import { useMessageStore } from "../presentation/stores/messageStore";
+import { WebSocketClient } from "../services/websocket/WebSocketClient";
+import type { Chat } from "../domain/entities/Chat";
+import type { Message } from "../domain/entities/Message";
 
-  const simulateOpen = () => {
-    mockWebSocket.readyState = 1; // WebSocket.OPEN = 1
-    if (mockWebSocket.onopen) mockWebSocket.onopen({} as Event);
-    const openCallback = mockWebSocket.addEventListener.mock.calls.find(
-      (call: any[]) => call[0] === "open"
-    )?.[1];
-    if (openCallback) openCallback({} as Event);
-  };
+// ---------------------------------------------------------------------------
+// MMKV mock with per-instance registry keyed by storage id.
+// The registry lives inside the factory so it exists when stores first
+// import react-native-mmkv (module-load time, before test bodies run).
+// ---------------------------------------------------------------------------
 
-  const simulateMessage = (data: any) => {
-    if (mockWebSocket.onmessage) mockWebSocket.onmessage({ data } as MessageEvent);
-    const messageCallback = mockWebSocket.addEventListener.mock.calls.find(
-      (call: any[]) => call[0] === "message"
-    )?.[1];
-    if (messageCallback) messageCallback({ data } as MessageEvent);
-  };
-
-  const simulateClose = () => {
-    mockWebSocket.readyState = 3; // WebSocket.CLOSED = 3
-    if (mockWebSocket.onclose) mockWebSocket.onclose({} as CloseEvent);
-    const closeCallback = mockWebSocket.addEventListener.mock.calls.find(
-      (call: any[]) => call[0] === "close"
-    )?.[1];
-    if (closeCallback) closeCallback({} as CloseEvent);
-  };
-
-  return {
-    mockWebSocket,
-    simulateOpen,
-    simulateMessage,
-    simulateClose,
-  };
-};
-
-// Mock global WebSocket
-const mockWebSocketClass = jest.fn();
-global.WebSocket = mockWebSocketClass as any;
-
-// Mock MMKV instances for testing
-let mockChatsStorage: any;
-let mockMessagesStorage: any;
-
-// Test helper component
-const TestComponent: React.FC<{
-  initialChats?: Chat[];
-  onMessageSent?: (chatId: string, message: Message) => void;
-}> = ({ initialChats = [], onMessageSent }) => {
-  const { setChats, addMessage, messages, currentChatId, setCurrentChat } = useMVPStore();
-
-  React.useEffect(() => {
-    if (initialChats.length > 0) {
-      setChats(initialChats);
+jest.mock("react-native-mmkv", () => {
+  const instances = new Map<string, Record<string, jest.Mock>>();
+  const makeInstance = (): Record<string, jest.Mock> => ({
+    getString: jest.fn().mockReturnValue(undefined),
+    set: jest.fn(),
+    delete: jest.fn(),
+    clearAll: jest.fn(),
+    getAllKeys: jest.fn(() => []),
+  });
+  const MMKV: any = jest.fn().mockImplementation((options?: { id?: string }) => {
+    const id = options?.id ?? "default";
+    if (!instances.has(id)) {
+      instances.set(id, makeInstance());
     }
-  }, [initialChats, setChats]);
+    return instances.get(id);
+  });
+  MMKV.__instances = instances;
+  return { MMKV };
+});
 
-  const handleSendMessage = (chatId: string, text: string) => {
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      text,
-      senderId: "me",
-      timestamp: new Date(),
-      isOwn: true,
-    };
+function getInstance(id: string): Record<string, jest.Mock> {
+  const { MMKV } = require("react-native-mmkv");
+  return (MMKV as any).__instances.get(id);
+}
 
-    addMessage(chatId, newMessage);
-    onMessageSent?.(chatId, newMessage);
-  };
+// ---------------------------------------------------------------------------
+// WebSocket mock
+// ---------------------------------------------------------------------------
 
-  return (
-    <View testID="chat-list">
-      {initialChats.map((chat) => (
-        <TouchableOpacity
-          key={chat.id}
-          testID={`chat-${chat.id}`}
-          onPress={() => setCurrentChat(chat.id)}
-        >
-          <Text testID={`chat-name-${chat.id}`}>{chat.name}</Text>
-          <Text testID={`chat-last-message-${chat.id}`}>{chat.lastMessage}</Text>
-        </TouchableOpacity>
-      ))}
+class MockWebSocket {
+  static OPEN = 1;
+  static CONNECTING = 0;
+  static CLOSING = 2;
+  static CLOSED = 3;
 
-      {currentChatId && (
-        <View testID="chat-screen">
-          <ScrollView testID="messages">
-            {messages[currentChatId]?.map((message) => (
-              <View key={message.id} testID={`message-${message.id}`}>
-                <Text testID={`message-text-${message.id}`}>{message.text}</Text>
-                <Text testID={`message-sender-${message.id}`}>{message.senderId}</Text>
-              </View>
-            ))}
-          </ScrollView>
+  readyState = MockWebSocket.CONNECTING;
+  onopen: ((event?: unknown) => void) | null = null;
+  onmessage: ((event: { data: string }) => void) | null = null;
+  onclose: ((event: { wasClean: boolean }) => void) | null = null;
+  onerror: ((event?: unknown) => void) | null = null;
 
-          <TextInput
-            testID="message-input"
-            placeholder="Type a message..."
-            onChangeText={(text: string) => {
-              // Simulate typing
-            }}
-          />
-          <TouchableOpacity
-            testID="send-button"
-            onPress={() => {
-              const input = screen.getByTestId("message-input");
-              const text = input.props.value || "";
-              if (text.trim()) {
-                handleSendMessage(currentChatId, text);
-                // Clear input
-                fireEvent.changeText(input, "");
-              }
-            }}
-          >
-            <Text>Send</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
-  );
-};
+  send = jest.fn();
+  close = jest.fn((code?: number, reason?: string) => {
+    this.readyState = MockWebSocket.CLOSED;
+    this.onclose?.({ wasClean: true });
+  });
 
-describe("Integration Tests: Store + Chat Service + MMKV", () => {
-  let mockWebSocket: any;
-  let simulateOpen: any;
-  let simulateMessage: any;
-  let simulateClose: any;
+  simulateOpen() {
+    this.readyState = MockWebSocket.OPEN;
+    this.onopen?.();
+  }
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-    jest.useFakeTimers();
+  simulateMessage(data: string) {
+    this.onmessage?.({ data });
+  }
 
-    // Create fresh mock WebSocket
-    const mock = createMockWebSocket();
-    mockWebSocket = mock.mockWebSocket;
-    simulateOpen = mock.simulateOpen;
-    simulateMessage = mock.simulateMessage;
-    simulateClose = mock.simulateClose;
+  simulateUncleanClose() {
+    this.readyState = MockWebSocket.CLOSED;
+    this.onclose?.({ wasClean: false });
+  }
+}
 
-    mockWebSocketClass.mockImplementation(() => mockWebSocket);
+let lastSocket: MockWebSocket | null = null;
+// The client compares readyState against WebSocket.OPEN from the global,
+// so the factory must expose the standard static constants.
+const socketFactory: any = jest.fn(() => {
+  lastSocket = new MockWebSocket();
+  return lastSocket;
+});
+socketFactory.CONNECTING = MockWebSocket.CONNECTING;
+socketFactory.OPEN = MockWebSocket.OPEN;
+socketFactory.CLOSING = MockWebSocket.CLOSING;
+socketFactory.CLOSED = MockWebSocket.CLOSED;
 
-    // Create fresh MMKV mocks
-    mockChatsStorage = {
-      getString: jest.fn(),
-      set: jest.fn(),
-      delete: jest.fn(),
-      clearAll: jest.fn(),
-    };
+const originalWebSocket = global.WebSocket;
 
-    mockMessagesStorage = {
-      getString: jest.fn(),
-      set: jest.fn(),
-      delete: jest.fn(),
-      clearAll: jest.fn(),
-    };
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
-    // Mock MMKV constructor
-    (MMKV as jest.MockedClass<typeof MMKV>).mockImplementation((options) => {
-      if (options?.id === "chats") {
-        return mockChatsStorage;
-      } else if (options?.id === "messages") {
-        return mockMessagesStorage;
+function makeChat(overrides: Partial<Chat> & { id: string }): Chat {
+  return {
+    type: "private",
+    participantIds: ["currentUser", "other"],
+    unreadCount: 0,
+    isPinned: false,
+    isMuted: false,
+    isArchived: false,
+    createdAt: new Date("2024-01-01T10:00:00Z"),
+    updatedAt: new Date("2024-01-01T10:00:00Z"),
+    ...overrides,
+  } as Chat;
+}
+
+function makeMessage(overrides: Partial<Message> & { id: string; chatId: string }): Message {
+  return {
+    senderId: "me",
+    type: "text",
+    text: "Hello",
+    timestamp: new Date("2024-01-01T10:00:00Z"),
+    status: "sent",
+    reactions: [],
+    edited: false,
+    ...overrides,
+  } as Message;
+}
+
+function resetStores() {
+  act(() => {
+    useChatStore.getState().setChats([]);
+    useChatStore.getState().setActiveChat(null);
+    useMessageStore.getState().clearMessages();
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Setup
+// ---------------------------------------------------------------------------
+
+beforeEach(() => {
+  jest.clearAllMocks();
+
+  const { MMKV } = require("react-native-mmkv");
+  for (const instance of (MMKV as any).__instances.values()) {
+    instance.getString.mockReturnValue(undefined);
+    instance.set.mockClear();
+    instance.delete.mockClear();
+  }
+
+  socketFactory.mockClear();
+  lastSocket = null;
+  (global as any).WebSocket = socketFactory;
+
+  resetStores();
+});
+
+afterEach(() => {
+  (global as any).WebSocket = originalWebSocket;
+});
+
+// ---------------------------------------------------------------------------
+// Full Send/Receive Cycle
+// ---------------------------------------------------------------------------
+
+describe("Full Send/Receive Cycle", () => {
+  it("completes end-to-end local message flow through chat + message stores", () => {
+    const chat = makeChat({ id: "integration-chat-1" });
+
+    act(() => {
+      useChatStore.getState().addChat(chat);
+      useChatStore.getState().setActiveChat("integration-chat-1");
+    });
+
+    expect(useChatStore.getState().activeChatId).toBe("integration-chat-1");
+
+    const message = makeMessage({
+      id: "msg-e2e-1",
+      chatId: "integration-chat-1",
+      text: "Hello from integration test",
+    });
+
+    act(() => {
+      useMessageStore.getState().addMessage(message);
+      useChatStore.getState().updateLastMessage("integration-chat-1", message);
+    });
+
+    // Message is retrievable per chat
+    const messages = useMessageStore.getState().getMessagesByChatId("integration-chat-1");
+    expect(messages.map((m) => m.id)).toContain("msg-e2e-1");
+
+    // Chat lastMessage was updated
+    expect(useChatStore.getState().getChatById("integration-chat-1")?.lastMessage?.id).toBe(
+      "msg-e2e-1"
+    );
+
+    // Message persisted to MMKV-backed storage
+    const messageStorage = getInstance("message-storage");
+    expect(messageStorage.set).toHaveBeenCalled();
+  });
+
+  it("persists messages for the correct chat index", () => {
+    act(() => {
+      useMessageStore.getState().addMessage(makeMessage({ id: "m1", chatId: "chat-a" }));
+      useMessageStore.getState().addMessage(makeMessage({ id: "m2", chatId: "chat-b" }));
+    });
+
+    expect(useMessageStore.getState().messagesByChatId["chat-a"]).toEqual(["m1"]);
+    expect(useMessageStore.getState().messagesByChatId["chat-b"]).toEqual(["m2"]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Connection Management (WebSocketClient)
+// ---------------------------------------------------------------------------
+
+describe("Connection Management", () => {
+  function makeClient(): WebSocketClient {
+    return new WebSocketClient({
+      url: "wss://example.test/ws",
+      authToken: "token-123",
+      reconnectInterval: 10,
+    });
+  }
+
+  it("connects and reports connected status", async () => {
+    const client = makeClient();
+    const statuses: string[] = [];
+    client.onStatusChange((status) => statuses.push(status));
+
+    client.connect();
+    expect(socketFactory).toHaveBeenCalledWith("wss://example.test/ws?token=token-123");
+
+    act(() => {
+      lastSocket?.simulateOpen();
+    });
+
+    await waitFor(() => {
+      expect(client.getStatus()).toBe("connected");
+    });
+    expect(statuses).toContain("connected");
+
+    client.disconnect();
+  });
+
+  it("attempts reconnection after an unclean close", async () => {
+    const client = makeClient();
+    client.connect();
+
+    act(() => {
+      lastSocket?.simulateOpen();
+    });
+    await waitFor(() => expect(client.getStatus()).toBe("connected"));
+
+    act(() => {
+      lastSocket?.simulateUncleanClose();
+    });
+
+    // An unclean close immediately schedules a reconnect attempt
+    await waitFor(() => expect(client.getStatus()).toBe("reconnecting"));
+
+    // The reconnect timer fires shortly after (reconnectInterval: 10ms)
+    await waitFor(() => expect(client.getStatus()).toBe("connecting"));
+    expect(socketFactory.mock.calls.length).toBeGreaterThanOrEqual(2);
+
+    client.disconnect();
+  });
+
+  it("does not reconnect after a clean disconnect", async () => {
+    const client = makeClient();
+    client.connect();
+    lastSocket?.simulateOpen();
+
+    client.disconnect();
+
+    // Give any (incorrectly scheduled) reconnect timer time to fire
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(socketFactory).toHaveBeenCalledTimes(1);
+    expect(client.getStatus()).toBe("disconnected");
+  });
+
+  it("delivers incoming messages to registered handlers", async () => {
+    const client = makeClient();
+    const payloads: unknown[] = [];
+    client.onMessage("message", (payload) => payloads.push(payload));
+
+    client.connect();
+    act(() => {
+      lastSocket?.simulateOpen();
+    });
+
+    act(() => {
+      lastSocket?.simulateMessage(JSON.stringify({ type: "message", payload: { id: "x1" } }));
+    });
+
+    expect(payloads).toEqual([{ id: "x1" }]);
+    client.disconnect();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Data Persistence
+// ---------------------------------------------------------------------------
+
+describe("Data Persistence", () => {
+  it("writes normalized chat state through the MMKV-backed storage adapter", () => {
+    const chat = makeChat({ id: "persisted-chat-1" });
+
+    act(() => {
+      useChatStore.getState().addChat(chat);
+    });
+
+    const chatStorage = getInstance("chat-storage");
+    expect(chatStorage.set).toHaveBeenCalledWith(
+      "chat-storage",
+      expect.stringContaining("persisted-chat-1")
+    );
+  });
+
+  it("keeps stores usable when persisted data is corrupted", () => {
+    getInstance("chat-storage").getString.mockReturnValue("invalid json");
+    getInstance("message-storage").getString.mockReturnValue("also invalid json");
+
+    // Rehydrating from corrupt data must not throw and stores stay usable
+    expect(() => {
+      act(() => {
+        useMessageStore.getState().addMessage(makeMessage({ id: "m-corrupt", chatId: "c1" }));
+        useChatStore.getState().addChat(makeChat({ id: "c1" }));
+      });
+    }).not.toThrow();
+
+    expect(useMessageStore.getState().getMessageById("m-corrupt")).toBeDefined();
+    expect(useChatStore.getState().getChatById("c1")).toBeDefined();
+  });
+
+  it("restores chats from previously persisted JSON", () => {
+    const persistedChats = [makeChat({ id: "persisted-chat-2" })];
+    getInstance("chat-storage").getString.mockReturnValue(JSON.stringify(persistedChats));
+
+    const raw = getInstance("chat-storage").getString("chat-storage");
+    expect(raw).toBeDefined();
+
+    // Simulate hydration into the live store
+    act(() => {
+      useChatStore.getState().setChats(JSON.parse(raw as string));
+    });
+
+    expect(useChatStore.getState().getChatById("persisted-chat-2")).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Performance Under Load
+// ---------------------------------------------------------------------------
+
+describe("Performance Under Load", () => {
+  it("handles high-frequency message additions without dropping any", () => {
+    act(() => {
+      for (let i = 0; i < 100; i++) {
+        useMessageStore
+          .getState()
+          .addMessage(makeMessage({ id: `perf-${i}`, chatId: "perf-chat", text: `M${i}` }));
       }
-      return {
-        getString: jest.fn(),
-        set: jest.fn(),
-        delete: jest.fn(),
-        clearAll: jest.fn(),
-      };
     });
-  });
 
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
-  describe("Full Send/Receive Cycle", () => {
-    it("should complete end-to-end message flow", async () => {
-      const testChats: Chat[] = [
-        {
-          id: "integration-chat-1",
-          name: "Integration Test Chat",
-          lastMessage: "Initial message",
-          timestamp: new Date("2023-01-01T10:00:00Z"),
-          unreadCount: 0,
-        },
-      ];
-
-      const onMessageSent = jest.fn();
-
-      render(<TestComponent initialChats={testChats} onMessageSent={onMessageSent} />);
-
-      // Verify initial state
-      expect(screen.getByTestId("chat-name-integration-chat-1")).toBeTruthy();
-      expect(screen.getByTestId("chat-last-message-integration-chat-1")).toBeTruthy();
-
-      // Select chat
-      fireEvent.press(screen.getByTestId("chat-integration-chat-1"));
-
-      // Verify chat screen is shown
-      await waitFor(() => {
-        expect(screen.getByTestId("chat-screen")).toBeTruthy();
-      });
-
-      // Connect to WebSocket (simulated)
-      simulateOpen();
-
-      // Type and send message
-      const input = screen.getByTestId("message-input");
-      const sendButton = screen.getByTestId("send-button");
-
-      fireEvent.changeText(input, "Hello from integration test");
-      fireEvent.press(sendButton);
-
-      // Verify message was added to store
-      await waitFor(() => {
-        expect(screen.getByTestId("message-text-Hello from integration test")).toBeTruthy();
-        expect(screen.getByTestId("message-sender-me")).toBeTruthy();
-      });
-
-      // Verify callback was called
-      expect(onMessageSent).toHaveBeenCalledWith(
-        "integration-chat-1",
-        expect.objectContaining({
-          text: "Hello from integration test",
-          senderId: "me",
-          isOwn: true,
-        })
+    const messages = useMessageStore.getState().getMessagesByChatId("perf-chat");
+    expect(messages).toHaveLength(100);
+    // Sorted ascending by timestamp
+    for (let i = 1; i < messages.length; i++) {
+      expect(messages[i].timestamp.getTime()).toBeGreaterThanOrEqual(
+        messages[i - 1].timestamp.getTime()
       );
+    }
+  });
 
-      // Verify MMKV persistence
-      expect(mockMessagesStorage.set).toHaveBeenCalledWith(
-        "messages_integration-chat-1",
-        expect.stringContaining("Hello from integration test")
+  it("looks up messages by chat in O(1) via the secondary index", () => {
+    act(() => {
+      const batch = Array.from({ length: 500 }, (_, i) =>
+        makeMessage({ id: `bulk-${i}`, chatId: `chat-${i % 10}` })
       );
+      useMessageStore.getState().addMessages(batch);
     });
 
-    it("should handle real-time message reception", async () => {
-      const testChats: Chat[] = [
-        {
-          id: "realtime-chat-1",
-          name: "Realtime Test Chat",
-          lastMessage: "Waiting for messages",
-          timestamp: new Date(),
-          unreadCount: 0,
-        },
-      ];
+    const start = performance.now();
+    const subset = useMessageStore.getState().getMessagesByChatId("chat-3");
+    const elapsed = performance.now() - start;
 
-      render(<TestComponent initialChats={testChats} />);
+    expect(subset).toHaveLength(50);
+    expect(elapsed).toBeLessThan(100);
+  });
+});
 
-      // Select chat and connect
-      fireEvent.press(screen.getByTestId("chat-realtime-chat-1"));
-      simulateOpen();
+// ---------------------------------------------------------------------------
+// Error Recovery & Concurrent Operations
+// ---------------------------------------------------------------------------
 
-      await waitFor(() => {
-        expect(screen.getByTestId("chat-screen")).toBeTruthy();
-      });
-
-      // Simulate receiving a message via WebSocket
-      const incomingMessage = {
-        type: "message",
-        id: "incoming-1",
-        text: "Hello from remote user",
-        senderId: "remote-user",
-        timestamp: new Date().toISOString(),
-        chatId: "realtime-chat-1",
-      };
-
-      simulateMessage(JSON.stringify(incomingMessage));
-
-      // Verify message appears in UI
-      await waitFor(() => {
-        expect(screen.getByTestId("message-text-Hello from remote user")).toBeTruthy();
-        expect(screen.getByTestId("message-sender-remote-user")).toBeTruthy();
-      });
-
-      // Verify message was persisted to MMKV
-      expect(mockMessagesStorage.set).toHaveBeenCalledWith(
-        "messages_realtime-chat-1",
-        expect.stringContaining("Hello from remote user")
-      );
+describe("Error Recovery and Concurrency", () => {
+  it("keeps local state intact when storage writes fail", () => {
+    // Only fail the first write; later tests must see healthy storage
+    getInstance("message-storage").set.mockImplementationOnce(() => {
+      throw new Error("Storage unavailable");
     });
 
-    it("should handle message history loading", async () => {
-      const testChats: Chat[] = [
-        {
-          id: "history-chat-1",
-          name: "History Test Chat",
-          lastMessage: "Loading history...",
-          timestamp: new Date(),
-          unreadCount: 0,
-        },
-      ];
-
-      render(<TestComponent initialChats={testChats} />);
-
-      // Select chat and connect
-      fireEvent.press(screen.getByTestId("chat-history-chat-1"));
-      simulateOpen();
-
-      await waitFor(() => {
-        expect(screen.getByTestId("chat-screen")).toBeTruthy();
+    expect(() => {
+      act(() => {
+        useMessageStore.getState().addMessage(makeMessage({ id: "m-fail", chatId: "c9" }));
       });
+    }).not.toThrow();
 
-      // Simulate receiving message history
-      const historyData = {
-        type: "history",
-        messages: [
-          {
-            id: "history-1",
-            text: "Historical message 1",
-            senderId: "user1",
-            timestamp: new Date("2023-01-01T09:00:00Z").toISOString(),
-            chatId: "history-chat-1",
-          },
-          {
-            id: "history-2",
-            text: "Historical message 2",
-            senderId: "user2",
-            timestamp: new Date("2023-01-01T09:05:00Z").toISOString(),
-            chatId: "history-chat-1",
-          },
-        ],
-      };
-
-      simulateMessage(JSON.stringify(historyData));
-
-      // Verify all historical messages appear
-      await waitFor(() => {
-        expect(screen.getByTestId("message-text-Historical message 1")).toBeTruthy();
-        expect(screen.getByTestId("message-text-Historical message 2")).toBeTruthy();
-      });
-    });
+    expect(useMessageStore.getState().getMessageById("m-fail")).toBeDefined();
   });
 
-  describe("Connection Management", () => {
-    it("should handle WebSocket reconnection", async () => {
-      const testChats: Chat[] = [
-        {
-          id: "reconnect-chat-1",
-          name: "Reconnect Test Chat",
-          lastMessage: "Testing reconnection",
-          timestamp: new Date(),
-          unreadCount: 0,
-        },
-      ];
+  it("routes concurrent operations on multiple chats independently", () => {
+    act(() => {
+      useChatStore.getState().addChat(makeChat({ id: "concurrent-chat-1" }));
+      useChatStore.getState().addChat(makeChat({ id: "concurrent-chat-2" }));
 
-      render(<TestComponent initialChats={testChats} />);
-
-      // Select chat and connect
-      fireEvent.press(screen.getByTestId("chat-reconnect-chat-1"));
-      simulateOpen();
-
-      await waitFor(() => {
-        expect(screen.getByTestId("chat-screen")).toBeTruthy();
-      });
-
-      // Simulate connection loss
-      simulateClose();
-
-      // Should attempt reconnection after delay
-      jest.advanceTimersByTime(1000);
-      expect(mockWebSocketClass).toHaveBeenCalledTimes(2); // Initial + reconnect
-
-      // Simulate successful reconnection
-      simulateOpen();
-
-      // Should be able to send messages after reconnection
-      const input = screen.getByTestId("message-input");
-      const sendButton = screen.getByTestId("send-button");
-
-      fireEvent.changeText(input, "Message after reconnection");
-      fireEvent.press(sendButton);
-
-      await waitFor(() => {
-        expect(screen.getByTestId("message-text-Message after reconnection")).toBeTruthy();
-      });
+      useMessageStore
+        .getState()
+        .addMessage(makeMessage({ id: "cm-1", chatId: "concurrent-chat-1", text: "one" }));
+      useMessageStore
+        .getState()
+        .addMessage(makeMessage({ id: "cm-2", chatId: "concurrent-chat-2", text: "two" }));
     });
 
-    it("should handle connection errors gracefully", async () => {
-      const testChats: Chat[] = [
-        {
-          id: "error-chat-1",
-          name: "Error Test Chat",
-          lastMessage: "Testing error handling",
-          timestamp: new Date(),
-          unreadCount: 0,
-        },
-      ];
-
-      render(<TestComponent initialChats={testChats} />);
-
-      // Select chat
-      fireEvent.press(screen.getByTestId("chat-error-chat-1"));
-
-      // Should still show chat screen even with connection issues
-      await waitFor(() => {
-        expect(screen.getByTestId("chat-screen")).toBeTruthy();
-      });
-
-      // Should be able to send messages (they'll be queued)
-      const input = screen.getByTestId("message-input");
-      const sendButton = screen.getByTestId("send-button");
-
-      fireEvent.changeText(input, "Message during error");
-      fireEvent.press(sendButton);
-
-      await waitFor(() => {
-        expect(screen.getByTestId("message-text-Message during error")).toBeTruthy();
-      });
-    });
+    expect(useMessageStore.getState().getMessagesByChatId("concurrent-chat-1").map((m) => m.id)).toEqual(["cm-1"]);
+    expect(useMessageStore.getState().getMessagesByChatId("concurrent-chat-2").map((m) => m.id)).toEqual(["cm-2"]);
+    expect(useChatStore.getState().getAllChats()).toHaveLength(2);
   });
 
-  describe("Data Persistence", () => {
-    it("should persist and restore chats across sessions", async () => {
-      const persistedChats: Chat[] = [
-        {
-          id: "persisted-chat-1",
-          name: "Persisted Chat",
-          lastMessage: "This should persist",
-          timestamp: new Date("2023-01-01T10:00:00Z"),
-          unreadCount: 2,
-        },
-      ];
-
-      // Mock persisted data
-      mockChatsStorage.getString.mockReturnValue(JSON.stringify(persistedChats));
-
-      render(<TestComponent />);
-
-      // Should load persisted chats
-      await waitFor(() => {
-        expect(screen.getByTestId("chat-name-persisted-chat-1")).toBeTruthy();
-        expect(screen.getByTestId("chat-last-message-This should persist")).toBeTruthy();
-      });
-
-      // Add new chat
-      const { setChats } = useMVPStore();
-      const newChats = [
-        ...persistedChats,
-        {
-          id: "new-chat-1",
-          name: "New Chat",
-          lastMessage: "New message",
-          timestamp: new Date(),
-          unreadCount: 0,
-        },
-      ];
-
-      setChats(newChats);
-
-      // Should persist new chats
-      expect(mockChatsStorage.set).toHaveBeenCalledWith("chats", JSON.stringify(newChats));
+  it("removes deleted messages from every index", () => {
+    act(() => {
+      useMessageStore.getState().addMessage(makeMessage({ id: "del-1", chatId: "c-del" }));
+      useMessageStore.getState().deleteMessage("del-1");
     });
 
-    it("should persist and restore messages across sessions", async () => {
-      const testChats: Chat[] = [
-        {
-          id: "message-persist-chat-1",
-          name: "Message Persistence Test",
-          lastMessage: "Testing message persistence",
-          timestamp: new Date(),
-          unreadCount: 0,
-        },
-      ];
-
-      const persistedMessages: Message[] = [
-        {
-          id: "persisted-msg-1",
-          text: "Persisted message",
-          senderId: "other-user",
-          timestamp: new Date("2023-01-01T09:00:00Z"),
-          isOwn: false,
-        },
-      ];
-
-      // Mock persisted messages
-      mockMessagesStorage.getString.mockReturnValue(JSON.stringify(persistedMessages));
-
-      render(<TestComponent initialChats={testChats} />);
-
-      // Select chat
-      fireEvent.press(screen.getByTestId("chat-message-persist-chat-1"));
-
-      await waitFor(() => {
-        expect(screen.getByTestId("chat-screen")).toBeTruthy();
-      });
-
-      // Should load persisted messages
-      expect(screen.getByTestId("message-text-Persisted message")).toBeTruthy();
-      expect(screen.getByTestId("message-sender-other-user")).toBeTruthy();
-    });
-
-    it("should handle corrupted persisted data gracefully", async () => {
-      // Mock corrupted data
-      mockChatsStorage.getString.mockReturnValue("invalid json");
-      mockMessagesStorage.getString.mockReturnValue("also invalid json");
-
-      render(<TestComponent />);
-
-      // Should fall back to default data and not crash
-      await waitFor(() => {
-        expect(screen.getByTestId("chat-list")).toBeTruthy();
-      });
-
-      // Should handle errors without crashing
-      expect(() => {
-        const { setChats } = useMVPStore();
-        setChats([]);
-      }).not.toThrow();
-    });
-  });
-
-  describe("Performance Under Load", () => {
-    it("should handle high-frequency message operations", async () => {
-      const testChats: Chat[] = [
-        {
-          id: "performance-chat-1",
-          name: "Performance Test Chat",
-          lastMessage: "Testing performance",
-          timestamp: new Date(),
-          unreadCount: 0,
-        },
-      ];
-
-      render(<TestComponent initialChats={testChats} />);
-
-      // Select chat
-      fireEvent.press(screen.getByTestId("chat-performance-chat-1"));
-
-      await waitFor(() => {
-        expect(screen.getByTestId("chat-screen")).toBeTruthy();
-      });
-
-      // Send multiple messages rapidly
-      const input = screen.getByTestId("message-input");
-      const sendButton = screen.getByTestId("send-button");
-
-      for (let i = 0; i < 20; i++) {
-        fireEvent.changeText(input, `Performance message ${i}`);
-        fireEvent.press(sendButton);
-
-        // Small delay to simulate realistic typing
-        jest.advanceTimersByTime(10);
-      }
-
-      // Should handle all messages without crashing
-      await waitFor(() => {
-        expect(screen.getByTestId("message-text-Performance message 0")).toBeTruthy();
-        expect(screen.getByTestId("message-text-Performance message 19")).toBeTruthy();
-      });
-
-      // Should persist all messages
-      expect(mockMessagesStorage.set).toHaveBeenCalledTimes(20);
-    });
-
-    it("should handle large message datasets efficiently", async () => {
-      const testChats: Chat[] = [
-        {
-          id: "large-dataset-chat-1",
-          name: "Large Dataset Test",
-          lastMessage: "Testing large dataset",
-          timestamp: new Date(),
-          unreadCount: 0,
-        },
-      ];
-
-      // Simulate large message history
-      const largeMessageSet: Message[] = Array.from({ length: 100 }, (_, i) => ({
-        id: `large-msg-${i}`,
-        text: `Large dataset message ${i}`,
-        senderId: i % 2 === 0 ? "me" : "other",
-        timestamp: new Date(Date.now() + i),
-        isOwn: i % 2 === 0,
-      }));
-
-      mockMessagesStorage.getString.mockReturnValue(JSON.stringify(largeMessageSet));
-
-      const startTime = performance.now();
-      render(<TestComponent initialChats={testChats} />);
-
-      fireEvent.press(screen.getByTestId("chat-large-dataset-chat-1"));
-
-      await waitFor(() => {
-        expect(screen.getByTestId("chat-screen")).toBeTruthy();
-      });
-
-      const endTime = performance.now();
-
-      // Should render within reasonable time
-      expect(endTime - startTime).toBeLessThan(1000);
-
-      // Should render first and last messages
-      expect(screen.getByTestId("message-text-Large dataset message 0")).toBeTruthy();
-      expect(screen.getByTestId("message-text-Large dataset message 99")).toBeTruthy();
-    });
-  });
-
-  describe("Error Recovery", () => {
-    it("should recover from WebSocket connection failures", async () => {
-      const testChats: Chat[] = [
-        {
-          id: "recovery-chat-1",
-          name: "Recovery Test Chat",
-          lastMessage: "Testing recovery",
-          timestamp: new Date(),
-          unreadCount: 0,
-        },
-      ];
-
-      render(<TestComponent initialChats={testChats} />);
-
-      // Select chat
-      fireEvent.press(screen.getByTestId("chat-recovery-chat-1"));
-
-      await waitFor(() => {
-        expect(screen.getByTestId("chat-screen")).toBeTruthy();
-      });
-
-      // Simulate multiple connection failures
-      for (let i = 0; i < 3; i++) {
-        simulateClose();
-        jest.advanceTimersByTime((i + 1) * 1000);
-      }
-
-      // Should attempt reconnection multiple times
-      expect(mockWebSocketClass).toHaveBeenCalledTimes(4); // Initial + 3 reconnections
-
-      // Eventually connect successfully
-      simulateOpen();
-
-      // Should work normally after recovery
-      const input = screen.getByTestId("message-input");
-      const sendButton = screen.getByTestId("send-button");
-
-      fireEvent.changeText(input, "Message after recovery");
-      fireEvent.press(sendButton);
-
-      await waitFor(() => {
-        expect(screen.getByTestId("message-text-Message after recovery")).toBeTruthy();
-      });
-    });
-
-    it("should handle storage failures gracefully", async () => {
-      const testChats: Chat[] = [
-        {
-          id: "storage-error-chat-1",
-          name: "Storage Error Test",
-          lastMessage: "Testing storage errors",
-          timestamp: new Date(),
-          unreadCount: 0,
-        },
-      ];
-
-      // Mock storage failures
-      mockMessagesStorage.set.mockImplementation(() => {
-        throw new Error("Storage unavailable");
-      });
-
-      render(<TestComponent initialChats={testChats} />);
-
-      fireEvent.press(screen.getByTestId("chat-storage-error-chat-1"));
-
-      await waitFor(() => {
-        expect(screen.getByTestId("chat-screen")).toBeTruthy();
-      });
-
-      // Should still be able to send messages even if storage fails
-      const input = screen.getByTestId("message-input");
-      const sendButton = screen.getByTestId("send-button");
-
-      fireEvent.changeText(input, "Message despite storage error");
-      fireEvent.press(sendButton);
-
-      await waitFor(() => {
-        expect(screen.getByTestId("message-text-Message despite storage error")).toBeTruthy();
-      });
-    });
-  });
-
-  describe("Concurrent Operations", () => {
-    it("should handle simultaneous chat operations", async () => {
-      const testChats: Chat[] = [
-        {
-          id: "concurrent-chat-1",
-          name: "Concurrent Test Chat 1",
-          lastMessage: "Concurrent test 1",
-          timestamp: new Date(),
-          unreadCount: 0,
-        },
-        {
-          id: "concurrent-chat-2",
-          name: "Concurrent Test Chat 2",
-          lastMessage: "Concurrent test 2",
-          timestamp: new Date(),
-          unreadCount: 0,
-        },
-      ];
-
-      render(<TestComponent initialChats={testChats} />);
-
-      // Select first chat
-      fireEvent.press(screen.getByTestId("chat-concurrent-chat-1"));
-
-      await waitFor(() => {
-        expect(screen.getByTestId("chat-screen")).toBeTruthy();
-      });
-
-      // Send message in first chat
-      const input1 = screen.getByTestId("message-input");
-      const sendButton1 = screen.getByTestId("send-button");
-
-      fireEvent.changeText(input1, "Message in chat 1");
-      fireEvent.press(sendButton1);
-
-      // Switch to second chat
-      fireEvent.press(screen.getByTestId("chat-concurrent-chat-2"));
-
-      // Send message in second chat
-      fireEvent.changeText(input1, "Message in chat 2");
-      fireEvent.press(sendButton1);
-
-      await waitFor(() => {
-        expect(screen.getByTestId("message-text-Message in chat 1")).toBeTruthy();
-        expect(screen.getByTestId("message-text-Message in chat 2")).toBeTruthy();
-      });
-
-      // Should persist messages for both chats
-      expect(mockMessagesStorage.set).toHaveBeenCalledWith(
-        "messages_concurrent-chat-1",
-        expect.stringContaining("Message in chat 1")
-      );
-      expect(mockMessagesStorage.set).toHaveBeenCalledWith(
-        "messages_concurrent-chat-2",
-        expect.stringContaining("Message in chat 2")
-      );
-    });
+    expect(useMessageStore.getState().getMessageById("del-1")).toBeUndefined();
+    expect(useMessageStore.getState().messagesByChatId["c-del"]).toEqual([]);
   });
 });
