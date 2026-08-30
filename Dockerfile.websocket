@@ -1,0 +1,19 @@
+# WebSocket server image (standalone scaling target)
+# The WebSocket server runs inside the same Node process as the API
+# (see server/websocket.ts); this image starts it on WS_PORT.
+FROM node:20-alpine
+
+WORKDIR /app
+
+ENV PORT=8080
+
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts
+
+COPY server ./server
+COPY shared ./shared
+COPY app.json ./
+
+EXPOSE 8080
+
+CMD ["npm", "run", "server:start"]
