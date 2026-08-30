@@ -8,8 +8,8 @@ import { View, StyleSheet, Pressable, Animated } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useUIStore } from "@presentation/stores";
-import type { Toast as ToastType } from "@presentation/stores/types";
+import { useUIStore } from "@/presentation/stores";
+import type { Toast as ToastType } from "@/presentation/stores/types";
 
 interface ToastProps {
   toast: ToastType;

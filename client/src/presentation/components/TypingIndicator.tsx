@@ -5,7 +5,7 @@
 
 import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Text, Animated } from "react-native";
-import { useTheme } from "../../../hooks/useTheme";
+import { useTheme } from "@/hooks/useTheme";
 import { useUIStore } from "../stores";
 import { getTypingIndicatorsManager } from "../../core/typingIndicators/TypingIndicatorsManager";
 

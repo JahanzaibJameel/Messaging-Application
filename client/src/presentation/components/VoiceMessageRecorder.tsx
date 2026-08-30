@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, StyleSheet, TouchableOpacity, Text, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useTheme } from "../../../hooks/useTheme";
+import { useTheme } from "@/hooks/useTheme";
 import { voiceRecorder, VoiceRecorder, type VoiceRecording } from "../../core/media/VoiceRecorder";
 import { useUIStore } from "../stores";
 

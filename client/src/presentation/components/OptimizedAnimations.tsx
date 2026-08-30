@@ -309,10 +309,8 @@ export const useAnimationPerformanceMonitor = () => {
 
     frameCount.current++;
 
-    // Log performance every 60 frames (approximately 1 second)
+    // Warn on degraded performance every 60 frames (approximately 1 second)
     if (frameCount.current % 60 === 0) {
-      console.log(`Animation FPS: ${fps.toFixed(1)}`);
-
       // Warn if below 55fps
       if (fps < 55 && performanceMonitoring) {
         console.warn(`Low FPS detected: ${fps.toFixed(1)} - Consider optimizing animations`);
