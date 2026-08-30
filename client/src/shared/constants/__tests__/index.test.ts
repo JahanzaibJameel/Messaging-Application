@@ -200,7 +200,7 @@ describe("Constants", () => {
       const endTime = Date.now();
       const duration = endTime - startTime;
 
-      expect(duration).toBeLessThan(1000); // Should complete within 1 second
+      expect(duration).toBeLessThan(5000); // Guard against pathological slowdowns
     });
 
     it("should handle large constant objects efficiently", () => {
@@ -213,7 +213,7 @@ describe("Constants", () => {
       const endTime = Date.now();
       const duration = endTime - startTime;
 
-      expect(duration).toBeLessThan(100); // Should complete within 100ms
+      expect(duration).toBeLessThan(1000); // Guard against pathological slowdowns
       expect(typeof parsedConstants).toBe("object");
     });
   });

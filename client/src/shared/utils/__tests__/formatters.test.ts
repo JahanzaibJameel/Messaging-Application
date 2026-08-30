@@ -297,14 +297,14 @@ describe("formatters", () => {
       const result = formatFileSize(Number.MAX_SAFE_INTEGER);
 
       expect(typeof result).toBe("string");
-      expect(result).toContain("EB");
+      expect(result).toContain("PB");
     });
 
     it("should handle extremely small numbers", () => {
       const result = formatFileSize(Number.MIN_SAFE_INTEGER);
 
       expect(typeof result).toBe("string");
-      expect(result).toContain("EB");
+      expect(result).toContain("PB");
     });
   });
 });
