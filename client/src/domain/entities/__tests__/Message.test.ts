@@ -3,12 +3,12 @@
  * Testing core message business logic and validation
  */
 
-import { Message, MessageType, MessageStatus } from "../Message";
+import { MessageEntity } from "../Message";
 
 describe("Message Entity", () => {
   describe("Constructor", () => {
     it("should create a valid text message", () => {
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_123",
         chatId: "chat_456",
         senderId: "user_789",
@@ -37,7 +37,7 @@ describe("Message Entity", () => {
         height: 600,
       };
 
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_124",
         chatId: "chat_456",
         senderId: "user_789",
@@ -54,7 +54,7 @@ describe("Message Entity", () => {
     });
 
     it("should create message with reply", () => {
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_125",
         chatId: "chat_456",
         senderId: "user_789",
@@ -70,7 +70,7 @@ describe("Message Entity", () => {
     });
 
     it("should create edited message", () => {
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_126",
         chatId: "chat_456",
         senderId: "user_789",
@@ -84,16 +84,16 @@ describe("Message Entity", () => {
       };
 
       expect(message.edited).toBe(true);
-      expect(message.editedAt).toBe("2024-01-01T00:30:00Z");
+      expect(message.editedAt).toEqual(new Date("2024-01-01T00:30:00Z"));
     });
 
     it("should create message with reactions", () => {
       const reactions = [
-        { userId: "user_1", emoji: "👍", createdAt: "2024-01-01T00:00:00Z" },
-        { userId: "user_2", emoji: "❤️", createdAt: "2024-01-01T00:00:00Z" },
+        { userId: "user_1", emoji: "Ã°Å¸â€˜Â", createdAt: "2024-01-01T00:00:00Z" },
+        { userId: "user_2", emoji: "Ã¢ÂÂ¤Ã¯Â¸Â", createdAt: "2024-01-01T00:00:00Z" },
       ];
 
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_127",
         chatId: "chat_456",
         senderId: "user_789",
@@ -116,7 +116,7 @@ describe("Message Entity", () => {
         customField: "custom value",
       };
 
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_128",
         chatId: "chat_456",
         senderId: "user_789",
@@ -132,7 +132,7 @@ describe("Message Entity", () => {
     });
 
     it("should create local only message", () => {
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_129",
         chatId: "chat_456",
         senderId: "user_789",
@@ -150,7 +150,7 @@ describe("Message Entity", () => {
 
   describe("Message Types", () => {
     it("should handle text messages", () => {
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_130",
         chatId: "chat_456",
         senderId: "user_789",
@@ -174,7 +174,7 @@ describe("Message Entity", () => {
         height: 600,
       };
 
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_131",
         chatId: "chat_456",
         senderId: "user_789",
@@ -200,7 +200,7 @@ describe("Message Entity", () => {
         duration: 30,
       };
 
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_132",
         chatId: "chat_456",
         senderId: "user_789",
@@ -222,7 +222,7 @@ describe("Message Entity", () => {
         duration: 15,
       };
 
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_133",
         chatId: "chat_456",
         senderId: "user_789",
@@ -245,7 +245,7 @@ describe("Message Entity", () => {
         fileSize: 1024000,
       };
 
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_134",
         chatId: "chat_456",
         senderId: "user_789",
@@ -263,7 +263,7 @@ describe("Message Entity", () => {
 
   describe("Message Status", () => {
     it("should handle sent status", () => {
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_135",
         chatId: "chat_456",
         senderId: "user_789",
@@ -282,7 +282,7 @@ describe("Message Entity", () => {
     });
 
     it("should handle delivered status", () => {
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_136",
         chatId: "chat_456",
         senderId: "user_789",
@@ -301,7 +301,7 @@ describe("Message Entity", () => {
     });
 
     it("should handle read status", () => {
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_137",
         chatId: "chat_456",
         senderId: "user_789",
@@ -320,7 +320,7 @@ describe("Message Entity", () => {
     });
 
     it("should handle failed status", () => {
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_138",
         chatId: "chat_456",
         senderId: "user_789",
@@ -341,7 +341,7 @@ describe("Message Entity", () => {
 
   describe("Message Utilities", () => {
     it("should check if message is from user", () => {
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_139",
         chatId: "chat_456",
         senderId: "user_789",
@@ -357,7 +357,7 @@ describe("Message Entity", () => {
     });
 
     it("should check if message is edited", () => {
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_140",
         chatId: "chat_456",
         senderId: "user_789",
@@ -370,7 +370,7 @@ describe("Message Entity", () => {
 
       expect(message.isEdited()).toBe(false);
 
-      const editedMessage: Message = {
+      const editedMessage = new MessageEntity({
         ...message,
         edited: true,
         editedAt: "2024-01-01T00:30:00Z",
@@ -381,7 +381,7 @@ describe("Message Entity", () => {
 
     it("should get message age", () => {
       const now = "2024-01-01T12:00:00Z";
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_141",
         chatId: "chat_456",
         senderId: "user_789",
@@ -397,7 +397,7 @@ describe("Message Entity", () => {
     });
 
     it("should format message for display", () => {
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_142",
         chatId: "chat_456",
         senderId: "user_789",
@@ -415,7 +415,7 @@ describe("Message Entity", () => {
 
   describe("Edge Cases", () => {
     it("should handle empty reactions array", () => {
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_143",
         chatId: "chat_456",
         senderId: "user_789",
@@ -432,7 +432,7 @@ describe("Message Entity", () => {
     });
 
     it("should handle null metadata", () => {
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_144",
         chatId: "chat_456",
         senderId: "user_789",
@@ -448,7 +448,7 @@ describe("Message Entity", () => {
     });
 
     it("should handle undefined metadata", () => {
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_145",
         chatId: "chat_456",
         senderId: "user_789",
@@ -465,7 +465,7 @@ describe("Message Entity", () => {
 
     it("should handle future timestamps", () => {
       const futureTime = "2024-01-01T00:00:00Z"; // Current time for test
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_146",
         chatId: "chat_456",
         senderId: "user_789",
@@ -482,7 +482,7 @@ describe("Message Entity", () => {
 
     it("should handle very long text", () => {
       const longText = "x".repeat(10000);
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_147",
         chatId: "chat_456",
         senderId: "user_789",
@@ -501,12 +501,12 @@ describe("Message Entity", () => {
   describe("Performance", () => {
     it("should handle large number of reactions efficiently", () => {
       const reactions = Array.from({ length: 1000 }, (_, i) => ({
-        userId: `user_${i}`,
-        emoji: "👍",
+        userId: $user_${i}$,
+        emoji: "Ã°Å¸â€˜Â",
         createdAt: "2024-01-01T00:00:00Z",
       }));
 
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_148",
         chatId: "chat_456",
         senderId: "user_789",
@@ -527,7 +527,7 @@ describe("Message Entity", () => {
     });
 
     it("should serialize large messages efficiently", () => {
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_149",
         chatId: "chat_456",
         senderId: "user_789",
@@ -550,7 +550,7 @@ describe("Message Entity", () => {
   describe("Data Consistency", () => {
     it("should maintain immutability", () => {
       const originalText = "Original text";
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_150",
         chatId: "chat_456",
         senderId: "user_789",
@@ -572,7 +572,7 @@ describe("Message Entity", () => {
 
     it("should handle date strings correctly", () => {
       const timestamp = "2024-01-01T00:00:00Z";
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_151",
         chatId: "chat_456",
         senderId: "user_789",
@@ -583,7 +583,7 @@ describe("Message Entity", () => {
         localOnly: false,
       };
 
-      expect(message.timestamp).toBe(timestamp);
+      expect(message.timestamp).toEqual(new Date(timestamp));
       expect(message.getAge(timestamp)).toBe(0);
     });
 
@@ -595,7 +595,7 @@ describe("Message Entity", () => {
         height: 600,
       };
 
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_152",
         chatId: "chat_456",
         senderId: "user_789",
@@ -613,23 +613,23 @@ describe("Message Entity", () => {
 
   describe("Security", () => {
     it("should handle special characters in text", () => {
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_153",
         chatId: "chat_456",
         senderId: "user_789",
         type: "text",
-        text: "Hello 🌍 世界! ñoño",
+        text: "Hello Ã°Å¸Å’Â Ã¤Â¸â€“Ã§â€¢Å’! ÃƒÂ±oÃƒÂ±o",
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
       };
 
-      expect(message.text).toBe("Hello 🌍 世界! ñoño");
+      expect(message.text).toBe("Hello Ã°Å¸Å’Â Ã¤Â¸â€“Ã§â€¢Å’! ÃƒÂ±oÃƒÂ±o");
       expect(message.text.length).toBeGreaterThan(10);
     });
 
     it("should handle extremely long messages", () => {
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_154",
         chatId: "chat_456",
         senderId: "user_789",
@@ -650,7 +650,7 @@ describe("Message Entity", () => {
         injection: "'; DROP TABLE users; --",
       };
 
-      const message: Message = {
+      const message = new MessageEntity({
         id: "msg_155",
         chatId: "chat_456",
         senderId: "user_789",
