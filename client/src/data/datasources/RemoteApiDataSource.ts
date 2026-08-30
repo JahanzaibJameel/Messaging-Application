@@ -3,7 +3,7 @@
  * Handles all remote API communication
  */
 
-import { AppError } from "@core/errors";
+import { AppError } from "@/core/errors";
 import type { ChatModel, MessageModel, UserModel } from "../models/MessageModel";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "https://api.chatapp.com";

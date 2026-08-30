@@ -4,7 +4,7 @@
  */
 
 import { MMKV } from "react-native-mmkv";
-import { AppError } from "@core/errors";
+import { AppError } from "@/core/errors";
 import type { ChatModel, MessageModel, UserModel } from "../models/MessageModel";
 
 const storage = new MMKV({ id: "chatapp-local-storage" });
