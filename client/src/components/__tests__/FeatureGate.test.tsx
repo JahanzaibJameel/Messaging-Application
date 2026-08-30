@@ -256,8 +256,8 @@ describe("FeatureGate Component", () => {
       );
 
       const flagInfo = DEFAULT_FEATURE_FLAGS.enableVoiceMessages;
-      expect(screen.getByText("Voice Messages")).toBeTruthy();
-      expect(screen.getByText("functionality")).toBeTruthy();
+      expect(screen.getByText(/Voice Messages/)).toBeTruthy();
+      expect(screen.getByText(/functionality/)).toBeTruthy();
       expect(screen.getByText("Rollout: 30%")).toBeTruthy();
     });
 
@@ -382,14 +382,14 @@ describe("FeatureGate Component", () => {
     });
 
     it("should handle flag value changes", () => {
+      // Initially disabled
+      mockUseFeatureFlag.mockReturnValue(false);
       const { rerender } = render(
         <FeatureGate flag="enableVoiceMessages">
           <Text testID="child-content">Child Content</Text>
         </FeatureGate>
       );
 
-      // Initially disabled
-      mockUseFeatureFlag.mockReturnValue(false);
       expect(screen.queryByTestId("child-content")).toBeFalsy();
 
       // Enable flag

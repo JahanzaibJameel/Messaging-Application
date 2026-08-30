@@ -8,7 +8,7 @@ import Animated, {
   FadeInDown,
 } from "react-native-reanimated";
 import { useAccessibleAnimation } from "../accessibility/a11yHelpers";
-import type { Message } from "../presentation/stores/mvpStore";
+import type { Message } from "@/domain/entities/Message";
 
 interface AnimatedMessageProps {
   message: Message;
