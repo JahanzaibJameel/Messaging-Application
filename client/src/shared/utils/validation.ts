@@ -24,31 +24,38 @@ export interface UsernameValidationResult extends ValidationResult {
   normalized?: string;
 }
 
+/** Maximum digits in an international phone number (E.164). */
+const MAX_PHONE_DIGITS = 15;
+
 /**
- * Validates phone numbers
+ * Validates phone numbers. Accepts common formatting characters
+ * (spaces, dashes, parentheses, dots) and normalizes the result
+ * to a leading-plus digit string.
  */
 export function validatePhone(phone: string | null | undefined): ValidationResult {
-  if (!phone || phone.trim() === "") {
+  if (!phone || typeof phone !== "string" || phone.trim() === "") {
     return { isValid: false, error: "Phone number is required" };
   }
 
-  // Remove all non-digit characters except + at the start
-  const normalized = phone.replace(/[^\d+]/g, "");
-  const cleaned = normalized.startsWith("+") ? normalized : "+" + normalized;
+  const digits = phone.replace(/\D/g, "");
 
-  // Check if phone has at least 10 digits after cleaning
-  if (cleaned.replace(/\D/g, "").length < 10) {
+  if (digits.length < 10) {
     return { isValid: false, error: "Phone number must have at least 10 digits" };
   }
 
-  return { isValid: true, error: null, normalized: cleaned };
+  if (digits.length > MAX_PHONE_DIGITS) {
+    return { isValid: false, error: "Phone number is too long" };
+  }
+
+  const normalized = `+${digits}`;
+  return { isValid: true, error: null, normalized };
 }
 
 /**
- * Validates email addresses
+ * Validates email addresses.
  */
 export function validateEmail(email: string | null | undefined): ValidationResult {
-  if (!email || email.trim() === "") {
+  if (!email || typeof email !== "string" || email.trim() === "") {
     return { isValid: false, error: "Email is required" };
   }
 
@@ -57,11 +64,17 @@ export function validateEmail(email: string | null | undefined): ValidationResul
     return { isValid: false, error: "Invalid email format" };
   }
 
+  // Reject consecutive dots (e.g. "user..name@domain.com")
+  if (email.includes("..")) {
+    return { isValid: false, error: "Invalid email format" };
+  }
+
   return { isValid: true, error: null };
 }
 
 /**
- * Validates passwords
+ * Validates passwords against configurable requirements.
+ * By default all character classes are required.
  */
 export function validatePassword(
   password: string | null | undefined,
@@ -73,7 +86,7 @@ export function validatePassword(
     requireSpecialChars?: boolean;
   }
 ): PasswordValidationResult {
-  if (!password || password.trim() === "") {
+  if (!password || typeof password !== "string" || password.trim() === "") {
     return {
       isValid: false,
       error: "Password is required",
@@ -81,17 +94,17 @@ export function validatePassword(
     };
   }
 
-  const minLength = requirements?.minLength || 8;
-  const requireUppercase = requirements?.requireUppercase || false;
-  const requireLowercase = requirements?.requireLowercase || false;
-  const requireNumbers = requirements?.requireNumbers || false;
-  const requireSpecialChars = requirements?.requireSpecialChars || false;
+  const minLength = requirements?.minLength ?? 8;
+  const requireUppercase = requirements?.requireUppercase ?? true;
+  const requireLowercase = requirements?.requireLowercase ?? true;
+  const requireNumbers = requirements?.requireNumbers ?? true;
+  const requireSpecialChars = requirements?.requireSpecialChars ?? true;
 
   const hasMinLength = password.length >= minLength;
   const hasUppercase = /[A-Z]/.test(password);
   const hasLowercase = /[a-z]/.test(password);
   const hasNumbers = /\d/.test(password);
-  const hasSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+  const hasSpecialChars = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password);
 
   const validationRequirements = {
     hasMinLength,
@@ -126,60 +139,57 @@ export function validatePassword(
 }
 
 /**
- * Validates usernames
+ * Validates usernames. Only letters, numbers, underscores and hyphens are
+ * accepted; surrounding whitespace is tolerated and trimmed away.
  */
 export function validateUsername(username: string | null | undefined): UsernameValidationResult {
-  if (!username || username.trim() === "") {
+  if (!username || typeof username !== "string" || username.trim() === "") {
     return { isValid: false, error: "Username is required" };
   }
 
-  const trimmed = username.trim();
+  const normalized = username.trim();
 
-  // Check length (3-50 characters)
-  if (trimmed.length < 3) {
-    return { isValid: false, error: "Username must be at least 3 characters" };
-  }
-
-  if (trimmed.length > 50) {
-    return { isValid: false, error: "Username must be 50 characters or less" };
-  }
-
-  // Check for invalid characters (alphanumeric, underscores, hyphens only)
-  const validUsernameRegex = /^[a-zA-Z0-9_-]+$/;
-  if (!validUsernameRegex.test(trimmed)) {
+  if (/[^a-zA-Z0-9_-]/.test(normalized)) {
     return {
       isValid: false,
       error: "Username can only contain letters, numbers, underscores, and hyphens",
     };
   }
 
-  // Normalize by removing invalid characters and trimming
-  const normalized = trimmed.replace(/[^a-zA-Z0-9_-]/g, "").trim();
+  if (normalized.length > 50) {
+    return { isValid: false, error: "Username must be 50 characters or less" };
+  }
 
   return { isValid: true, error: null, normalized };
 }
 
 /**
- * Sanitizes user input to prevent XSS and injection attacks
+ * Sanitizes user input to prevent XSS and injection attacks.
+ * Strips known injection vectors, then HTML-encodes the remainder.
  */
 export function sanitizeInput(input: string | null | undefined): string {
-  if (!input) return "";
+  if (!input || typeof input !== "string") {
+    return "";
+  }
 
   return (
     input
-      // Remove HTML tags
-      .replace(/<[^>]*>/g, "")
+      // Remove NULL bytes
+      .replace(/\0/g, "")
+      // Remove potentially dangerous URI schemes and event handlers
+      .replace(/javascript:/gi, "")
+      .replace(/data:/gi, "")
+      .replace(/vbscript:/gi, "")
+      .replace(/on\w+\s*=/gi, "")
+      // Neutralize SQL comment markers and statement separators
+      .replace(/--/g, "")
+      .replace(/;/g, "")
       // Encode HTML entities
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#x27;")
-      // Remove potentially dangerous patterns
-      .replace(/javascript:/gi, "")
-      .replace(/data:/gi, "")
-      .replace(/vbscript:/gi, "")
-      .replace(/on\w+\s*=/gi, "")
       .trim()
   );
 }
