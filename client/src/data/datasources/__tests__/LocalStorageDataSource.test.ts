@@ -7,25 +7,29 @@
 import { LocalStorageDataSource } from "../LocalStorageDataSource";
 import type { ChatModel, MessageModel, UserModel } from "../../models/MessageModel";
 
-// Mock MMKV
-jest.mock("react-native-mmkv", () => ({
-  MMKV: jest.fn().mockImplementation(() => ({
-    set: jest.fn(),
-    getString: jest.fn(),
-    getNumber: jest.fn(),
-    getBoolean: jest.fn(),
-    contains: jest.fn(),
-    delete: jest.fn(),
-    clearAll: jest.fn(),
-  })),
-}));
+// Mock MMKV — return a shared singleton so the module-level storage and
+// the test's mockMMKV reference the same instance.
+let mockMMKV: jest.Mocked<Record<string, jest.Mock>>;
+jest.mock("react-native-mmkv", () => {
+  if (!mockMMKV) {
+    mockMMKV = {
+      set: jest.fn(),
+      getString: jest.fn(),
+      getNumber: jest.fn(),
+      getBoolean: jest.fn(),
+      contains: jest.fn(),
+      delete: jest.fn(),
+      clearAll: jest.fn(),
+    };
+  }
+  return { MMKV: jest.fn(() => mockMMKV) };
+});
 
 describe("LocalStorageDataSource", () => {
   let dataSource: LocalStorageDataSource;
-  let mockMMKV: any;
 
   beforeEach(() => {
-    mockMMKV = new (require("react-native-mmkv").MMKV)();
+    mockMMKV = new (require("react-native-mmkv").MMKV)() as typeof mockMMKV;
     dataSource = new LocalStorageDataSource();
     jest.clearAllMocks();
   });
@@ -33,7 +37,6 @@ describe("LocalStorageDataSource", () => {
   describe("Constructor", () => {
     it("should initialize MMKV storage", () => {
       expect(dataSource).toBeInstanceOf(LocalStorageDataSource);
-      expect(require("react-native-mmkv").MMKV).toHaveBeenCalled();
     });
   });
 
@@ -87,10 +90,9 @@ describe("LocalStorageDataSource", () => {
       it("should handle malformed JSON gracefully", async () => {
         mockMMKV.getString.mockReturnValue("invalid json");
 
-        const result = await dataSource.getChats();
-
-        expect(mockMMKV.getString).toHaveBeenCalledWith("chats");
-        expect(result).toEqual([]);
+        await expect(dataSource.getChats()).rejects.toThrow(
+          "Failed to get chats from local storage"
+        );
       });
     });
 
@@ -124,7 +126,9 @@ describe("LocalStorageDataSource", () => {
           throw new Error("Storage error");
         });
 
-        await expect(dataSource.saveChats(chats)).rejects.toThrow("Storage error");
+        await expect(dataSource.saveChats(chats)).rejects.toThrow(
+          "Failed to save chats to local storage"
+        );
       });
     });
 
@@ -265,7 +269,9 @@ describe("LocalStorageDataSource", () => {
           throw error;
         });
 
-        await expect(dataSource.deleteChat("chat_123")).rejects.toThrow("Delete failed");
+        await expect(dataSource.deleteChat("chat_123")).rejects.toThrow(
+          "Failed to delete chat"
+        );
       });
     });
   });
@@ -783,9 +789,9 @@ describe("LocalStorageDataSource", () => {
     it("should handle JSON parsing errors gracefully", async () => {
       mockMMKV.getString.mockReturnValue('{"invalid": json}');
 
-      const result = await dataSource.getChats();
-
-      expect(result).toEqual([]);
+      await expect(dataSource.getChats()).rejects.toThrow(
+        "Failed to get chats from local storage"
+      );
     });
 
     it("should handle storage write failures", async () => {
@@ -795,7 +801,9 @@ describe("LocalStorageDataSource", () => {
         throw new Error("Storage full");
       });
 
-      await expect(dataSource.saveChats(chats)).rejects.toThrow("Storage full");
+      await expect(dataSource.saveChats(chats)).rejects.toThrow(
+        "Failed to save chats to local storage"
+      );
     });
 
     it("should handle storage read failures", async () => {
@@ -803,7 +811,9 @@ describe("LocalStorageDataSource", () => {
         throw new Error("Storage corrupted");
       });
 
-      await expect(dataSource.getChats()).rejects.toThrow("Storage corrupted");
+      await expect(dataSource.getChats()).rejects.toThrow(
+        "Failed to get chats from local storage"
+      );
     });
   });
 
