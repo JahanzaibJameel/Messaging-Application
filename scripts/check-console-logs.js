@@ -1,1 +1,102 @@
-#!/usr/bin/env node\n\n/**\n * Console Log Check Script\n * Scans source files for console.log statements and fails if found in production\n * \n * Usage: node scripts/check-console-logs.js\n * \n * This script prevents accidental console.log statements from reaching production\n * which can cause performance issues and expose sensitive information.\n */\n\nconst fs = require('fs');\nconst path = require('path');\nconst glob = require('glob');\n\n// Configuration\nconst CONFIG = {\n  // File patterns to check\n  patterns: [\n    'client/src/**/*.{ts,tsx,js,jsx}',\n    'server/**/*.{ts,js}',\n  ],\n  // Patterns to ignore (test files, mocks, etc.)\n  ignorePatterns: [\n    '**/*.test.{ts,tsx,js,jsx}',\n    '**/*.spec.{ts,tsx,js,jsx}',\n    '**/__tests__/**',\n    '**/node_modules/**',\n    '**/dist/**',\n    '**/coverage/**',\n  ],\n  // Allowed console methods in production\n  allowedConsole: [\n    'console.warn', // Important warnings\n    'console.error', // Error logging\n  ],\n  // Console methods that should never be in production\n  forbiddenConsole: [\n    'console.log',\n    'console.info',\n    'console.debug',\n    'console.trace',\n    'console.table',\n    'console.group',\n    'console.groupEnd',\n    'console.groupCollapsed',\n  ],\n};\n\n/**\n * Check if a file should be analyzed\n */\nfunction shouldCheckFile(filePath) {\n  const relativePath = path.relative(process.cwd(), filePath);\n  \n  // Check if file matches ignore patterns\n  for (const ignorePattern of CONFIG.ignorePatterns) {\n    if (glob.sync(ignorePattern).includes(relativePath)) {\n      return false;\n    }\n  }\n  \n  return true;\n}\n\n/**\n * Extract console statements from file content\n */\nfunction extractConsoleStatements(content, filePath) {\n  const statements = [];\n  const lines = content.split('\\n');\n  \n  lines.forEach((line, index) => {\n    const lineNumber = index + 1;\n    const trimmedLine = line.trim();\n    \n    // Check for forbidden console methods\n    CONFIG.forbiddenConsole.forEach(method => {\n      if (trimmedLine.includes(method)) {\n        // Simple check to avoid false positives in comments\n        if (!trimmedLine.includes('//') || trimmedLine.indexOf(method) < trimmedLine.indexOf('//')) {\n          statements.push({\n            method,\n            line: lineNumber,\n            content: line.trim(),\n            filePath,\n          });\n        }\n      }\n    });\n  });\n  \n  return statements;\n}\n\n/**\n * Main function to check for console.log statements\n */\nfunction checkConsoleLogs() {\n  console.log('🔍 Checking for console.log statements...');\n  \n  let totalFiles = 0;\n  let filesWithIssues = 0;\n  const allIssues = [];\n  \n  // Process each pattern\n  for (const pattern of CONFIG.patterns) {\n    const files = glob.sync(pattern, { ignore: CONFIG.ignorePatterns });\n    \n    for (const filePath of files) {\n      if (!shouldCheckFile(filePath)) {\n        continue;\n      }\n      \n      try {\n        const content = fs.readFileSync(filePath, 'utf8');\n        const statements = extractConsoleStatements(content, filePath);\n        \n        if (statements.length > 0) {\n          filesWithIssues++;\n          allIssues.push(...statements);\n        }\n        \n        totalFiles++;\n      } catch (error) {\n        console.error(`Error reading file ${filePath}:`, error.message);\n      }\n    }\n  }\n  \n  // Report results\n  console.log(`\\n📊 Results:`);\n  console.log(`   Files checked: ${totalFiles}`);\n  console.log(`   Files with issues: ${filesWithIssues}`);\n  console.log(`   Total console statements found: ${allIssues.length}`);\n  \n  if (allIssues.length > 0) {\n    console.log('\\n❌ Console statements found:');\n    \n    // Group issues by file\n    const issuesByFile = {};\n    allIssues.forEach(issue => {\n      if (!issuesByFile[issue.filePath]) {\n        issuesByFile[issue.filePath] = [];\n      }\n      issuesByFile[issue.filePath].push(issue);\n    });\n    \n    // Display issues by file\n    Object.entries(issuesByFile).forEach(([filePath, issues]) => {\n      console.log(`\\n📁 ${filePath}:`);\n      issues.forEach(issue => {\n        console.log(`   Line ${issue.line}: ${issue.method}`);\n        console.log(`   ${issue.content}`);\n      });\n    });\n    \n    console.log('\\n💡 To fix these issues:');\n    console.log('   1. Remove console.log statements');\n    console.log('   2. Use proper logging library (e.g., winston, pino)');\n    console.log('   3. Add // eslint-disable-next-line no-console for necessary logs');\n    console.log('   4. Move debugging logs to test files');\n    \n    console.log('\\n❌ Check failed! Please remove console.log statements before committing.');\n    process.exit(1);\n  } else {\n    console.log('\\n✅ No console.log statements found!');\n    console.log('🎉 Check passed!');\n  }\n}\n\n// Run the check\nif (require.main === module) {\n  checkConsoleLogs();\n}\n\nmodule.exports = { checkConsoleLogs, CONFIG };
+#!/usr/bin/env node
+
+/**
+ * Console Log Check Script
+ * Scans client source files for console.log-style statements and fails if
+ * any are found outside of approved logging infrastructure.
+ *
+ * Usage: node scripts/check-console-logs.js
+ */
+
+const fs = require("fs");
+const path = require("path");
+const glob = require("glob");
+
+const CONFIG = {
+  // Scan client production code. The server intentionally logs via console.
+  patterns: ["client/src/**/*.{ts,tsx,js,jsx}"],
+  // Patterns to ignore (test files, mocks, logging infrastructure)
+  ignorePatterns: [
+    "**/*.test.{ts,tsx,js,jsx}",
+    "**/*.spec.{ts,tsx,js,jsx}",
+    "**/__tests__/**",
+    "**/test-utils/**",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/coverage/**",
+    "client/src/core/logger/**",
+    "client/src/utils/logger.ts",
+    "client/src/core/errorHandling/SentryBreadcrumbs.tsx",
+  ],
+  // Console methods that should never appear in production code paths
+  forbiddenConsole: [
+    "console.log",
+    "console.info",
+    "console.debug",
+    "console.trace",
+    "console.table",
+  ],
+};
+
+function listFiles() {
+  const files = new Set();
+  for (const pattern of CONFIG.patterns) {
+    for (const file of glob.sync(pattern, { ignore: CONFIG.ignorePatterns })) {
+      files.add(file);
+    }
+  }
+  return [...files];
+}
+
+function extractConsoleStatements(content) {
+  const statements = [];
+  const lines = content.split(/\r?\n/);
+
+  lines.forEach((line, index) => {
+    const withoutComments = line.split("//")[0];
+    CONFIG.forbiddenConsole.forEach((method) => {
+      if (withoutComments.includes(method)) {
+        statements.push({
+          method,
+          line: index + 1,
+          content: line.trim(),
+        });
+      }
+    });
+  });
+
+  return statements;
+}
+
+function checkConsoleLogs() {
+  const files = listFiles();
+  const allIssues = [];
+
+  for (const filePath of files) {
+    try {
+      const content = fs.readFileSync(filePath, "utf8");
+      allIssues.push(...extractConsoleStatements(content).map((issue) => ({ ...issue, filePath })));
+    } catch (error) {
+      console.error(`Error reading file ${filePath}:`, error.message);
+      process.exitCode = 1;
+    }
+  }
+
+  console.log(`Checked ${files.length} files for forbidden console statements.`);
+
+  if (allIssues.length > 0) {
+    console.error("\nForbidden console statements found:");
+    for (const issue of allIssues) {
+      console.error(`  ${issue.filePath}:${issue.line} ${issue.method}`);
+    }
+    process.exit(1);
+  }
+
+  console.log("No forbidden console statements found.");
+}
+
+if (require.main === module) {
+  checkConsoleLogs();
+}
+
+module.exports = { checkConsoleLogs, CONFIG };
