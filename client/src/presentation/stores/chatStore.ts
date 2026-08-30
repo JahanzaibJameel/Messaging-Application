@@ -8,23 +8,36 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { MMKV } from "react-native-mmkv";
 
-import type { Chat, GroupChat } from "@domain/entities/Chat";
-import { ChatEntity } from "@domain/entities/Chat";
-import type { Message } from "@domain/entities/Message";
+import type { Chat, GroupChat } from "@/domain/entities/Chat";
+import { ChatEntity } from "@/domain/entities/Chat";
+import type { Message } from "@/domain/entities/Message";
 import type { ChatState, ChatActions, EntityState } from "./types";
 
 const storage = new MMKV({ id: "chat-storage" });
 
 const mmkvStorage = {
   getItem: (name: string): string | null => {
-    const value = storage.getString(name);
-    return value ?? null;
+    try {
+      const value = storage.getString(name);
+      return value ?? null;
+    } catch {
+      // Storage read failures must not break hydration
+      return null;
+    }
   },
   setItem: (name: string, value: string): void => {
-    storage.set(name, value);
+    try {
+      storage.set(name, value);
+    } catch {
+      // Storage write failures must not crash store updates
+    }
   },
   removeItem: (name: string): void => {
-    storage.delete(name);
+    try {
+      storage.delete(name);
+    } catch {
+      // Ignore removal failures
+    }
   },
 };
 

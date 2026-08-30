@@ -2,9 +2,9 @@
  * Store types and interfaces
  */
 
-import type { User, UserSettings } from "@domain/entities/User";
-import type { Chat, GroupChat } from "@domain/entities/Chat";
-import type { Message } from "@domain/entities/Message";
+import type { User, UserSettings } from "@/domain/entities/User";
+import type { Chat, GroupChat } from "@/domain/entities/Chat";
+import type { Message } from "@/domain/entities/Message";
 
 // Normalized entity state
 export interface EntityState<T> {

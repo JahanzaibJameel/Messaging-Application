@@ -17,7 +17,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { MMKV } from "react-native-mmkv";
 
-import type { Message } from "@domain/entities/Message";
+import type { Message } from "@/domain/entities/Message";
 import type { MessageState, MessageActions, EntityState } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -27,9 +27,28 @@ import type { MessageState, MessageActions, EntityState } from "./types";
 const storage = new MMKV({ id: "message-storage" });
 
 const mmkvStorage = {
-  getItem: (name: string): string | null => storage.getString(name) ?? null,
-  setItem: (name: string, value: string): void => storage.set(name, value),
-  removeItem: (name: string): void => storage.delete(name),
+  getItem: (name: string): string | null => {
+    try {
+      return storage.getString(name) ?? null;
+    } catch {
+      // Storage read failures must not break hydration
+      return null;
+    }
+  },
+  setItem: (name: string, value: string): void => {
+    try {
+      storage.set(name, value);
+    } catch {
+      // Storage write failures must not crash store updates
+    }
+  },
+  removeItem: (name: string): void => {
+    try {
+      storage.delete(name);
+    } catch {
+      // Ignore removal failures
+    }
+  },
 };
 
 // ---------------------------------------------------------------------------
