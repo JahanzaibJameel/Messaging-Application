@@ -3,8 +3,8 @@
  */
 
 import { useChatStore } from "../chatStore";
-import { ChatEntity } from "@domain/entities/Chat";
-import { MessageEntity } from "@domain/entities/Message";
+import { ChatEntity } from "@/domain/entities/Chat";
+import { MessageEntity } from "@/domain/entities/Message";
 
 const emptyEntityState = { ids: [], entities: {} };
 
