@@ -41,7 +41,7 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
         if: steps.cache.outputs.cache-hit != 'true'
 
   type-check:
@@ -71,7 +71,7 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
         if: needs.setup.outputs.cache-hit != 'true'
 
       - name: Run TypeScript type check
@@ -104,7 +104,7 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
         if: needs.setup.outputs.cache-hit != 'true'
 
       - name: Run ESLint with zero warnings
@@ -140,7 +140,7 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
         if: needs.setup.outputs.cache-hit != 'true'
 
       - name: Run tests with coverage
@@ -165,30 +165,30 @@ jobs:
             
             # Fail if any metric is below 85%
             if (( $(echo "$LINES < 85" | bc -l) )); then
-              echo "❌ Lines coverage $LINES% is below 85%"
+              echo "âŒ Lines coverage $LINES% is below 85%"
               exit 1
             fi
             if (( $(echo "$BRANCHES < 85" | bc -l) )); then
-              echo "❌ Branches coverage $BRANCHES% is below 85%"
+              echo "âŒ Branches coverage $BRANCHES% is below 85%"
               exit 1
             fi
             if (( $(echo "$FUNCTIONS < 85" | bc -l) )); then
-              echo "❌ Functions coverage $FUNCTIONS% is below 85%"
+              echo "âŒ Functions coverage $FUNCTIONS% is below 85%"
               exit 1
             fi
             if (( $(echo "$STATEMENTS < 85" | bc -l) )); then
-              echo "❌ Statements coverage $STATEMENTS% is below 85%"
+              echo "âŒ Statements coverage $STATEMENTS% is below 85%"
               exit 1
             fi
             
-            echo "✅ All coverage thresholds met (≥85%)"
+            echo "âœ… All coverage thresholds met (â‰¥85%)"
           else
-            echo "❌ Coverage file not found"
+            echo "âŒ Coverage file not found"
             exit 1
           fi
 
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           file: ./coverage/lcov.info
           flags: unittests
@@ -222,7 +222,7 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
         if: needs.setup.outputs.cache-hit != 'true'
 
       - name: Measure Expo web export size
@@ -234,7 +234,7 @@ jobs:
           rm -rf dist
           npx expo export --platform web
           if [ ! -d dist ]; then
-            echo "❌ expo export did not produce a dist/ directory"
+            echo "âŒ expo export did not produce a dist/ directory"
             exit 1
           fi
           BUNDLE_SIZE_KB=$(du -sk dist | cut -f1)
@@ -244,10 +244,10 @@ jobs:
         run: |
           BUNDLE_SIZE=$(du -sk dist | cut -f1)
           if [ "$BUNDLE_SIZE" -gt "${{ env.BUNDLE_SIZE_LIMIT }}" ]; then
-            echo "❌ Expo web export size ${BUNDLE_SIZE}KB exceeds limit of ${{ env.BUNDLE_SIZE_LIMIT }}KB"
+            echo "âŒ Expo web export size ${BUNDLE_SIZE}KB exceeds limit of ${{ env.BUNDLE_SIZE_LIMIT }}KB"
             exit 1
           else
-            echo "✅ Expo web export size ${BUNDLE_SIZE}KB is within limit of ${{ env.BUNDLE_SIZE_LIMIT }}KB"
+            echo "âœ… Expo web export size ${BUNDLE_SIZE}KB is within limit of ${{ env.BUNDLE_SIZE_LIMIT }}KB"
           fi
 
   console-check:
@@ -277,7 +277,7 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
         if: needs.setup.outputs.cache-hit != 'true'
 
       - name: Check for console.log in production code
@@ -310,7 +310,7 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
         if: needs.setup.outputs.cache-hit != 'true'
 
       - name: Run dependency vulnerability audit
@@ -338,7 +338,7 @@ jobs:
           output: 'trivy-results.sarif'
 
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
@@ -373,11 +373,8 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
         if: needs.setup.outputs.cache-hit != 'true'
-
-      - name: Setup Expo CLI
-        run: npx expo-cli --version
 
       - name: Build for ${{ matrix.platform }}
         run: |
@@ -386,10 +383,10 @@ jobs:
               npm run build:web
               ;;
             android)
-              npx expo build:android --no-build --non-interactive
+              npx expo export --platform android
               ;;
             ios)
-              npx expo build:ios --no-build --non-interactive
+              npx expo export --platform ios
               ;;
           esac
 
