@@ -1,3 +1,4 @@
+export const DIAGNOSTIC_MARKER_V5 = "I_AM_THE_NEW_MOCK";
 export const getGenericPassword = jest.fn(() =>
   Promise.resolve({ username: "test", password: "test" })
 );
@@ -28,9 +29,7 @@ export const BIOMETRY_TYPE = {
   FINGERPRINT: "Fingerprint",
 };
 
-export const getSupportedBiometryType = jest.fn(() =>
-  Promise.resolve("TouchID" as const)
-);
+export const getSupportedBiometryType = jest.fn(() => Promise.resolve("TouchID" as const));
 
 export default {
   getGenericPassword,
