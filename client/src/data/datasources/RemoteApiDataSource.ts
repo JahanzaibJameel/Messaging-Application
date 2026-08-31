@@ -38,29 +38,29 @@ export class RemoteApiDataSource {
       headers["Authorization"] = `Bearer ${this.authToken}`;
     }
 
+    let response: Response;
     try {
-      const response = await fetch(url, {
+      response = await fetch(url, {
         ...options,
         headers,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        return await response.json();
-      }
-
-      return null as T;
     } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw AppError.network("API request failed", error as Error);
+      // Network-level failure (fetch rejected) — preserve the original message
+      // so callers can distinguish connectivity issues from API errors.
+      throw AppError.network((error as Error)?.message || "Network error occurred", error as Error);
     }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const contentType = response.headers?.get("content-type");
+    if (!contentType || contentType.includes("application/json")) {
+      return await response.json();
+    }
+
+    return null as T;
   }
 
   // Auth Operations
