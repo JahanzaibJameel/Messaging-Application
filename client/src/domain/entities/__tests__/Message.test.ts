@@ -17,13 +17,13 @@ describe("Message Entity", () => {
         type: "text",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       expect(message.id).toBe("msg_123");
       expect(message.chatId).toBe("chat_456");
       expect(message.senderId).toBe("user_789");
       expect(message.text).toBe("Hello world");
-      expect(message.timestamp).toBe("2024-01-01T00:00:00Z");
+      expect(message.timestamp).toEqual(new Date("2024-01-01T00:00:00Z"));
       expect(message.type).toBe("text");
       expect(message.status).toBe("sent");
       expect(message.localOnly).toBe(false);
@@ -46,7 +46,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       expect(message.type).toBe("image");
       expect(message.attachment).toEqual(attachment);
@@ -64,7 +64,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       expect(message.replyTo).toBe("msg_120");
     });
@@ -81,7 +81,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       expect(message.edited).toBe(true);
       expect(message.editedAt).toEqual(new Date("2024-01-01T00:30:00Z"));
@@ -103,9 +103,11 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
-      expect(message.reactions).toEqual(reactions);
+      expect(message.reactions).toEqual(
+        reactions.map((r) => ({ ...r, createdAt: new Date(r.createdAt) }))
+      );
       expect(message.reactions).toHaveLength(2);
     });
 
@@ -126,7 +128,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       expect(message.metadata).toEqual(metadata);
     });
@@ -141,7 +143,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "pending",
         localOnly: true,
-      };
+      });
 
       expect(message.localOnly).toBe(true);
       expect(message.status).toBe("pending");
@@ -159,7 +161,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       expect(message.type).toBe("text");
       expect(message.isTextMessage()).toBe(true);
@@ -183,7 +185,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       expect(message.type).toBe("image");
       expect(message.isTextMessage()).toBe(false);
@@ -209,7 +211,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       expect(message.type).toBe("video");
       expect(message.isVideoMessage()).toBe(true);
@@ -231,7 +233,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       expect(message.type).toBe("audio");
       expect(message.isAudioMessage()).toBe(true);
@@ -254,7 +256,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       expect(message.type).toBe("document");
       expect(message.isDocumentMessage()).toBe(true);
@@ -272,7 +274,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       expect(message.status).toBe("sent");
       expect(message.isSent()).toBe(true);
@@ -291,7 +293,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "delivered",
         localOnly: false,
-      };
+      });
 
       expect(message.status).toBe("delivered");
       expect(message.isSent()).toBe(false);
@@ -310,7 +312,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "read",
         localOnly: false,
-      };
+      });
 
       expect(message.status).toBe("read");
       expect(message.isSent()).toBe(false);
@@ -329,7 +331,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "failed",
         localOnly: false,
-      };
+      });
 
       expect(message.status).toBe("failed");
       expect(message.isSent()).toBe(false);
@@ -350,7 +352,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       expect(message.isFromUser("user_789")).toBe(true);
       expect(message.isFromUser("user_999")).toBe(false);
@@ -366,7 +368,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       expect(message.isEdited()).toBe(false);
 
@@ -374,7 +376,7 @@ describe("Message Entity", () => {
         ...message,
         edited: true,
         editedAt: "2024-01-01T00:30:00Z",
-      };
+      });
 
       expect(editedMessage.isEdited()).toBe(true);
     });
@@ -390,7 +392,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T11:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       const age = message.getAge(now);
       expect(age).toBe(3600000); // 1 hour in milliseconds
@@ -406,7 +408,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       const formatted = message.toDisplayText();
       expect(formatted).toBe("Display test");
@@ -425,7 +427,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       expect(message.reactions).toEqual([]);
       expect(message.reactions).toHaveLength(0);
@@ -442,7 +444,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       expect(message.metadata).toBeNull();
     });
@@ -458,7 +460,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       expect(message.metadata).toBeUndefined();
     });
@@ -474,7 +476,7 @@ describe("Message Entity", () => {
         timestamp: futureTime,
         status: "sent",
         localOnly: false,
-      };
+      });
 
       const age = message.getAge(futureTime);
       expect(age).toBe(0);
@@ -491,7 +493,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       expect(message.text).toBe(longText);
       expect(message.text.length).toBe(10000);
@@ -501,7 +503,7 @@ describe("Message Entity", () => {
   describe("Performance", () => {
     it("should handle large number of reactions efficiently", () => {
       const reactions = Array.from({ length: 1000 }, (_, i) => ({
-        userId: $user_${i}$,
+        userId: `user_${i}`,
         emoji: "Ã°Å¸â€˜Â",
         createdAt: "2024-01-01T00:00:00Z",
       }));
@@ -516,7 +518,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       const startTime = Date.now();
       const hasReaction = message.hasReactionFromUser("user_500");
@@ -536,7 +538,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       const startTime = Date.now();
       const json = message.toJSON();
@@ -559,7 +561,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       const json1 = message.toJSON();
       // Simulate text change (this would be done via methods in real implementation)
@@ -581,7 +583,7 @@ describe("Message Entity", () => {
         timestamp,
         status: "sent",
         localOnly: false,
-      };
+      });
 
       expect(message.timestamp).toEqual(new Date(timestamp));
       expect(message.getAge(timestamp)).toBe(0);
@@ -604,7 +606,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       expect(message.attachment).toEqual(validAttachment);
       expect(message.attachment.type).toBe("image");
@@ -622,7 +624,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       expect(message.text).toBe("Hello Ã°Å¸Å’Â Ã¤Â¸â€“Ã§â€¢Å’! ÃƒÂ±oÃƒÂ±o");
       expect(message.text.length).toBeGreaterThan(10);
@@ -638,7 +640,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       expect(message.text).toBe("x".repeat(1000000));
       expect(message.text.length).toBe(1000000);
@@ -660,7 +662,7 @@ describe("Message Entity", () => {
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
         localOnly: false,
-      };
+      });
 
       expect(message.metadata).toEqual(maliciousMetadata);
     });
