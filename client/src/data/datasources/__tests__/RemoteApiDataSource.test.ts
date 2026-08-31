@@ -10,6 +10,11 @@ describe("RemoteApiDataSource", () => {
   let dataSource: RemoteApiDataSource;
 
   beforeEach(() => {
+    // jsdom does not provide fetch; install a no-op spy target so tests can
+    // spy on / mock it per-case.
+    if (!global.fetch) {
+      (global as any).fetch = jest.fn();
+    }
     dataSource = new RemoteApiDataSource();
   });
 
