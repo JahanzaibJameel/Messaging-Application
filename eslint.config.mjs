@@ -1,7 +1,12 @@
+import { fileURLToPath } from "url";
+import { dirname, resolve } from "path";
 import expoConfig from "eslint-config-expo/flat.js";
 import prettierConfig from "eslint-config-prettier";
 import prettierPlugin from "eslint-plugin-prettier/recommended";
 import tsParser from "@typescript-eslint/parser";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export default [
   // Base Expo config
@@ -19,7 +24,7 @@ export default [
           jsx: true,
         },
         project: true,
-        tsconfigRootDir: "./",
+        tsconfigRootDir: resolve(__dirname),
       },
     },
     rules: {
