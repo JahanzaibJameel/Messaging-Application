@@ -22,6 +22,7 @@ const createMockWebSocket = () => {
 
   // Mock event simulation
   const simulateOpen = () => {
+    mockWebSocket.readyState = 1; // WebSocket.OPEN = 1
     if (mockWebSocket.onopen) mockWebSocket.onopen({} as Event);
     const openCallback = mockWebSocket.addEventListener.mock.calls.find(
       (call: any[]) => call[0] === "open"
@@ -65,7 +66,12 @@ const createMockWebSocket = () => {
 
 // Mock global WebSocket
 const mockWebSocketClass = jest.fn();
-global.WebSocket = mockWebSocketClass as any;
+global.WebSocket = Object.assign(mockWebSocketClass as any, {
+  CONNECTING: 0,
+  OPEN: 1,
+  CLOSING: 2,
+  CLOSED: 3,
+});
 
 describe("SimpleChatService", () => {
   let service: SimpleChatService;
@@ -104,10 +110,10 @@ describe("SimpleChatService", () => {
 
     it("should set up event listeners on connect", () => {
       service.connect();
-      expect(mockWebSocket.addEventListener).toHaveBeenCalledWith("open", expect.any(Function));
-      expect(mockWebSocket.addEventListener).toHaveBeenCalledWith("message", expect.any(Function));
-      expect(mockWebSocket.addEventListener).toHaveBeenCalledWith("close", expect.any(Function));
-      expect(mockWebSocket.addEventListener).toHaveBeenCalledWith("error", expect.any(Function));
+      expect(mockWebSocket.onopen).toEqual(expect.any(Function));
+      expect(mockWebSocket.onmessage).toEqual(expect.any(Function));
+      expect(mockWebSocket.onclose).toEqual(expect.any(Function));
+      expect(mockWebSocket.onerror).toEqual(expect.any(Function));
     });
 
     it("should report connected status after successful connection", () => {
