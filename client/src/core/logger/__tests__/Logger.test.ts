@@ -125,7 +125,7 @@ describe("Logger", () => {
 
     it("should log error messages", () => {
       const error = new Error("Test error");
-      logger.error("Error message", "test-context", { data: "test" }, error);
+      logger.error("Error message", error, "test-context", { data: "test" });
 
       expect(mockConsole.error).toHaveBeenCalledWith(
         expect.stringMatching(
@@ -138,7 +138,7 @@ describe("Logger", () => {
 
     it("should log fatal messages", () => {
       const error = new Error("Fatal error");
-      logger.fatal("Fatal message", "test-context", { data: "test" }, error);
+      logger.fatal("Fatal message", error, "test-context", { data: "test" });
 
       expect(mockConsole.error).toHaveBeenCalledWith(
         expect.stringMatching(
@@ -189,7 +189,6 @@ describe("Logger", () => {
       expect(mockConsole.debug).not.toHaveBeenCalled();
       expect(mockConsole.info).not.toHaveBeenCalled();
       expect(mockConsole.warn).not.toHaveBeenCalled();
-      expect(mockConsole.error).toHaveBeenCalledTimes(1);
       expect(mockConsole.error).toHaveBeenCalledTimes(2); // error + fatal
     });
 
@@ -304,7 +303,7 @@ describe("Logger", () => {
   describe("Log Entry Structure", () => {
     it("should create properly structured log entries", () => {
       const error = new Error("Test error");
-      logger.error("Error message", "test-context", { data: "test" }, error);
+      logger.error("Error message", error, "test-context", { data: "test" });
 
       const buffer = (logger as any).buffer;
       const entry = buffer[0];
@@ -488,8 +487,8 @@ describe("Logger", () => {
         logger.debug("debug");
         logger.info("info", "context");
         logger.warn("warn", "context", { data: "test" });
-        logger.error("error", "context", { data: "test" }, error);
-        logger.fatal("fatal", undefined, undefined, error);
+        logger.error("error", error, "context", { data: "test" });
+        logger.fatal("fatal", error, undefined, undefined);
       }).not.toThrow();
     });
   });
@@ -546,27 +545,27 @@ describe("Logger Convenience Functions", () => {
 
   it("should provide logError function", () => {
     const error = new Error("Test error");
-    logError("Error message", "context", { data: "test" }, error);
+    logError("Error message", error, "context", { data: "test" });
 
     expect(mockConsole.error).toHaveBeenCalledWith(
       expect.stringMatching(
-        /^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[ERROR\] \[\[object Object\]\]: Error message$/
+        /^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[ERROR\] \[context\]: Error message$/
       ),
-      error,
-      "context"
+      { data: "test" },
+      error
     );
   });
 
   it("should provide logFatal function", () => {
     const error = new Error("Fatal error");
-    logFatal("Fatal message", "context", { data: "test" }, error);
+    logFatal("Fatal message", error, "context", { data: "test" });
 
     expect(mockConsole.error).toHaveBeenCalledWith(
       expect.stringMatching(
-        /^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[FATAL\] \[\[object Object\]\]: Fatal message$/
+        /^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[FATAL\] \[context\]: Fatal message$/
       ),
-      error,
-      "context"
+      { data: "test" },
+      error
     );
   });
 
