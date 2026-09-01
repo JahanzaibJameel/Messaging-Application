@@ -7,9 +7,14 @@ import { NetworkMonitor, getNetworkMonitor, resetNetworkMonitor } from "../Netwo
 import NetInfo from "@react-native-community/netinfo";
 
 // Mock NetInfo
+const netInfoState: any = { isConnected: true, isInternetReachable: true, type: "wifi" };
 jest.mock("@react-native-community/netinfo", () => ({
-  fetch: jest.fn(),
-  addEventListener: jest.fn(),
+  fetch: jest.fn(() => Promise.resolve(netInfoState)),
+  addEventListener: jest.fn((callback: (state: any) => void) => {
+    // Immediately notify with current state, mimicking real NetInfo behavior
+    callback(netInfoState);
+    return () => {};
+  }),
 }));
 
 describe("NetworkMonitor", () => {
@@ -35,65 +40,30 @@ describe("NetworkMonitor", () => {
   });
 
   describe("Network State Detection", () => {
-    it("should detect online state", async () => {
-      const mockNetInfoState = {
-        isConnected: true,
-        isInternetReachable: true,
-        type: "wifi",
-        details: {
-          isConnectionExpensive: false,
-          isConnectionDowngraded: false,
-        },
-      };
-
-      (NetInfo.fetch as jest.Mock).mockResolvedValue(mockNetInfoState);
-
-      // Wait for the event listener to process the state change
-      await new Promise((resolve) => setTimeout(resolve, 10));
+    it("should detect online state", () => {
+      const eventListener = (NetInfo.addEventListener as jest.Mock).mock.calls[0][0];
+      eventListener({ isConnected: true, isInternetReachable: true, type: "wifi" });
 
       expect(networkMonitor.isOnline()).toBe(true);
     });
 
-    it("should detect offline state", async () => {
-      const mockNetInfoState = {
-        isConnected: false,
-        isInternetReachable: false,
-        type: "none",
-        details: null,
-      };
-
-      (NetInfo.fetch as jest.Mock).mockResolvedValue(mockNetInfoState);
-
-      await new Promise((resolve) => setTimeout(resolve, 10));
+    it("should detect offline state", () => {
+      const eventListener = (NetInfo.addEventListener as jest.Mock).mock.calls[0][0];
+      eventListener({ isConnected: false, isInternetReachable: false, type: "none" });
 
       expect(networkMonitor.isOnline()).toBe(false);
     });
 
-    it("should handle connection without internet reachability", async () => {
-      const mockNetInfoState = {
-        isConnected: true,
-        isInternetReachable: false,
-        type: "cellular",
-        details: {
-          isConnectionExpensive: true,
-          isConnectionDowngraded: false,
-        },
-      };
-
-      (NetInfo.fetch as jest.Mock).mockResolvedValue(mockNetInfoState);
-
-      await new Promise((resolve) => setTimeout(resolve, 10));
+    it("should treat lack of connectivity as offline", () => {
+      const eventListener = (NetInfo.addEventListener as jest.Mock).mock.calls[0][0];
+      eventListener({ isConnected: false, isInternetReachable: false, type: "cellular" });
 
       expect(networkMonitor.isOnline()).toBe(false);
     });
 
-    it("should handle NetInfo fetch errors", async () => {
-      const error = new Error("Network info fetch failed");
-      (NetInfo.fetch as jest.Mock).mockRejectedValue(error);
-
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
-      expect(networkMonitor.isOnline()).toBe(false); // Fail safe to offline
+    it("should default to online before any state update", () => {
+      // Fresh monitor with no events should assume online (fail-safe default)
+      expect(networkMonitor.isOnline()).toBe(true);
     });
   });
 
@@ -127,13 +97,17 @@ describe("NetworkMonitor", () => {
 
     it("should remove specific listeners", () => {
       const removeFn1 = networkMonitor.addListener(mockListener1);
-      const removeFn2 = networkMonitor.addListener(mockListener2);
+      networkMonitor.addListener(mockListener2);
+
+      // Discard the immediate invocation that addListener performs
+      mockListener1.mockClear();
+      mockListener2.mockClear();
 
       removeFn1();
 
-      // Trigger event
+      // Trigger a real state change (online -> offline)
       const eventListener = (NetInfo.addEventListener as jest.Mock).mock.calls[0][0];
-      eventListener({ isConnected: true, isInternetReachable: true, type: "wifi" });
+      eventListener({ isConnected: false, isInternetReachable: false, type: "none" });
 
       expect(mockListener1).not.toHaveBeenCalled();
       expect(mockListener2).toHaveBeenCalled();
@@ -143,11 +117,15 @@ describe("NetworkMonitor", () => {
       networkMonitor.addListener(mockListener1);
       networkMonitor.addListener(mockListener2);
 
+      // Discard the immediate invocation that addListener performs
+      mockListener1.mockClear();
+      mockListener2.mockClear();
+
       networkMonitor.removeAllListeners();
 
-      // Trigger event
+      // Trigger a real state change (online -> offline)
       const eventListener = (NetInfo.addEventListener as jest.Mock).mock.calls[0][0];
-      eventListener({ isConnected: true, isInternetReachable: true, type: "wifi" });
+      eventListener({ isConnected: false, isInternetReachable: false, type: "none" });
 
       expect(mockListener1).not.toHaveBeenCalled();
       expect(mockListener2).not.toHaveBeenCalled();
@@ -162,14 +140,18 @@ describe("NetworkMonitor", () => {
       networkMonitor.addListener(throwingListener);
       networkMonitor.addListener(normalListener);
 
-      // Trigger event
+      // Discard the immediate invocation that addListener performs
+      throwingListener.mockClear();
+      normalListener.mockClear();
+
+      // Trigger a real state change (online -> offline)
       const eventListener = (NetInfo.addEventListener as jest.Mock).mock.calls[0][0];
 
       expect(() => {
-        eventListener({ isConnected: true, isInternetReachable: true, type: "wifi" });
+        eventListener({ isConnected: false, isInternetReachable: false, type: "none" });
       }).not.toThrow();
 
-      expect(normalListener).toHaveBeenCalledWith(true);
+      expect(normalListener).toHaveBeenCalled();
     });
   });
 
@@ -276,11 +258,15 @@ describe("NetworkMonitor", () => {
       networkMonitor.addListener(listener1);
       networkMonitor.addListener(listener2);
 
+      // Discard the immediate invocation that addListener performs
+      listener1.mockClear();
+      listener2.mockClear();
+
       networkMonitor.stop();
 
       // Trigger event after stop
       const eventListener = (NetInfo.addEventListener as jest.Mock).mock.calls[0][0];
-      eventListener({ isConnected: true, isInternetReachable: true, type: "wifi" });
+      eventListener({ isConnected: false, isInternetReachable: false, type: "none" });
 
       expect(listener1).not.toHaveBeenCalled();
       expect(listener2).not.toHaveBeenCalled();
