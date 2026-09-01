@@ -29,7 +29,7 @@ export function Avatar({
   return (
     <View style={[styles.container, { width: avatarSize, height: avatarSize }]}>
       <Image
-        source={uri ? { uri } : require("../../assets/images/avatar-placeholder.png")}
+        source={uri ? { uri } : require("../../../assets/images/avatar-placeholder.png")}
         style={[
           styles.image,
           {
