@@ -66,6 +66,12 @@ describe("SyncEngine", () => {
       },
     };
 
+    // Store mocks mirror the zustand pattern: useStore.getState() returns state
+    mockSyncStore.getState = jest.fn(() => mockStoreStates.syncStore);
+    mockMessageStore.getState = jest.fn(() => mockStoreStates.messageStore);
+    mockChatStore.getState = jest.fn(() => mockStoreStates.chatStore);
+    mockUIStore.getState = jest.fn(() => mockStoreStates.uiStore);
+
     mockSyncStore.mockReturnValue(mockStoreStates.syncStore);
     mockMessageStore.mockReturnValue(mockStoreStates.messageStore);
     mockChatStore.mockReturnValue(mockStoreStates.chatStore);
