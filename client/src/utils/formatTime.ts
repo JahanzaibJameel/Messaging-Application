@@ -7,15 +7,7 @@
  * client/src/i18n/dateHelper.ts.
  */
 
-const DAY_NAMES = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 function toDate(timestamp: unknown): Date | null {
   if (timestamp instanceof Date) {
@@ -113,6 +105,20 @@ export function formatLastSeen(timestamp: string | Date | null | undefined): str
 
   return `last seen ${formatUtcShortDate(date)} at ${timeStr}`;
 }
+
+/** "h:mm AM/PM" in UTC, used for status timestamps. */
+export function formatStatusTime(timestamp: string | Date | null | undefined): string {
+  const date = toDate(timestamp);
+  if (!date) {
+    return "Invalid Date";
+  }
+  return formatUtc12Hour(date);
+}
+
+/**
+ * Formats a call duration as "m:ss". Negative durations keep the sign on
+ * the minute component (e.g. -10 seconds → "-1:50").
+ */
 
 /**
  * Formats a call duration as "m:ss". Negative durations keep the sign on
