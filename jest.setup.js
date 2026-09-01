@@ -11,6 +11,15 @@ jest.mock("react-native-reanimated", () => {
   return Reanimated;
 });
 
+// Mock react-native-clipboard
+jest.mock("@react-native-clipboard/clipboard", () => ({
+  getString: jest.fn(() => Promise.resolve("")),
+  setString: jest.fn(),
+  hasString: jest.fn(() => Promise.resolve(false)),
+  addListener: jest.fn(),
+  removeListeners: jest.fn(),
+}));
+
 // Mock NetInfo
 jest.mock("@react-native-community/netinfo", () => ({
   fetch: jest.fn(() => Promise.resolve({ isConnected: true, type: "wifi" })),
