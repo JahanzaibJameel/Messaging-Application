@@ -45,7 +45,11 @@ export class NetworkMonitor {
     this.listeners.add(callback);
 
     // Immediately call with current status
-    callback(this.isConnected);
+    try {
+      callback(this.isConnected);
+    } catch (error) {
+      logger.error("Network listener error", error as Error, "NetworkMonitor");
+    }
 
     return () => {
       this.listeners.delete(callback);
@@ -83,6 +87,8 @@ export class NetworkMonitor {
       this.unsubscribe = null;
     }
     this.removeAllListeners();
+    // Once monitoring stops we can no longer guarantee connectivity
+    this.isConnected = false;
   }
 }
 
