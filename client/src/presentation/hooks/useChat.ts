@@ -156,6 +156,7 @@ export function useChat(options: UseChatOptions = {}) {
   // Delete message
   const deleteMessageById = useCallback(
     async (messageId: string) => {
+      if (!chatId) return;
       try {
         await chatRepository.deleteMessage(messageId, chatId);
         deleteMessage(messageId);
