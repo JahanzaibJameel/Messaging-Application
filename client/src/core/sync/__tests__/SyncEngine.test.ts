@@ -13,16 +13,26 @@ import {
   useUIStore,
 } from "../../../presentation/stores";
 
-// Mock dependencies
-jest.mock("../NetworkMonitor");
+// Mock NetworkMonitor with a shared, controllable instance
+jest.mock("../NetworkMonitor", () => {
+  const mockInstance = {
+    mockIsOnline: jest.fn().mockReturnValue(true),
+    addListener: jest.fn().mockImplementation((callback) => {
+      mockInstance._lastCallback = callback;
+      return jest.fn();
+    }),
+    removeAllListeners: jest.fn(),
+    _lastCallback: null,
+  };
+  // Rename for the implementation's expected interface
+  (mockInstance as any).isOnline = mockInstance.mockIsOnline;
+  const MockedNetworkMonitor = jest.fn().mockImplementation(() => mockInstance);
+  (MockedNetworkMonitor as any)._instance = mockInstance;
+  return { NetworkMonitor: MockedNetworkMonitor };
+});
+
+// Mock stores
 jest.mock("../../../presentation/stores");
-
-const mockNetworkMonitor = NetworkMonitor as jest.MockedClass<typeof NetworkMonitor>;
-const mockSyncStore = useSyncStore as jest.MockedFunction<typeof useSyncStore>;
-const mockMessageStore = useMessageStore as jest.MockedFunction<typeof useMessageStore>;
-const mockChatStore = useChatStore as jest.MockedFunction<typeof useChatStore>;
-const mockUIStore = useUIStore as jest.MockedFunction<typeof useUIStore>;
-
 // Mock chat repository
 jest.mock("../../../data/repositories", () => ({
   chatRepository: {
@@ -31,12 +41,26 @@ jest.mock("../../../data/repositories", () => ({
   },
 }));
 
+const mockSyncStore = useSyncStore as jest.MockedFunction<typeof useSyncStore>;
+const mockMessageStore = useMessageStore as jest.MockedFunction<typeof useMessageStore>;
+const mockChatStore = useChatStore as jest.MockedFunction<typeof useChatStore>;
+const mockUIStore = useUIStore as jest.MockedFunction<typeof useUIStore>;
+
 describe("SyncEngine", () => {
   let syncEngine: SyncEngine;
   let mockStoreStates: any;
+  let mockNetworkMonitorInstance: any;
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // Get the shared mock instance
+    const NetworkMonitorModule = require("../NetworkMonitor");
+    mockNetworkMonitorInstance = NetworkMonitorModule.NetworkMonitor._instance;
+    // Reset mock instance methods
+    mockNetworkMonitorInstance.isOnline.mockReturnValue(true);
+    mockNetworkMonitorInstance.removeAllListeners.mockClear();
+    mockNetworkMonitorInstance._lastCallback = null;
 
     // Setup mock store states
     mockStoreStates = {
@@ -77,15 +101,8 @@ describe("SyncEngine", () => {
     mockChatStore.mockReturnValue(mockStoreStates.chatStore);
     mockUIStore.mockReturnValue(mockStoreStates.uiStore);
 
-    // Mock network monitor
-    mockNetworkMonitor.mockImplementation(() => ({
-      isOnline: jest.fn().mockReturnValue(true),
-      addListener: jest.fn(),
-      removeAllListeners: jest.fn(),
-    }));
-
     syncEngine = new SyncEngine({
-      syncInterval: 1000, // Short interval for tests
+      syncInterval: 1000,
       retryAttempts: 2,
       retryDelay: 100,
     });
@@ -106,7 +123,6 @@ describe("SyncEngine", () => {
       const customConfig = { syncInterval: 5000 };
       const engine = new SyncEngine(customConfig);
       engine.start();
-      // Should not throw with custom config
       expect(engine.getStatus()).toBe("idle");
       engine.stop();
     });
@@ -127,7 +143,7 @@ describe("SyncEngine", () => {
     it("should clear existing timer when starting", () => {
       syncEngine.start();
       const firstStatus = syncEngine.getStatus();
-      syncEngine.start(); // Start again
+      syncEngine.start();
       expect(syncEngine.getStatus()).toBe(firstStatus);
     });
 
@@ -168,22 +184,34 @@ describe("SyncEngine", () => {
     });
 
     it("should skip processing when already processing", async () => {
-      // Set processing flag by starting a long-running process
+      const { chatRepository } = require("../../../data/repositories");
+      let resolveSave: () => void;
+      chatRepository.saveMessage.mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveSave = resolve;
+          })
+      );
+
+      mockStoreStates.syncStore.pendingMessages = [{ messageId: mockMessage.id, retryCount: 0 }];
+      mockStoreStates.messageStore.getMessageById.mockReturnValue(mockMessage);
+
       const processPromise = syncEngine.processQueue();
+      // Allow the first processQueue to set isProcessing=true before the second call
+      await Promise.resolve();
       const secondProcessPromise = syncEngine.processQueue();
 
-      await Promise.all([processPromise, secondProcessPromise]);
-
-      // Should only process once
+      // Second call should be skipped
       expect(mockStoreStates.syncStore.setStatus).toHaveBeenCalledTimes(1);
+      expect(mockStoreStates.syncStore.setStatus).toHaveBeenLastCalledWith("syncing");
+
+      resolveSave!();
+      await processPromise;
+      await secondProcessPromise;
     });
 
     it("should skip processing when offline", async () => {
-      mockNetworkMonitor.mockImplementation(() => ({
-        isOnline: jest.fn().mockReturnValue(false),
-        addListener: jest.fn(),
-        removeAllListeners: jest.fn(),
-      }));
+      mockNetworkMonitorInstance.isOnline.mockReturnValue(false);
 
       await syncEngine.processQueue();
 
@@ -219,6 +247,7 @@ describe("SyncEngine", () => {
     });
 
     it("should handle message sync failure", async () => {
+      jest.useFakeTimers();
       const { chatRepository } = require("../../../data/repositories");
       const error = new Error("Network error");
       chatRepository.saveMessage.mockRejectedValue(error);
@@ -228,7 +257,11 @@ describe("SyncEngine", () => {
 
       await syncEngine.processQueue();
 
+      // retry is scheduled via setTimeout (retryCount+1 < retryAttempts=2)
+      jest.advanceTimersByTime(100);
+
       expect(mockStoreStates.syncStore.retryMessage).toHaveBeenCalledWith(mockMessage.id);
+      jest.useRealTimers();
     });
 
     it("should mark message as failed after max retries", async () => {
@@ -289,11 +322,7 @@ describe("SyncEngine", () => {
     });
 
     it("should skip full sync when offline", async () => {
-      mockNetworkMonitor.mockImplementation(() => ({
-        isOnline: jest.fn().mockReturnValue(false),
-        addListener: jest.fn(),
-        removeAllListeners: jest.fn(),
-      }));
+      mockNetworkMonitorInstance.isOnline.mockReturnValue(false);
 
       await syncEngine.sync();
 
@@ -328,37 +357,25 @@ describe("SyncEngine", () => {
 
   describe("Network Monitoring", () => {
     it("should setup network listener on construction", () => {
-      expect(mockNetworkMonitor.prototype.addListener).toHaveBeenCalled();
+      expect(mockNetworkMonitorInstance.addListener).toHaveBeenCalled();
     });
 
     it("should handle coming online", () => {
-      const mockAddListener = mockNetworkMonitor.prototype.addListener;
-      let onlineCallback: (isOnline: boolean) => void;
-
-      mockAddListener.mockImplementation((callback) => {
-        onlineCallback = callback;
-      });
-
-      new SyncEngine();
+      const callback = mockNetworkMonitorInstance._lastCallback;
+      expect(callback).toBeInstanceOf(Function);
 
       // Simulate coming online
-      onlineCallback(true);
+      callback(true);
 
       expect(mockStoreStates.syncStore.setStatus).toHaveBeenCalledWith("idle");
     });
 
     it("should handle going offline", () => {
-      const mockAddListener = mockNetworkMonitor.prototype.addListener;
-      let onlineCallback: (isOnline: boolean) => void;
-
-      mockAddListener.mockImplementation((callback) => {
-        onlineCallback = callback;
-      });
-
-      new SyncEngine();
+      const callback = mockNetworkMonitorInstance._lastCallback;
+      expect(callback).toBeInstanceOf(Function);
 
       // Simulate going offline
-      onlineCallback(false);
+      callback(false);
 
       expect(mockStoreStates.syncStore.setStatus).toHaveBeenCalledWith("offline");
     });
@@ -386,7 +403,7 @@ describe("SyncEngine", () => {
       syncEngine.start();
       syncEngine.destroy();
 
-      expect(mockNetworkMonitor.prototype.removeAllListeners).toHaveBeenCalled();
+      expect(mockNetworkMonitorInstance.removeAllListeners).toHaveBeenCalled();
     });
 
     it("should not process after destroy", async () => {
@@ -420,7 +437,14 @@ describe("SyncEngine", () => {
       chatRepository.saveMessage.mockRejectedValue(error);
 
       mockStoreStates.syncStore.pendingMessages = [{ messageId: "msg_123", retryCount: 0 }];
-      const mockMessage = { id: "msg_123", chatId: "chat_456" };
+      const mockMessage = {
+        id: "msg_123",
+        chatId: "chat_456",
+        senderId: "user_789",
+        text: "Test",
+        timestamp: "2024-01-01T00:00:00Z",
+        status: "pending" as const,
+      };
       mockStoreStates.messageStore.getMessageById.mockReturnValue(mockMessage);
 
       await syncEngine.processQueue();
@@ -430,6 +454,7 @@ describe("SyncEngine", () => {
     });
 
     it("should maintain processing state correctly", async () => {
+      jest.useFakeTimers();
       const { chatRepository } = require("../../../data/repositories");
 
       // Mock slow operation
@@ -438,6 +463,16 @@ describe("SyncEngine", () => {
         return new Promise((resolve) => {
           resolvePromise = resolve;
         });
+      });
+
+      mockStoreStates.syncStore.pendingMessages = [{ messageId: "msg_123", retryCount: 0 }];
+      mockStoreStates.messageStore.getMessageById.mockReturnValue({
+        id: "msg_123",
+        chatId: "chat_456",
+        senderId: "user_789",
+        text: "Test",
+        timestamp: "2024-01-01T00:00:00Z",
+        status: "pending",
       });
 
       const processPromise1 = syncEngine.processQueue();
@@ -453,6 +488,7 @@ describe("SyncEngine", () => {
       // Now should be able to process again
       await processPromise2;
       expect(mockStoreStates.syncStore.setStatus).toHaveBeenCalledTimes(2);
+      jest.useRealTimers();
     });
   });
 });
