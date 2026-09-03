@@ -157,7 +157,7 @@ export function useChat(options: UseChatOptions = {}) {
   const deleteMessageById = useCallback(
     async (messageId: string) => {
       try {
-        await chatRepository.deleteMessage(messageId);
+        await chatRepository.deleteMessage(messageId, chatId);
         deleteMessage(messageId);
         showToast({
           type: "success",
