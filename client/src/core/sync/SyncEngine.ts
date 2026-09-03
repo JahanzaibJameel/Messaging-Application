@@ -116,7 +116,7 @@ export class SyncEngine {
    * Process the sync queue
    */
   async processQueue(): Promise<void> {
-    if (this.isProcessing || !this.networkMonitor.isOnline()) {
+    if (this.isDestroyed || this.isProcessing || !this.networkMonitor.isOnline()) {
       return;
     }
 
@@ -199,7 +199,7 @@ export class SyncEngine {
    * Full sync with server
    */
   async sync(): Promise<void> {
-    if (!this.networkMonitor.isOnline()) {
+    if (this.isDestroyed || !this.networkMonitor.isOnline()) {
       return;
     }
 
