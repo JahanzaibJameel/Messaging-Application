@@ -6,7 +6,8 @@ import { Avatar } from "@/components/Avatar";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing } from "@/constants/theme";
-import { Status, User } from "@/types";
+import { Status } from "@/domain/entities/Status";
+import { User } from "@/domain/entities/User";
 import { formatStatusTime } from "@/utils/formatTime";
 
 interface StatusItemProps {
