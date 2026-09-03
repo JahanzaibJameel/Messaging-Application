@@ -91,7 +91,15 @@ export class SimpleChatService implements ChatService {
               messageLength: message.text.length,
             });
 
-            this.messageCallbacks.forEach((callback) => callback(message));
+            this.messageCallbacks.forEach((callback) => {
+              try {
+                callback(message);
+              } catch (callbackError) {
+                addWebSocketBreadcrumb("message_callback_error", {
+                  error: String(callbackError),
+                });
+              }
+            });
           } else if (data.type === "history") {
             addWebSocketBreadcrumb("history_received", {
               messageCount: data.messages?.length || 0,
@@ -105,7 +113,15 @@ export class SimpleChatService implements ChatService {
                 timestamp: new Date(msg.timestamp),
                 chatId: msg.chatId,
               };
-              this.messageCallbacks.forEach((callback) => callback(message));
+              this.messageCallbacks.forEach((callback) => {
+                try {
+                  callback(message);
+                } catch (callbackError) {
+                  addWebSocketBreadcrumb("message_callback_error", {
+                    error: String(callbackError),
+                  });
+                }
+              });
             });
           }
         } catch (error) {
