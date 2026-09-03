@@ -6,7 +6,8 @@ import { Avatar } from "@/components/Avatar";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing } from "@/constants/theme";
-import { Call, User } from "@/types";
+import { Call } from "@/domain/entities/Call";
+import { User } from "@/domain/entities/User";
 import { formatChatListTime, formatCallDuration } from "@/utils/formatTime";
 
 interface CallItemProps {
