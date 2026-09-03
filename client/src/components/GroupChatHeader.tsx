@@ -5,7 +5,7 @@ import { Avatar } from "@/components/Avatar";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing } from "@/constants/theme";
-import { GroupChat } from "@/types";
+import { GroupChat } from "@/domain/entities/Chat";
 import { useAuthStore } from "@/presentation/stores";
 
 interface GroupChatHeaderProps {
