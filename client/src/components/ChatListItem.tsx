@@ -7,7 +7,8 @@ import { Avatar } from "@/components/Avatar";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { Chat, User } from "@/types";
+import { Chat } from "@/domain/entities/Chat";
+import { User } from "@/domain/entities/User";
 import { formatChatListTime } from "@/utils/formatTime";
 
 interface ChatListItemProps {
