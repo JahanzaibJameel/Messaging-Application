@@ -31,7 +31,7 @@ export class LocalStorageDataSource {
     this.storage = storage;
   }
 
-  private safeParse<T>(data: string | null): T | null {
+  private safeParse<T>(data: string | null | undefined): T | null {
     if (!data) return null;
     try {
       return JSON.parse(data);
