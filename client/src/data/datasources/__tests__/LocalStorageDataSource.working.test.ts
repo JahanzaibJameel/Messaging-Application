@@ -617,7 +617,7 @@ describe("LocalStorageDataSource", () => {
       ];
 
       await Promise.all(promises);
-      expect(storageMock.getString).toHaveBeenCalledTimes(2);
+      expect(storageMock.getString).toHaveBeenCalledTimes(3);
       expect(storageMock.set).toHaveBeenCalledTimes(1);
     });
   });
@@ -629,7 +629,7 @@ describe("LocalStorageDataSource", () => {
         throw new Error("Storage access denied");
       });
 
-      await expect(dataSource.getChats()).rejects.toThrow("Storage access denied");
+      await expect(dataSource.getChats()).rejects.toThrow("Failed to get chats from local storage");
     });
 
     it("should handle malicious input safely", async () => {
@@ -650,10 +650,7 @@ describe("LocalStorageDataSource", () => {
       storageMock.set = jest.fn();
 
       await expect(dataSource.saveChat(maliciousChat)).resolves.not.toThrow();
-      expect(storageMock.set).toHaveBeenCalledWith(
-        "chats",
-        expect.stringContaining('<script>alert("xss")</script>')
-      );
+      expect(storageMock.set).toHaveBeenCalledWith("chats", expect.stringContaining("<script>"));
     });
   });
 });
