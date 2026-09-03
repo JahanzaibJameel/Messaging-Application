@@ -17,7 +17,7 @@ export interface ChatRepository {
   save(chat: Chat): Promise<void>;
   saveMessage(message: Message): Promise<void>;
   updateMessage(message: Message): Promise<void>;
-  deleteMessage(messageId: string): Promise<void>;
+  deleteMessage(messageId: string, chatId: string): Promise<void>;
   markAsRead(chatId: string): Promise<void>;
 
   // Group operations
