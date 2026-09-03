@@ -419,10 +419,9 @@ describe("SimpleChatService", () => {
       });
       const normalCallback = jest.fn();
 
+      service.connect();
       service.onMessage(errorCallback);
       service.onMessage(normalCallback);
-
-      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
 
       simulateMessage(
         JSON.stringify({
@@ -436,16 +435,13 @@ describe("SimpleChatService", () => {
       );
 
       expect(normalCallback).toHaveBeenCalled();
-      // Error should be caught and not crash the service
-      expect(() => service.connect()).not.toThrow();
-
-      consoleSpy.mockRestore();
     });
   });
 
   describe("Type Safety", () => {
     it("should maintain correct ChatMessage interface", () => {
       const callback = jest.fn();
+      service.connect();
       service.onMessage(callback);
 
       const messageData = {
