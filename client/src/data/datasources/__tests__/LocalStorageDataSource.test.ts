@@ -90,9 +90,9 @@ describe("LocalStorageDataSource", () => {
       it("should handle malformed JSON gracefully", async () => {
         mockMMKV.getString.mockReturnValue("invalid json");
 
-        await expect(dataSource.getChats()).rejects.toThrow(
-          "Failed to get chats from local storage"
-        );
+        const result = await dataSource.getChats();
+
+        expect(result).toEqual([]);
       });
     });
 
@@ -269,9 +269,7 @@ describe("LocalStorageDataSource", () => {
           throw error;
         });
 
-        await expect(dataSource.deleteChat("chat_123")).rejects.toThrow(
-          "Failed to delete chat"
-        );
+        await expect(dataSource.deleteChat("chat_123")).rejects.toThrow("Failed to delete chat");
       });
     });
   });
@@ -308,9 +306,9 @@ describe("LocalStorageDataSource", () => {
 
         mockMMKV.getString.mockReturnValue(JSON.stringify(messages));
 
-        const result = await dataSource.getMessages();
+        const result = await dataSource.getMessages("chat_456");
 
-        expect(mockMMKV.getString).toHaveBeenCalledWith("messages");
+        expect(mockMMKV.getString).toHaveBeenCalledWith("messages_chat_456");
         expect(result).toEqual(messages);
         expect(result).toHaveLength(2);
       });
@@ -318,7 +316,7 @@ describe("LocalStorageDataSource", () => {
       it("should return empty array when no messages exist", async () => {
         mockMMKV.getString.mockReturnValue(undefined);
 
-        const result = await dataSource.getMessages();
+        const result = await dataSource.getMessages("chat_456");
 
         expect(result).toEqual([]);
         expect(result).toHaveLength(0);
@@ -344,9 +342,9 @@ describe("LocalStorageDataSource", () => {
 
         mockMMKV.set.mockReturnValue(true);
 
-        await dataSource.saveMessages(messages);
+        await dataSource.saveMessages("chat_456", messages);
 
-        expect(mockMMKV.set).toHaveBeenCalledWith("messages", JSON.stringify(messages));
+        expect(mockMMKV.set).toHaveBeenCalledWith("messages_chat_456", JSON.stringify(messages));
       });
     });
 
@@ -371,7 +369,7 @@ describe("LocalStorageDataSource", () => {
 
         await dataSource.saveMessage(message);
 
-        expect(mockMMKV.set).toHaveBeenCalledWith("messages", JSON.stringify([message]));
+        expect(mockMMKV.set).toHaveBeenCalledWith("messages_chat_456", JSON.stringify([message]));
       });
 
       it("should update existing message", async () => {
@@ -394,77 +392,51 @@ describe("LocalStorageDataSource", () => {
 
         await dataSource.saveMessage(updatedMessage);
 
-        expect(mockMMKV.set).toHaveBeenCalledWith("messages", JSON.stringify([updatedMessage]));
+        expect(mockMMKV.set).toHaveBeenCalledWith(
+          "messages_chat_456",
+          JSON.stringify([updatedMessage])
+        );
       });
     });
 
     describe("getMessagesByChatId", () => {
       it("should retrieve messages for specific chat", async () => {
-        const messages: MessageModel[] = [
-          {
-            id: "msg_1",
-            chatId: "chat_456",
-            senderId: "user_1",
-            type: "text",
-            text: "Message 1",
-            timestamp: "2024-01-01T00:00:00Z",
-            status: "sent",
-            reactions: [],
-            edited: false,
-            localOnly: false,
-          },
-          {
-            id: "msg_2",
-            chatId: "chat_456",
-            senderId: "user_2",
-            type: "text",
-            text: "Message 2",
-            timestamp: "2024-01-01T01:00:00Z",
-            status: "sent",
-            reactions: [],
-            edited: false,
-            localOnly: false,
-          },
-          {
-            id: "msg_3",
-            chatId: "chat_789",
-            senderId: "user_3",
-            type: "text",
-            text: "Different chat message",
-            timestamp: "2024-01-01T02:00:00Z",
-            status: "sent",
-            reactions: [],
-            edited: false,
-            localOnly: false,
-          },
-        ];
+        const message1: MessageModel = {
+          id: "msg_1",
+          chatId: "chat_456",
+          senderId: "user_1",
+          type: "text",
+          text: "Message 1",
+          timestamp: "2024-01-01T00:00:00Z",
+          status: "sent",
+          reactions: [],
+          edited: false,
+          localOnly: false,
+        };
+        const message2: MessageModel = {
+          id: "msg_2",
+          chatId: "chat_456",
+          senderId: "user_2",
+          type: "text",
+          text: "Message 2",
+          timestamp: "2024-01-01T01:00:00Z",
+          status: "sent",
+          reactions: [],
+          edited: false,
+          localOnly: false,
+        };
 
-        mockMMKV.getString.mockReturnValue(JSON.stringify(messages));
+        mockMMKV.getString.mockReturnValue(JSON.stringify([message1, message2]));
 
         const result = await dataSource.getMessagesByChatId("chat_456");
 
+        expect(mockMMKV.getString).toHaveBeenCalledWith("messages_chat_456");
+        expect(result).toEqual([message1, message2]);
         expect(result).toHaveLength(2);
-        expect(result[0].id).toBe("msg_1");
-        expect(result[1].id).toBe("msg_2");
       });
 
       it("should return empty array for chat with no messages", async () => {
-        const messages: MessageModel[] = [
-          {
-            id: "msg_1",
-            chatId: "chat_789",
-            senderId: "user_3",
-            type: "text",
-            text: "Different chat message",
-            timestamp: "2024-01-01T02:00:00Z",
-            status: "sent",
-            reactions: [],
-            edited: false,
-            localOnly: false,
-          },
-        ];
-
-        mockMMKV.getString.mockReturnValue(JSON.stringify(messages));
+        mockMMKV.getString.mockReturnValue(undefined);
 
         const result = await dataSource.getMessagesByChatId("chat_456");
 
@@ -503,9 +475,9 @@ describe("LocalStorageDataSource", () => {
         mockMMKV.getString.mockReturnValue(JSON.stringify([message1, message2]));
         mockMMKV.set.mockReturnValue(true);
 
-        await dataSource.deleteMessage("msg_1");
+        await dataSource.deleteMessage("chat_456", "msg_1");
 
-        expect(mockMMKV.set).toHaveBeenCalledWith("messages", JSON.stringify([message2]));
+        expect(mockMMKV.set).toHaveBeenCalledWith("messages_chat_456", JSON.stringify([message2]));
       });
     });
 
@@ -538,12 +510,11 @@ describe("LocalStorageDataSource", () => {
           },
         ];
 
-        mockMMKV.getString.mockReturnValue(JSON.stringify(messages));
-        mockMMKV.set.mockReturnValue(true);
+        mockMMKV.delete.mockReturnValue(true);
 
         await dataSource.clearMessagesByChatId("chat_456");
 
-        expect(mockMMKV.set).toHaveBeenCalledWith("messages", JSON.stringify([messages[1]]));
+        expect(mockMMKV.delete).toHaveBeenCalledWith("messages_chat_456");
       });
     });
   });
@@ -789,9 +760,9 @@ describe("LocalStorageDataSource", () => {
     it("should handle JSON parsing errors gracefully", async () => {
       mockMMKV.getString.mockReturnValue('{"invalid": json}');
 
-      await expect(dataSource.getChats()).rejects.toThrow(
-        "Failed to get chats from local storage"
-      );
+      const result = await dataSource.getChats();
+
+      expect(result).toEqual([]);
     });
 
     it("should handle storage write failures", async () => {
@@ -811,9 +782,7 @@ describe("LocalStorageDataSource", () => {
         throw new Error("Storage corrupted");
       });
 
-      await expect(dataSource.getChats()).rejects.toThrow(
-        "Failed to get chats from local storage"
-      );
+      await expect(dataSource.getChats()).rejects.toThrow("Failed to get chats from local storage");
     });
   });
 
