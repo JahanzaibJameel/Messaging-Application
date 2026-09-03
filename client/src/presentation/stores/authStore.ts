@@ -10,8 +10,11 @@ import { MMKV } from "react-native-mmkv";
 
 import type { User } from "../../domain/entities/User";
 import { UserEntity } from "../../domain/entities/User";
+import type { UserModel } from "../../data/models/MessageModel";
 import type { AuthState, AuthActions } from "./types";
 import { logger } from "../../core/logger";
+import { remoteApiDataSource } from "../../data/datasources/RemoteApiDataSource";
+import { setToken, resetToken } from "../../security/keychain";
 
 const storage = new MMKV({ id: "auth-storage" });
 
@@ -35,6 +38,7 @@ const initialState: AuthState = {
   isAuthenticated: false,
   isLoading: true,
   error: null,
+  pendingPhone: undefined,
 };
 
 export const useAuthStore = create<AuthStore>()(
@@ -52,13 +56,16 @@ export const useAuthStore = create<AuthStore>()(
           try {
             logger.info("Sending OTP request", "Auth", { phone });
 
-            // TODO: Replace with actual API call when backend is ready
-            // const response = await apiClient.post('/auth/login', { phone });
+            const response = await remoteApiDataSource.login(phone);
+            
+            if (!response.success) {
+              throw new Error("Failed to send OTP");
+            }
 
             set((state: AuthState) => {
+              state.pendingPhone = phone;
               state.isLoading = false;
             });
-
             logger.info("OTP request sent successfully", "Auth");
           } catch (error) {
             const message = error instanceof Error ? error.message : "Login failed";
@@ -80,9 +87,6 @@ export const useAuthStore = create<AuthStore>()(
           try {
             logger.info("Verifying OTP", "Auth");
 
-            // TODO: Replace with actual API call when backend is ready
-            // const response = await apiClient.post('/auth/verify', { phone, otp });
-
             // Validate OTP format
             if (otp.length !== 6 || !/^\d+$/.test(otp)) {
               set((state: AuthState) => {
@@ -92,23 +96,42 @@ export const useAuthStore = create<AuthStore>()(
               return false;
             }
 
-            // Create user entity (in production, this comes from API)
-            const user = new UserEntity({
-              id: `user_${Date.now()}`,
-              name: "You",
-              phone: get().currentUser?.phone || "",
-              isOnline: true,
-              createdAt: new Date(),
-              updatedAt: new Date(),
+            const phone = get().pendingPhone;
+            if (!phone) {
+              throw new Error("No pending phone number found. Please request OTP again.");
+            }
+
+            const response = await remoteApiDataSource.verifyOtp(phone, otp);
+            
+            if (!response.success) {
+              throw new Error(response.data?.error || "Verification failed");
+            }
+
+            const { token, user } = response.data;
+
+            // Store token securely
+            await setToken(token);
+
+            // Create user entity from API response
+            const userEntity = new UserEntity({
+              id: user.id,
+              name: user.name,
+              phone: user.phone,
+              avatar: user.avatar,
+              isOnline: user.isOnline,
+              lastSeen: user.lastSeen ? new Date(user.lastSeen) : undefined,
+              status: user.status,
+              createdAt: user.createdAt ? new Date(user.createdAt) : new Date(),
+              updatedAt: user.updatedAt ? new Date(user.updatedAt) : new Date(),
             });
 
             set((state: AuthState) => {
-              state.currentUser = user;
+              state.currentUser = userEntity;
               state.isAuthenticated = true;
               state.isLoading = false;
             });
 
-            logger.info("OTP verified successfully", "Auth", { userId: user.id });
+            logger.info("OTP verified successfully", "Auth", { userId: userEntity.id });
             return true;
           } catch (error) {
             const message = error instanceof Error ? error.message : "Verification failed";
@@ -130,8 +153,10 @@ export const useAuthStore = create<AuthStore>()(
           try {
             logger.info("Logging out", "Auth");
 
-            // TODO: Replace with actual API call when backend is ready
-            // await apiClient.post('/auth/logout');
+            await remoteApiDataSource.logout();
+            
+            // Clear tokens from secure storage
+            await resetToken();
 
             set((state: AuthState) => {
               state.currentUser = null;
