@@ -26,7 +26,7 @@ export class RemoteApiDataSource {
     this.authToken = token;
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`;
 
     const headers: Record<string, string> = {
@@ -47,35 +47,45 @@ export class RemoteApiDataSource {
     } catch (error) {
       // Network-level failure (fetch rejected) — preserve the original message
       // so callers can distinguish connectivity issues from API errors.
-      throw AppError.network((error as Error)?.message || "Network error occurred", error as Error);
+      throw new Error((error as Error)?.message || "Network error occurred");
+    }
+
+    let data: T | null = null;
+    try {
+      const responseText = await response.text();
+      if (responseText) {
+        data = JSON.parse(responseText);
+      }
+    } catch {
+      // If not JSON, return as null
     }
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      const errorData = data as { error?: string; message?: string } | null;
+      throw new Error(errorData?.error || errorData?.message || `HTTP ${response.status}: ${response.statusText}`);
     }
 
-    const contentType = response.headers?.get("content-type");
-    if (!contentType || contentType.includes("application/json")) {
-      return await response.json();
-    }
-
-    return null as T;
+    return {
+      data: data as T,
+      success: true,
+    };
   }
 
   // Auth Operations
-  async login(phone: string): Promise<{ otpSent: boolean }> {
-    return this.request("/auth/login", {
+  async login(phone: string): Promise<{ success: boolean }> {
+    const response = await this.request<boolean>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ phone }),
     });
+    return { success: response.success };
   }
 
-  async verifyOtp(phone: string, otp: string): Promise<{ token: string; user: UserModel }> {
-    return this.request("/auth/verify", {
+  async verifyOtp(phone: string, otp: string): Promise<{ success: boolean; data: { token: string; user: UserModel } }> {
+    const response = await this.request<{ token: string; user: UserModel }>("/auth/verify", {
       method: "POST",
       body: JSON.stringify({ phone, otp }),
     });
+    return { success: response.success, data: response.data };
   }
 
   async logout(): Promise<void> {
