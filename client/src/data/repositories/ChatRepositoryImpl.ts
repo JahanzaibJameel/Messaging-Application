@@ -89,7 +89,7 @@ export class ChatRepositoryImpl implements ChatRepository {
     await this.localDataSource.saveMessage(messageModel);
   }
 
-  async deleteMessage(messageId: string, chatId?: string): Promise<void> {
+  async deleteMessage(messageId: string, chatId: string): Promise<void> {
     await this.localDataSource.deleteMessage(chatId, messageId);
 
     try {
