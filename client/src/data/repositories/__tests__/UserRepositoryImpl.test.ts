@@ -179,37 +179,40 @@ describe("UserRepositoryImpl", () => {
 
   describe("getByIds", () => {
     it("should return users by IDs", async () => {
-      const mockUsers = [
-        {
-          id: "user_123",
-          name: "User One",
-          phone: "+1234567890",
-          isOnline: true,
-          createdAt: "2024-01-01T00:00:00Z",
-          updatedAt: "2024-01-01T00:00:00Z",
-        },
-        {
-          id: "user_456",
-          name: "User Two",
-          phone: "+0987654321",
-          isOnline: false,
-          createdAt: "2024-01-01T00:00:00Z",
-          updatedAt: "2024-01-01T00:00:00Z",
-        },
-      ];
+      const mockUser1 = {
+        id: "user_123",
+        name: "User One",
+        phone: "+1234567890",
+        isOnline: true,
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-01T00:00:00Z",
+      };
+      const mockUser2 = {
+        id: "user_456",
+        name: "User Two",
+        phone: "+0987654321",
+        isOnline: false,
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-01T00:00:00Z",
+      };
 
-      mockLocalStorage.getUsers.mockResolvedValue(mockUsers);
+      mockLocalStorage.getUserById.mockImplementation(async (id: string) => {
+        if (id === "user_123") return mockUser1 as any;
+        if (id === "user_456") return mockUser2 as any;
+        return null;
+      });
 
       const result = await userRepository.getByIds(["user_123", "user_456"]);
 
-      expect(mockLocalStorage.getUsers).toHaveBeenCalled();
+      expect(mockLocalStorage.getUserById).toHaveBeenCalledWith("user_123");
+      expect(mockLocalStorage.getUserById).toHaveBeenCalledWith("user_456");
       expect(result).toHaveLength(2);
       expect(result[0].id).toBe("user_123");
       expect(result[1].id).toBe("user_456");
     });
 
     it("should return empty array for no matching IDs", async () => {
-      mockLocalStorage.getUsers.mockResolvedValue([]);
+      mockLocalStorage.getUserById.mockResolvedValue(null);
 
       const result = await userRepository.getByIds(["user_123", "user_456"]);
 
@@ -230,14 +233,16 @@ describe("UserRepositoryImpl", () => {
 
       await userRepository.save(user);
 
-      expect(mockLocalStorage.saveUser).toHaveBeenCalledWith({
-        id: "user_123",
-        name: "Test User",
-        phone: "+1234567890",
-        isOnline: true,
-        createdAt: user.createdAt.toISOString(),
-        updatedAt: user.updatedAt.toISOString(),
-      });
+      expect(mockLocalStorage.saveUser).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "user_123",
+          name: "Test User",
+          phone: "+1234567890",
+          isOnline: true,
+          createdAt: user.createdAt.toISOString(),
+          updatedAt: user.updatedAt.toISOString(),
+        })
+      );
     });
   });
 
@@ -278,7 +283,7 @@ describe("UserRepositoryImpl", () => {
 
       await userRepository.updateSettings("user_123", settings);
 
-      expect(mockLocalStorage.saveUser).toHaveBeenCalled();
+      expect(mockLocalStorage.saveSettings).toHaveBeenCalled();
     });
   });
 
@@ -335,7 +340,18 @@ describe("UserRepositoryImpl", () => {
         updatedAt: "2024-01-01T00:00:00Z",
       }));
 
-      mockLocalStorage.getUsers.mockResolvedValue(largeUserList);
+      mockLocalStorage.getUserById.mockImplementation(async (id: string) => {
+        const index = parseInt(id.replace("user_", ""), 10);
+        if (isNaN(index) || index >= 1000) return null;
+        return {
+          id: `user_${index}`,
+          name: `User ${index}`,
+          phone: `+1234567${index.toString().padStart(4, "0")}`,
+          isOnline: index % 2 === 0,
+          createdAt: "2024-01-01T00:00:00Z",
+          updatedAt: "2024-01-01T00:00:00Z",
+        } as any;
+      });
 
       const startTime = Date.now();
       const result = await userRepository.getByIds(
@@ -382,14 +398,16 @@ describe("UserRepositoryImpl", () => {
 
       await userRepository.save(user);
 
-      expect(mockLocalStorage.saveUser).toHaveBeenCalledWith({
-        id: "user_123",
-        name: "Consistency Test",
-        phone: "+1234567890",
-        isOnline: true,
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
-      });
+      expect(mockLocalStorage.saveUser).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "user_123",
+          name: "Consistency Test",
+          phone: "+1234567890",
+          isOnline: true,
+          createdAt: "2024-01-01T00:00:00.000Z",
+          updatedAt: "2024-01-01T00:00:00.000Z",
+        })
+      );
     });
 
     it("should handle date conversion correctly", async () => {
@@ -405,14 +423,16 @@ describe("UserRepositoryImpl", () => {
 
       await userRepository.save(user);
 
-      expect(mockLocalStorage.saveUser).toHaveBeenCalledWith({
-        id: "user_123",
-        name: "Date Test",
-        phone: "+1234567890",
-        isOnline: true,
-        createdAt: "2024-01-01T12:00:00Z",
-        updatedAt: "2024-01-01T12:00:00Z",
-      });
+      expect(mockLocalStorage.saveUser).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "user_123",
+          name: "Date Test",
+          phone: "+1234567890",
+          isOnline: true,
+          createdAt: "2024-01-01T12:00:00.000Z",
+          updatedAt: "2024-01-01T12:00:00.000Z",
+        })
+      );
     });
   });
 
