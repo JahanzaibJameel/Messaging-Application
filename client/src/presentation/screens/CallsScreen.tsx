@@ -24,7 +24,11 @@ export default function CallsScreen() {
     <View
       style={[
         styles.container,
-        { backgroundColor: theme.backgroundRoot, paddingTop: headerHeight + Spacing.md, paddingBottom: tabBarHeight },
+        {
+          backgroundColor: theme.backgroundRoot,
+          paddingTop: headerHeight + Spacing.md,
+          paddingBottom: tabBarHeight,
+        },
       ]}
     >
       <EmptyState
