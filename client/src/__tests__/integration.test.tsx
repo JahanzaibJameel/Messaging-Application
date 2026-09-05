@@ -424,8 +424,18 @@ describe("Error Recovery and Concurrency", () => {
         .addMessage(makeMessage({ id: "cm-2", chatId: "concurrent-chat-2", text: "two" }));
     });
 
-    expect(useMessageStore.getState().getMessagesByChatId("concurrent-chat-1").map((m) => m.id)).toEqual(["cm-1"]);
-    expect(useMessageStore.getState().getMessagesByChatId("concurrent-chat-2").map((m) => m.id)).toEqual(["cm-2"]);
+    expect(
+      useMessageStore
+        .getState()
+        .getMessagesByChatId("concurrent-chat-1")
+        .map((m) => m.id)
+    ).toEqual(["cm-1"]);
+    expect(
+      useMessageStore
+        .getState()
+        .getMessagesByChatId("concurrent-chat-2")
+        .map((m) => m.id)
+    ).toEqual(["cm-2"]);
     expect(useChatStore.getState().getAllChats()).toHaveLength(2);
   });
 
