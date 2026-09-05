@@ -74,10 +74,7 @@ describe("Performance Regression Tests", () => {
       const { result } = renderHook(() => useChatStore());
       act(() => result.current.setChats(chats));
 
-      const { avgTime, maxTime } = measurePerformance(
-        () => result.current.getSortedChats(),
-        100
-      );
+      const { avgTime, maxTime } = measurePerformance(() => result.current.getSortedChats(), 100);
 
       console.log("getSortedChats (500 items):", {
         avgTime: `${avgTime.toFixed(3)} ms`,
