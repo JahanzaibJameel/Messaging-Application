@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Unit tests for SyncEngine
  * Testing core synchronization logic without React Native dependencies
@@ -158,8 +157,11 @@ describe("SyncEngine", () => {
       chatId: "chat_456",
       senderId: "user_789",
       text: "Test message",
-      timestamp: "2024-01-01T00:00:00Z",
-      status: "pending" as const,
+      timestamp: new Date("2024-01-01T00:00:00Z"),
+      type: "text" as const,
+      reactions: [],
+      edited: false,
+      status: "sending" as const,
     };
 
     it("should queue message for sync", () => {
@@ -458,7 +460,7 @@ describe("SyncEngine", () => {
       const { chatRepository } = require("../../../data/repositories");
 
       // Mock slow operation
-      let resolvePromise: () => void;
+      let resolvePromise: (value?: unknown) => void;
       chatRepository.saveMessage.mockImplementation(() => {
         return new Promise((resolve) => {
           resolvePromise = resolve;
