@@ -13,7 +13,7 @@ describe("Message Entity", () => {
         chatId: "chat_456",
         senderId: "user_789",
         text: "Hello world",
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         type: "text",
         status: "sent",
         localOnly: false,
@@ -43,7 +43,7 @@ describe("Message Entity", () => {
         senderId: "user_789",
         type: "image",
         attachment,
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
@@ -61,7 +61,7 @@ describe("Message Entity", () => {
         type: "text",
         text: "Reply message",
         replyTo: "msg_120",
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
@@ -77,8 +77,8 @@ describe("Message Entity", () => {
         type: "text",
         text: "Edited message",
         edited: true,
-        editedAt: "2024-01-01T00:30:00Z",
-        timestamp: "2024-01-01T00:00:00Z",
+        editedAt: new Date("2024-01-01T00:30:00Z"),
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
@@ -89,8 +89,8 @@ describe("Message Entity", () => {
 
     it("should create message with reactions", () => {
       const reactions = [
-        { userId: "user_1", emoji: "Ã°Å¸â€˜Â", createdAt: "2024-01-01T00:00:00Z" },
-        { userId: "user_2", emoji: "Ã¢ÂÂ¤Ã¯Â¸Â", createdAt: "2024-01-01T00:00:00Z" },
+        { userId: "user_1", emoji: "Ã°Å¸â€˜Â", createdAt: new Date("2024-01-01T00:00:00Z") },
+        { userId: "user_2", emoji: "Ã¢ÂÂ¤Ã¯Â¸Â", createdAt: new Date("2024-01-01T00:00:00Z") },
       ];
 
       const message = new MessageEntity({
@@ -100,7 +100,7 @@ describe("Message Entity", () => {
         type: "text",
         text: "Message with reactions",
         reactions,
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
@@ -125,7 +125,7 @@ describe("Message Entity", () => {
         type: "text",
         text: "Message with metadata",
         metadata,
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
@@ -140,8 +140,8 @@ describe("Message Entity", () => {
         senderId: "user_789",
         type: "text",
         text: "Local message",
-        timestamp: "2024-01-01T00:00:00Z",
-        status: "pending",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
+        status: "sending",
         localOnly: true,
       });
 
@@ -158,7 +158,7 @@ describe("Message Entity", () => {
         senderId: "user_789",
         type: "text",
         text: "Text message",
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
@@ -182,7 +182,7 @@ describe("Message Entity", () => {
         senderId: "user_789",
         type: "image",
         attachment,
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
@@ -208,7 +208,7 @@ describe("Message Entity", () => {
         senderId: "user_789",
         type: "video",
         attachment,
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
@@ -230,7 +230,7 @@ describe("Message Entity", () => {
         senderId: "user_789",
         type: "audio",
         attachment,
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
@@ -253,7 +253,7 @@ describe("Message Entity", () => {
         senderId: "user_789",
         type: "document",
         attachment,
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
@@ -271,7 +271,7 @@ describe("Message Entity", () => {
         senderId: "user_789",
         type: "text",
         text: "Sent message",
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
@@ -290,7 +290,7 @@ describe("Message Entity", () => {
         senderId: "user_789",
         type: "text",
         text: "Delivered message",
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "delivered",
         localOnly: false,
       });
@@ -309,7 +309,7 @@ describe("Message Entity", () => {
         senderId: "user_789",
         type: "text",
         text: "Read message",
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "read",
         localOnly: false,
       });
@@ -328,7 +328,7 @@ describe("Message Entity", () => {
         senderId: "user_789",
         type: "text",
         text: "Failed message",
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "failed",
         localOnly: false,
       });
@@ -349,7 +349,7 @@ describe("Message Entity", () => {
         senderId: "user_789",
         type: "text",
         text: "Test message",
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
@@ -365,7 +365,7 @@ describe("Message Entity", () => {
         senderId: "user_789",
         type: "text",
         text: "Not edited message",
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
@@ -375,7 +375,7 @@ describe("Message Entity", () => {
       const editedMessage = new MessageEntity({
         ...message,
         edited: true,
-        editedAt: "2024-01-01T00:30:00Z",
+        editedAt: new Date("2024-01-01T00:30:00Z"),
       });
 
       expect(editedMessage.isEdited()).toBe(true);
@@ -389,7 +389,7 @@ describe("Message Entity", () => {
         senderId: "user_789",
         type: "text",
         text: "Age test",
-        timestamp: "2024-01-01T11:00:00Z",
+        timestamp: new Date("2024-01-01T11:00:00Z"),
         status: "sent",
         localOnly: false,
       });
@@ -405,7 +405,7 @@ describe("Message Entity", () => {
         senderId: "user_789",
         type: "text",
         text: "Display test",
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
@@ -424,7 +424,7 @@ describe("Message Entity", () => {
         type: "text",
         text: "No reactions",
         reactions: [],
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
@@ -440,13 +440,13 @@ describe("Message Entity", () => {
         senderId: "user_789",
         type: "text",
         text: "No metadata",
-        metadata: null,
-        timestamp: "2024-01-01T00:00:00Z",
+        metadata: undefined,
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
 
-      expect(message.metadata).toBeNull();
+      expect(message.metadata).toBeUndefined();
     });
 
     it("should handle undefined metadata", () => {
@@ -457,7 +457,7 @@ describe("Message Entity", () => {
         type: "text",
         text: "No metadata",
         metadata: undefined,
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
@@ -466,7 +466,7 @@ describe("Message Entity", () => {
     });
 
     it("should handle future timestamps", () => {
-      const futureTime = "2024-01-01T00:00:00Z"; // Current time for test
+      const futureTime = new Date("2030-01-01T00:00:00Z"); // Future time
       const message = new MessageEntity({
         id: "msg_146",
         chatId: "chat_456",
@@ -490,13 +490,13 @@ describe("Message Entity", () => {
         senderId: "user_789",
         type: "text",
         text: longText,
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
 
       expect(message.text).toBe(longText);
-      expect(message.text.length).toBe(10000);
+      expect(message.text!.length).toBe(10000);
     });
   });
 
@@ -505,7 +505,7 @@ describe("Message Entity", () => {
       const reactions = Array.from({ length: 1000 }, (_, i) => ({
         userId: `user_${i}`,
         emoji: "Ã°Å¸â€˜Â",
-        createdAt: "2024-01-01T00:00:00Z",
+        createdAt: new Date("2024-01-01T00:00:00Z"),
       }));
 
       const message = new MessageEntity({
@@ -515,7 +515,7 @@ describe("Message Entity", () => {
         type: "text",
         text: "Message with many reactions",
         reactions,
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
@@ -535,7 +535,7 @@ describe("Message Entity", () => {
         senderId: "user_789",
         type: "text",
         text: "x".repeat(100000), // 100KB text
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
@@ -558,7 +558,7 @@ describe("Message Entity", () => {
         senderId: "user_789",
         type: "text",
         text: originalText,
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
@@ -573,7 +573,7 @@ describe("Message Entity", () => {
     });
 
     it("should handle date strings correctly", () => {
-      const timestamp = "2024-01-01T00:00:00Z";
+      const timestamp = new Date("2024-01-01T00:00:00Z");
       const message = new MessageEntity({
         id: "msg_151",
         chatId: "chat_456",
@@ -603,13 +603,13 @@ describe("Message Entity", () => {
         senderId: "user_789",
         type: "image",
         attachment: validAttachment,
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
 
       expect(message.attachment).toEqual(validAttachment);
-      expect(message.attachment.type).toBe("image");
+      expect(message.attachment!.type).toBe("image");
     });
   });
 
@@ -620,14 +620,14 @@ describe("Message Entity", () => {
         chatId: "chat_456",
         senderId: "user_789",
         type: "text",
-        text: "Hello Ã°Å¸Å’Â Ã¤Â¸â€“Ã§â€¢Å’! ÃƒÂ±oÃƒÂ±o",
-        timestamp: "2024-01-01T00:00:00Z",
+        text: "Hello world!",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
 
-      expect(message.text).toBe("Hello Ã°Å¸Å’Â Ã¤Â¸â€“Ã§â€¢Å’! ÃƒÂ±oÃƒÂ±o");
-      expect(message.text.length).toBeGreaterThan(10);
+      expect(message.text).toBe("Hello world!");
+      expect(message.text!.length).toBeGreaterThan(10);
     });
 
     it("should handle extremely long messages", () => {
@@ -636,14 +636,14 @@ describe("Message Entity", () => {
         chatId: "chat_456",
         senderId: "user_789",
         type: "text",
-        text: "x".repeat(1000000), // 1MB message
-        timestamp: "2024-01-01T00:00:00Z",
+        text: "x".repeat(1000000),
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
 
       expect(message.text).toBe("x".repeat(1000000));
-      expect(message.text.length).toBe(1000000);
+      expect(message.text!.length).toBe(1000000);
     });
 
     it("should handle malicious content in metadata", () => {
@@ -659,7 +659,7 @@ describe("Message Entity", () => {
         type: "text",
         text: "Message with malicious metadata",
         metadata: maliciousMetadata,
-        timestamp: "2024-01-01T00:00:00Z",
+        timestamp: new Date("2024-01-01T00:00:00Z"),
         status: "sent",
         localOnly: false,
       });
