@@ -3,7 +3,6 @@
  * Handles all remote API communication
  */
 
-import { AppError } from "@/core/errors";
 import type { ChatModel, MessageModel, UserModel } from "../models/MessageModel";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "https://api.chatapp.com";
@@ -26,7 +25,7 @@ export class RemoteApiDataSource {
     this.authToken = token;
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
     const headers: Record<string, string> = {
@@ -50,42 +49,44 @@ export class RemoteApiDataSource {
       throw new Error((error as Error)?.message || "Network error occurred");
     }
 
-    let data: T | null = null;
+    let parsed: unknown = null;
     try {
       const responseText = await response.text();
       if (responseText) {
-        data = JSON.parse(responseText);
+        parsed = JSON.parse(responseText);
       }
     } catch {
-      // If not JSON, return as null
+      // If not JSON, leave parsed as null
     }
 
     if (!response.ok) {
-      const errorData = data as { error?: string; message?: string } | null;
-      throw new Error(errorData?.error || errorData?.message || `HTTP ${response.status}: ${response.statusText}`);
+      const errorData = parsed as { error?: string; message?: string } | null;
+      throw new Error(
+        errorData?.error || errorData?.message || `HTTP ${response.status}: ${response.statusText}`
+      );
     }
 
-    return {
-      data: data as T,
-      success: true,
-    };
+    const wrapped = parsed as { data?: T; success?: boolean } | null;
+    if (wrapped && typeof wrapped === "object" && "data" in wrapped) {
+      return (wrapped as ApiResponse<T>).data;
+    }
+    return parsed as T;
   }
 
   // Auth Operations
   async login(phone: string): Promise<{ success: boolean }> {
-    const response = await this.request<boolean>("/auth/login", {
+    const response = await this.request<{ success: boolean }>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ phone }),
     });
     return { success: response.success };
   }
 
-  async verifyOtp(phone: string, otp: string): Promise<{ success: boolean; data: { token: string; user: UserModel } }> {
-    const response = await this.request<{ token: string; user: UserModel }>("/auth/verify", {
+  async verifyOtp(phone: string, otp: string): Promise<{ token: string; user: UserModel }> {
+    return this.request<{ token: string; user: UserModel }>("/auth/verify", {
       method: "POST",
       body: JSON.stringify({ phone, otp }),
     });
-    return { success: response.success, data: response.data };
   }
 
   async logout(): Promise<void> {
@@ -96,7 +97,7 @@ export class RemoteApiDataSource {
   }
 
   async refreshToken(): Promise<{ token: string }> {
-    return this.request("/auth/refresh", {
+    return this.request<{ token: string }>("/auth/refresh", {
       method: "POST",
     });
   }
