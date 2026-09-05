@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * WebSocket Integration Tests
  * Drives the real server WebSocketManager through a mocked ws transport,
@@ -15,7 +14,6 @@ import {
   resetReadReceiptsManager,
 } from "../../core/readReceipts/ReadReceiptsManager";
 
-// eslint-disable-next-line no-console
 try {
   const fs = require("fs");
   const m = require("ws");
@@ -23,9 +21,9 @@ try {
     "wsprobe.txt",
     JSON.stringify({ type: typeof m, keys: Object.keys(m), open: m.WebSocket && m.WebSocket.OPEN })
   );
-} catch (e) {
+} catch (e: unknown) {
   try {
-    require("fs").writeFileSync("wsprobe.txt", "ERR " + e.message);
+    require("fs").writeFileSync("wsprobe.txt", "ERR " + (e as Error).message);
   } catch {}
 }
 
@@ -48,7 +46,7 @@ class FakeSocket {
   }
 
   onMessage: ((data: string) => void) | null = null;
-  onClose: (() => void) | null = null;
+  onClose: ((...args: any[]) => void) | null = null;
 
   send(data: string) {
     this.sent.push(data);
@@ -446,8 +444,6 @@ describe("ReadReceiptsManager Integration", () => {
   });
 
   test("should process read receipts without throwing for unknown messages", async () => {
-    await expect(
-      readReceiptsManager.markMessageAsRead("msg123", "user2")
-    ).resolves.not.toThrow();
+    await expect(readReceiptsManager.markMessageAsRead("msg123", "user2")).resolves.not.toThrow();
   });
 });
