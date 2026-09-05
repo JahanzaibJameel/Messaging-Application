@@ -10,7 +10,14 @@ const app = express();
 const log = console.log;
 
 // JWT secret for WebSocket authentication
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
+const JWT_SECRET =
+  process.env.JWT_SECRET ||
+  (process.env.NODE_ENV !== "production"
+    ? "dev-secret-change-in-production"
+    : (() => {
+        console.error("FATAL ERROR: JWT_SECRET environment variable is not set in production mode");
+        process.exit(1);
+      })());
 
 let wsManager: WebSocketManager | null = null;
 
@@ -225,10 +232,10 @@ function setupErrorHandler(app: express.Application) {
   configureExpoAndLanding(app);
 
   const server = await registerRoutes(app);
-  
+
   // Initialize WebSocket server with JWT secret
   wsManager = new WebSocketManager(server, JWT_SECRET);
-  log('WebSocket server initialized with JWT authentication');
+  log("WebSocket server initialized with JWT authentication");
 
   setupErrorHandler(app);
 
