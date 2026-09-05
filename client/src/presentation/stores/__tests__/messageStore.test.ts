@@ -44,9 +44,21 @@ function makeMessage(overrides: Partial<Message> & { id: string; chatId: string 
   } as Message;
 }
 
-const msg1 = makeMessage({ id: "msg-1", chatId: "chat-A", timestamp: new Date("2024-01-01T10:00:00Z") });
-const msg2 = makeMessage({ id: "msg-2", chatId: "chat-A", timestamp: new Date("2024-01-01T10:05:00Z") });
-const msg3 = makeMessage({ id: "msg-3", chatId: "chat-B", timestamp: new Date("2024-01-01T09:00:00Z") });
+const msg1 = makeMessage({
+  id: "msg-1",
+  chatId: "chat-A",
+  timestamp: new Date("2024-01-01T10:00:00Z"),
+});
+const msg2 = makeMessage({
+  id: "msg-2",
+  chatId: "chat-A",
+  timestamp: new Date("2024-01-01T10:05:00Z"),
+});
+const msg3 = makeMessage({
+  id: "msg-3",
+  chatId: "chat-B",
+  timestamp: new Date("2024-01-01T09:00:00Z"),
+});
 
 // ---------------------------------------------------------------------------
 // Setup — reset store between tests
@@ -140,8 +152,16 @@ describe("getMessagesByChatId", () => {
   });
 
   it("returns messages sorted oldest-first", () => {
-    const older = makeMessage({ id: "msg-old", chatId: "chat-A", timestamp: new Date("2024-01-01T08:00:00Z") });
-    const newer = makeMessage({ id: "msg-new", chatId: "chat-A", timestamp: new Date("2024-01-01T12:00:00Z") });
+    const older = makeMessage({
+      id: "msg-old",
+      chatId: "chat-A",
+      timestamp: new Date("2024-01-01T08:00:00Z"),
+    });
+    const newer = makeMessage({
+      id: "msg-new",
+      chatId: "chat-A",
+      timestamp: new Date("2024-01-01T12:00:00Z"),
+    });
 
     act(() => {
       useMessageStore.getState().addMessages([newer, older]); // insert out of order
