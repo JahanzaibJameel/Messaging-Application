@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/7</span>
+                <span class='fraction'>7/7</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/7</span>
+                <span class='fraction'>7/7</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -112,20 +112,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -133,20 +124,29 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -156,11 +156,11 @@
  */
 &nbsp;
 // App constants
-export const APP_NAME = <span class="cstat-no" title="statement not covered" >"ChatApp";</span>
-export const APP_VERSION = <span class="cstat-no" title="statement not covered" >"3.0.0";</span>
+export const APP_NAME = "ChatApp";
+export const APP_VERSION = "3.0.0";
 &nbsp;
 // Storage keys
-export const STORAGE_KEYS = <span class="cstat-no" title="statement not covered" >{</span>
+export const STORAGE_KEYS = {
   AUTH: "@chatapp/auth",
   CHATS: "@chatapp/chats",
   MESSAGES: "@chatapp/messages",
@@ -169,7 +169,7 @@ export const STORAGE_KEYS = <span class="cstat-no" title="statement not covered"
 } as const;
 &nbsp;
 // Sync constants
-export const SYNC_CONFIG = <span class="cstat-no" title="statement not covered" >{</span>
+export const SYNC_CONFIG = {
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 5000,
   BATCH_SIZE: 50,
@@ -177,20 +177,20 @@ export const SYNC_CONFIG = <span class="cstat-no" title="statement not covered" 
 } as const;
 &nbsp;
 // Message constants
-export const MESSAGE_CONFIG = <span class="cstat-no" title="statement not covered" >{</span>
+export const MESSAGE_CONFIG = {
   MAX_TEXT_LENGTH: 4096,
   MAX_FILE_SIZE: 50 * 1024 * 1024, // 50MB
   TYPING_TIMEOUT: 3000,
 } as const;
 &nbsp;
 // Pagination
-export const PAGINATION = <span class="cstat-no" title="statement not covered" >{</span>
+export const PAGINATION = {
   DEFAULT_LIMIT: 50,
   MAX_LIMIT: 100,
 } as const;
 &nbsp;
 // Animation durations
-export const ANIMATION = <span class="cstat-no" title="statement not covered" >{</span>
+export const ANIMATION = {
   FAST: 150,
   NORMAL: 300,
   SLOW: 500,
@@ -202,7 +202,7 @@ export const ANIMATION = <span class="cstat-no" title="statement not covered" >{
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-09T11:13:21.831Z
+                at 2026-09-04T17:33:58.686Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

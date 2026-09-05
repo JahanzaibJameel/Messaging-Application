@@ -167,27 +167,7 @@
 <a name='L102'></a><a href='#L102'>102</a>
 <a name='L103'></a><a href='#L103'>103</a>
 <a name='L104'></a><a href='#L104'>104</a>
-<a name='L105'></a><a href='#L105'>105</a>
-<a name='L106'></a><a href='#L106'>106</a>
-<a name='L107'></a><a href='#L107'>107</a>
-<a name='L108'></a><a href='#L108'>108</a>
-<a name='L109'></a><a href='#L109'>109</a>
-<a name='L110'></a><a href='#L110'>110</a>
-<a name='L111'></a><a href='#L111'>111</a>
-<a name='L112'></a><a href='#L112'>112</a>
-<a name='L113'></a><a href='#L113'>113</a>
-<a name='L114'></a><a href='#L114'>114</a>
-<a name='L115'></a><a href='#L115'>115</a>
-<a name='L116'></a><a href='#L116'>116</a>
-<a name='L117'></a><a href='#L117'>117</a>
-<a name='L118'></a><a href='#L118'>118</a>
-<a name='L119'></a><a href='#L119'>119</a>
-<a name='L120'></a><a href='#L120'>120</a>
-<a name='L121'></a><a href='#L121'>121</a>
-<a name='L122'></a><a href='#L122'>122</a>
-<a name='L123'></a><a href='#L123'>123</a>
-<a name='L124'></a><a href='#L124'>124</a>
-<a name='L125'></a><a href='#L125'>125</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L105'></a><a href='#L105'>105</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -206,10 +186,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -241,22 +217,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -311,17 +271,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import React from "react";
+import { View, Text, StyleSheet } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   runOnUI,
   FadeInDown,
-} from 'react-native-reanimated';
-import { useAccessibleAnimation } from '../accessibility/a11yHelpers';
-import type { Message } from '../presentation/stores/mvpStore';
+} from "react-native-reanimated";
+import { useAccessibleAnimation } from "../accessibility/a11yHelpers";
+import type { Message } from "@/domain/entities/Message";
 &nbsp;
 interface AnimatedMessageProps {
   message: Message;
@@ -329,11 +289,7 @@ interface AnimatedMessageProps {
   index?: number;
 }
 &nbsp;
-const AnimatedMessage: React.FC&lt;AnimatedMessageProps&gt; = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >({ </span></span>
-  message, 
-  isOwn = <span class="branch-0 cbranch-no" title="branch not covered" >false, </span>
-  index = <span class="branch-0 cbranch-no" title="branch not covered" >0 </span>
-}) =&gt; {
+const AnimatedMessage: React.FC&lt;AnimatedMessageProps&gt; = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >({</span> message, isOwn = <span class="branch-0 cbranch-no" title="branch not covered" >false,</span> index = <span class="branch-0 cbranch-no" title="branch not covered" >0 </span>}) =&gt; {</span>
   const reduceMotion = <span class="cstat-no" title="statement not covered" >useAccessibleAnimation();</span>
   const opacity = <span class="cstat-no" title="statement not covered" >useSharedValue(0);</span>
   const translateY = <span class="cstat-no" title="statement not covered" >useSharedValue(20);</span>
@@ -347,7 +303,7 @@ const AnimatedMessage: React.FC&lt;AnimatedMessageProps&gt; = <span class="cstat
     } else {
       // Run animation on UI thread
 <span class="cstat-no" title="statement not covered" >      runOnUI(<span class="fstat-no" title="function not covered" >()</span> =&gt; {</span>
-        'worklet';
+        "worklet";
 <span class="cstat-no" title="statement not covered" >        opacity.value = withTiming(1, { duration: 300 });</span>
 <span class="cstat-no" title="statement not covered" >        translateY.value = withTiming(0, { duration: 300 });</span>
       })();
@@ -366,35 +322,19 @@ const AnimatedMessage: React.FC&lt;AnimatedMessageProps&gt; = <span class="cstat
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  return (</span>
     &lt;Animated.View
-      style={[
-        styles.messageContainer,
-        isOwn &amp;&amp; styles.ownMessage,
-        animatedStyle,
-      ]}
+      style={[styles.messageContainer, isOwn &amp;&amp; styles.ownMessage, animatedStyle]}
       entering={enteringAnimation}
       accessibilityRole="text"
       accessibilityLabel={`Message from ${message.senderId}: ${message.text}`}
       accessible={true}
     &gt;
-      &lt;Text 
-        style={[
-          styles.messageText,
-          isOwn &amp;&amp; styles.ownMessageText
-        ]}
-        accessible={false}
-      &gt;
+      &lt;Text style={[styles.messageText, isOwn &amp;&amp; styles.ownMessageText]} accessible={false}&gt;
         {message.text}
       &lt;/Text&gt;
-      &lt;Text 
-        style={[
-          styles.timestamp,
-          isOwn &amp;&amp; styles.ownTimestamp
-        ]}
-        accessible={false}
-      &gt;
+      &lt;Text style={[styles.timestamp, isOwn &amp;&amp; styles.ownTimestamp]} accessible={false}&gt;
         {new Date(message.timestamp).toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
+          hour: "2-digit",
+          minute: "2-digit",
         })}
       &lt;/Text&gt;
     &lt;/Animated.View&gt;
@@ -407,30 +347,30 @@ const styles = <span class="cstat-no" title="statement not covered" >StyleSheet.
     marginVertical: 4,
     marginHorizontal: 8,
     borderRadius: 16,
-    maxWidth: '80%',
-    backgroundColor: '#f0f0f0',
-    alignSelf: 'flex-start',
+    maxWidth: "80%",
+    backgroundColor: "#f0f0f0",
+    alignSelf: "flex-start",
   },
   ownMessage: {
-    backgroundColor: '#007AFF',
-    alignSelf: 'flex-end',
+    backgroundColor: "#007AFF",
+    alignSelf: "flex-end",
   },
   messageText: {
     fontSize: 16,
-    color: '#333333',
+    color: "#333333",
     lineHeight: 20,
     marginBottom: 4,
   },
   ownMessageText: {
-    color: '#ffffff',
+    color: "#ffffff",
   },
   timestamp: {
     fontSize: 12,
-    color: '#666666',
-    alignSelf: 'flex-end',
+    color: "#666666",
+    alignSelf: "flex-end",
   },
   ownTimestamp: {
-    color: '#e0e0e0',
+    color: "#e0e0e0",
   },
 });
 &nbsp;
@@ -442,7 +382,7 @@ export default AnimatedMessage;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-09T11:13:20.106Z
+                at 2026-09-04T17:33:57.298Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

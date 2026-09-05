@@ -221,7 +221,49 @@
 <a name='L156'></a><a href='#L156'>156</a>
 <a name='L157'></a><a href='#L157'>157</a>
 <a name='L158'></a><a href='#L158'>158</a>
-<a name='L159'></a><a href='#L159'>159</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L159'></a><a href='#L159'>159</a>
+<a name='L160'></a><a href='#L160'>160</a>
+<a name='L161'></a><a href='#L161'>161</a>
+<a name='L162'></a><a href='#L162'>162</a>
+<a name='L163'></a><a href='#L163'>163</a>
+<a name='L164'></a><a href='#L164'>164</a>
+<a name='L165'></a><a href='#L165'>165</a>
+<a name='L166'></a><a href='#L166'>166</a>
+<a name='L167'></a><a href='#L167'>167</a>
+<a name='L168'></a><a href='#L168'>168</a>
+<a name='L169'></a><a href='#L169'>169</a>
+<a name='L170'></a><a href='#L170'>170</a>
+<a name='L171'></a><a href='#L171'>171</a>
+<a name='L172'></a><a href='#L172'>172</a>
+<a name='L173'></a><a href='#L173'>173</a>
+<a name='L174'></a><a href='#L174'>174</a>
+<a name='L175'></a><a href='#L175'>175</a>
+<a name='L176'></a><a href='#L176'>176</a>
+<a name='L177'></a><a href='#L177'>177</a>
+<a name='L178'></a><a href='#L178'>178</a>
+<a name='L179'></a><a href='#L179'>179</a>
+<a name='L180'></a><a href='#L180'>180</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -383,9 +425,9 @@
  * Store types and interfaces
  */
 &nbsp;
-import type { User, UserSettings } from "@domain/entities/User";
-import type { Chat, GroupChat } from "@domain/entities/Chat";
-import type { Message } from "@domain/entities/Message";
+import type { User, UserSettings } from "@/domain/entities/User";
+import type { Chat, GroupChat } from "@/domain/entities/Chat";
+import type { Message } from "@/domain/entities/Message";
 &nbsp;
 // Normalized entity state
 export interface EntityState&lt;T&gt; {
@@ -399,6 +441,7 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  pendingPhone?: string;
 }
 &nbsp;
 export interface AuthActions {
@@ -443,6 +486,12 @@ export interface ChatActions {
 // Message Store
 export interface MessageState {
   messages: EntityState&lt;Message&gt;;
+  /**
+   * Secondary index: chatId → ordered array of messageIds.
+   * Maintained atomically alongside `messages` so that
+   * getMessagesByChatId is O(1) instead of O(n).
+   */
+  messagesByChatId: Record&lt;string, string[]&gt;;
   typingUsers: Record&lt;string, boolean&gt;;
   replyingTo: Message | null;
   hasMoreMessages: Record&lt;string, boolean&gt;;
@@ -451,8 +500,10 @@ export interface MessageState {
 export interface MessageActions {
   setMessages: (chatId: string, messages: Message[]) =&gt; void;
   addMessage: (message: Message) =&gt; void;
+  addMessages: (messages: Message[]) =&gt; void;
   updateMessage: (messageId: string, updates: Partial&lt;Message&gt;) =&gt; void;
   deleteMessage: (messageId: string) =&gt; void;
+  clearMessages: () =&gt; void;
   setTyping: (chatId: string, userId: string, isTyping: boolean) =&gt; void;
   setReplyingTo: (message: Message | null) =&gt; void;
   addReaction: (messageId: string, userId: string, emoji: string) =&gt; void;
@@ -496,6 +547,14 @@ export interface UIState {
   isSyncing: boolean;
   searchQuery: string;
   showSearch: boolean;
+  typingIndicators?: Record&lt;
+    string,
+    {
+      users: any[];
+      text: string;
+      isAnyoneTyping: boolean;
+    }
+  &gt;;
 }
 &nbsp;
 export interface UIActions {
@@ -505,6 +564,10 @@ export interface UIActions {
   setSyncing: (value: boolean) =&gt; void;
   setSearchQuery: (query: string) =&gt; void;
   setShowSearch: (value: boolean) =&gt; void;
+  setTypingIndicators: (
+    chatId: string,
+    indicators: { users: any[]; text: string; isAnyoneTyping: boolean }
+  ) =&gt; void;
 }
 &nbsp;
 // Sync Store
@@ -544,7 +607,7 @@ export interface SyncActions {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-09T11:13:21.831Z
+                at 2026-09-04T17:33:58.686Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

@@ -289,7 +289,16 @@
 <a name='L224'></a><a href='#L224'>224</a>
 <a name='L225'></a><a href='#L225'>225</a>
 <a name='L226'></a><a href='#L226'>226</a>
-<a name='L227'></a><a href='#L227'>227</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L227'></a><a href='#L227'>227</a>
+<a name='L228'></a><a href='#L228'>228</a>
+<a name='L229'></a><a href='#L229'>229</a>
+<a name='L230'></a><a href='#L230'>230</a>
+<a name='L231'></a><a href='#L231'>231</a>
+<a name='L232'></a><a href='#L232'>232</a>
+<a name='L233'></a><a href='#L233'>233</a>
+<a name='L234'></a><a href='#L234'>234</a>
+<a name='L235'></a><a href='#L235'>235</a>
+<a name='L236'></a><a href='#L236'>236</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -376,6 +385,15 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -520,9 +538,9 @@
  * Catches JavaScript errors in component tree and reports to Sentry
  */
 &nbsp;
-import React, { Component, ReactNode } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { captureException } from '../monitoring/sentry';
+import React, { Component, ReactNode } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import { captureException } from "../monitoring/sentry";
 &nbsp;
 interface Props {
   children: ReactNode;
@@ -547,19 +565,19 @@ class ErrorBoundary extends Component&lt;Props, State&gt; {
   }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  co</span>mponentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-<span class="cstat-no" title="statement not covered" >    console.error('ErrorBoundary caught an error:', error, errorInfo);</span>
-    
+<span class="cstat-no" title="statement not covered" >    console.error("ErrorBoundary caught an error:", error, errorInfo);</span>
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    try {</span>
 <span class="cstat-no" title="statement not covered" >      captureException(error, {</span>
-        action: 'component_render',
-        screen: 'error_boundary',
+        action: "component_render",
+        screen: "error_boundary",
         additionalData: {
           componentStack: errorInfo.componentStack,
           errorBoundary: true,
         },
       });
     } catch (sentryError) {
-<span class="cstat-no" title="statement not covered" >      console.error('Failed to report error to Sentry:', sentryError);</span>
+<span class="cstat-no" title="statement not covered" >      console.error("Failed to report error to Sentry:", sentryError);</span>
     }
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    this.props.onError?.(error, errorInfo);</span>
@@ -582,15 +600,15 @@ class ErrorBoundary extends Component&lt;Props, State&gt; {
 <span class="cstat-no" title="statement not covered" >    if (this.state.error) {</span>
 <span class="cstat-no" title="statement not covered" >      try {</span>
 <span class="cstat-no" title="statement not covered" >        captureException(this.state.error, {</span>
-          action: 'user_reported_error',
-          screen: 'error_boundary',
+          action: "user_reported_error",
+          screen: "error_boundary",
           additionalData: {
             userFeedback: true,
             componentStack: this.state.errorInfo?.componentStack,
           },
         });
       } catch (sentryError) {
-<span class="cstat-no" title="statement not covered" >        console.error('Failed to report user feedback to Sentry:', sentryError);</span>
+<span class="cstat-no" title="statement not covered" >        console.error("Failed to report user feedback to Sentry:", sentryError);</span>
       }
     }
   };
@@ -604,11 +622,20 @@ class ErrorBoundary extends Component&lt;Props, State&gt; {
 <span class="cstat-no" title="statement not covered" >      return (</span>
         &lt;View style={styles.container}&gt;
           &lt;View style={styles.content}&gt;
-            &lt;Text style={styles.title} accessible={true} accessibilityLabel="Error occurred" accessibilityRole="header"&gt;
+            &lt;Text
+              style={styles.title}
+              accessible={true}
+              accessibilityLabel="Error occurred"
+              accessibilityRole="header"
+            &gt;
               Oops! Something went wrong
             &lt;/Text&gt;
-            
-            &lt;Text style={styles.message} accessible={true} accessibilityLabel="Error message description"&gt;
+&nbsp;
+            &lt;Text
+              style={styles.message}
+              accessible={true}
+              accessibilityLabel="Error message description"
+            &gt;
               We encountered an unexpected error. The issue has been reported to our team.
             &lt;/Text&gt;
 &nbsp;
@@ -616,7 +643,7 @@ class ErrorBoundary extends Component&lt;Props, State&gt; {
               &lt;ScrollView style={styles.errorDetails}&gt;
                 &lt;Text style={styles.errorTitle}&gt;Error Details (Development Only):&lt;/Text&gt;
                 &lt;Text style={styles.errorText}&gt;{this.state.error.toString()}&lt;/Text&gt;
-                
+&nbsp;
                 {this.state.errorInfo &amp;&amp; (
                   &lt;&gt;
                     &lt;Text style={styles.errorTitle}&gt;Component Stack:&lt;/Text&gt;
@@ -661,18 +688,18 @@ class ErrorBoundary extends Component&lt;Props, State&gt; {
 const styles = <span class="cstat-no" title="statement not covered" >StyleSheet.create({</span>
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#f8f9fa",
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   content: {
     maxWidth: 400,
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
+    alignItems: "center",
+    backgroundColor: "#ffffff",
     padding: 24,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -680,42 +707,42 @@ const styles = <span class="cstat-no" title="statement not covered" >StyleSheet.
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#dc3545',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "#dc3545",
+    textAlign: "center",
     marginBottom: 12,
   },
   message: {
     fontSize: 16,
-    color: '#6c757d',
-    textAlign: 'center',
+    color: "#6c757d",
+    textAlign: "center",
     marginBottom: 20,
     lineHeight: 22,
   },
   errorDetails: {
     maxHeight: 200,
-    width: '100%',
+    width: "100%",
     marginBottom: 20,
     padding: 12,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: "#f8f9fa",
     borderRadius: 8,
   },
   errorTitle: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#495057',
+    fontWeight: "bold",
+    color: "#495057",
     marginBottom: 8,
   },
   errorText: {
     fontSize: 12,
-    color: '#6c757d',
-    fontFamily: 'monospace',
+    color: "#6c757d",
+    fontFamily: "monospace",
     marginBottom: 12,
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
     gap: 12,
   },
   button: {
@@ -723,20 +750,20 @@ const styles = <span class="cstat-no" title="statement not covered" >StyleSheet.
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     minHeight: 44,
   },
   retryButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
   },
   reportButton: {
-    backgroundColor: '#28a745',
+    backgroundColor: "#28a745",
   },
   buttonText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 &nbsp;
@@ -748,7 +775,7 @@ export default ErrorBoundary;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-09T11:13:21.831Z
+                at 2026-09-04T17:33:58.686Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

@@ -25,28 +25,28 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/91</span>
+                <span class='fraction'>0/93</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/37</span>
+                <span class='fraction'>0/41</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/20</span>
+                <span class='fraction'>0/22</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/86</span>
+                <span class='fraction'>0/89</span>
             </div>
         
             
@@ -380,7 +380,13 @@
 <a name='L315'></a><a href='#L315'>315</a>
 <a name='L316'></a><a href='#L316'>316</a>
 <a name='L317'></a><a href='#L317'>317</a>
-<a name='L318'></a><a href='#L318'>318</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L318'></a><a href='#L318'>318</a>
+<a name='L319'></a><a href='#L319'>319</a>
+<a name='L320'></a><a href='#L320'>320</a>
+<a name='L321'></a><a href='#L321'>321</a>
+<a name='L322'></a><a href='#L322'>322</a>
+<a name='L323'></a><a href='#L323'>323</a>
+<a name='L324'></a><a href='#L324'>324</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -521,6 +527,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -541,6 +550,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -556,6 +566,8 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -591,7 +603,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -688,6 +699,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -702,10 +714,10 @@
  * Provides jailbreak/root detection and device security checks
  */
 &nbsp;
-import DeviceInfo from 'react-native-device-info';
-import { Platform, Alert } from 'react-native';
-import { captureException, addUserActionBreadcrumb } from '../monitoring/sentry';
-import { logger } from '../utils/logger';
+import DeviceInfo from "react-native-device-info";
+import { Platform, Alert } from "react-native";
+import { captureException, addUserActionBreadcrumb } from "../monitoring/sentry";
+import { logger } from "../utils/logger";
 &nbsp;
 export interface SecurityStatus {
   isJailbroken: boolean;
@@ -744,7 +756,7 @@ class DeviceSecurity {
    */
 <span class="fstat-no" title="function not covered" >  up</span>dateConfig(config: Partial&lt;SecurityConfig&gt;): void {
 <span class="cstat-no" title="statement not covered" >    this.config = { ...this.config, ...config };</span>
-<span class="cstat-no" title="statement not covered" >    logger.info('Device security config updated', { config: this.config }, 'security');</span>
+<span class="cstat-no" title="statement not covered" >    logger.info("Device security config updated", { config: this.config }, "security");</span>
   }
 &nbsp;
   /**
@@ -752,30 +764,30 @@ class DeviceSecurity {
    */
 <span class="fstat-no" title="function not covered" >  as</span>ync checkDeviceSecurity(): Promise&lt;SecurityStatus&gt; {
 <span class="cstat-no" title="statement not covered" >    try {</span>
-<span class="cstat-no" title="statement not covered" >      logger.info('Starting device security check', {}, 'security');</span>
-<span class="cstat-no" title="statement not covered" >      addUserActionBreadcrumb('device_security_check_start');</span>
+<span class="cstat-no" title="statement not covered" >      logger.info("Starting device security check", {}, "security");</span>
+<span class="cstat-no" title="statement not covered" >      addUserActionBreadcrumb("device_security_check_start");</span>
 &nbsp;
       const threats: string[] = <span class="cstat-no" title="statement not covered" >[];</span>
 &nbsp;
       // Check if device is an emulator
       const isEmulator = <span class="cstat-no" title="statement not covered" >await DeviceInfo.isEmulator();</span>
 <span class="cstat-no" title="statement not covered" >      if (isEmulator &amp;&amp; !this.config.allowEmulators) {</span>
-<span class="cstat-no" title="statement not covered" >        threats.push('emulator_detected');</span>
+<span class="cstat-no" title="statement not covered" >        threats.push("emulator_detected");</span>
       }
 &nbsp;
       // Check for jailbreak/root
       let isJailbroken = <span class="cstat-no" title="statement not covered" >false;</span>
       let isRooted = <span class="cstat-no" title="statement not covered" >false;</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      if (Platform.OS === 'ios') {</span>
+<span class="cstat-no" title="statement not covered" >      if (Platform.OS === "ios") {</span>
 <span class="cstat-no" title="statement not covered" >        isJailbroken = await this.checkJailbreak();</span>
 <span class="cstat-no" title="statement not covered" >        if (isJailbroken) {</span>
-<span class="cstat-no" title="statement not covered" >          threats.push('jailbreak_detected');</span>
+<span class="cstat-no" title="statement not covered" >          threats.push("jailbreak_detected");</span>
         }
-      } else <span class="cstat-no" title="statement not covered" >if (Platform.OS === 'android') {</span>
+      } else <span class="cstat-no" title="statement not covered" >if (Platform.OS === "android") {</span>
 <span class="cstat-no" title="statement not covered" >        isRooted = await this.checkRoot();</span>
 <span class="cstat-no" title="statement not covered" >        if (isRooted) {</span>
-<span class="cstat-no" title="statement not covered" >          threats.push('root_detected');</span>
+<span class="cstat-no" title="statement not covered" >          threats.push("root_detected");</span>
         }
       }
 &nbsp;
@@ -791,8 +803,8 @@ class DeviceSecurity {
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      this.securityStatus = status;</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      logger.info('Device security check completed', status, 'security');</span>
-<span class="cstat-no" title="statement not covered" >      addUserActionBreadcrumb('device_security_check_complete', status);</span>
+<span class="cstat-no" title="statement not covered" >      logger.info("Device security check completed", status, "security");</span>
+<span class="cstat-no" title="statement not covered" >      addUserActionBreadcrumb("device_security_check_complete", status);</span>
 &nbsp;
       // Handle security threats
 <span class="cstat-no" title="statement not covered" >      if (!status.isSecure &amp;&amp; this.config.enabled) {</span>
@@ -801,10 +813,10 @@ class DeviceSecurity {
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      return status;</span>
     } catch (error) {
-<span class="cstat-no" title="statement not covered" >      logger.error('Device security check failed', error, 'security');</span>
+<span class="cstat-no" title="statement not covered" >      logger.error("Device security check failed", error, "security");</span>
 <span class="cstat-no" title="statement not covered" >      captureException(error as Error, {</span>
-        action: 'device_security_check',
-        screen: 'security_module',
+        action: "device_security_check",
+        screen: "security_module",
       });
 &nbsp;
       // Return safe default on error
@@ -813,7 +825,7 @@ class DeviceSecurity {
         isEmulator: false,
         isRooted: false,
         isSecure: true,
-        threats: ['security_check_failed'],
+        threats: ["security_check_failed"],
       };
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      this.securityStatus = safeStatus;</span>
@@ -828,25 +840,28 @@ class DeviceSecurity {
 <span class="cstat-no" title="statement not covered" >    try {</span>
       // Check for common jailbreak indicators
       const jailbreakIndicators = <span class="cstat-no" title="statement not covered" >[</span>
-        '/Applications/Cydia.app',
-        '/Library/MobileSubstrate/MobileSubstrate.dylib',
-        '/bin/bash',
-        '/usr/sbin/sshd',
-        '/etc/apt',
-        '/private/var/lib/apt/',
+        "/Applications/Cydia.app",
+        "/Library/MobileSubstrate/MobileSubstrate.dylib",
+        "/bin/bash",
+        "/usr/sbin/sshd",
+        "/etc/apt",
+        "/private/var/lib/apt/",
       ];
 &nbsp;
       // This is a simplified check - in production, you'd want more sophisticated detection
       // For now, we'll use react-native-device-info's built-in check
-      const isJailbroken = <span class="cstat-no" title="statement not covered" >await DeviceInfo.isJailBroken();</span>
-      
+      const isJailbroken =
+<span class="cstat-no" title="statement not covered" >        (await (DeviceInfo as typeof DeviceInfo &amp; { isJailBroken?: () =&gt; Promise&lt;boolean&gt; })</span>
+          .isJailBroken?.()
+          .catch(<span class="fstat-no" title="function not covered" >()</span> =&gt; <span class="cstat-no" title="statement not covered" >false)</span>) ?? false;
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      if (isJailbroken) {</span>
-<span class="cstat-no" title="statement not covered" >        logger.security('Jailbreak detected', { indicators: jailbreakIndicators });</span>
+<span class="cstat-no" title="statement not covered" >        logger.security("Jailbreak detected", { indicators: jailbreakIndicators });</span>
       }
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      return isJailbroken;</span>
     } catch (error) {
-<span class="cstat-no" title="statement not covered" >      logger.error('Jailbreak check failed', error, 'security');</span>
+<span class="cstat-no" title="statement not covered" >      logger.error("Jailbreak check failed", error, "security");</span>
 <span class="cstat-no" title="statement not covered" >      return false;</span>
     }
   }
@@ -858,27 +873,30 @@ class DeviceSecurity {
 <span class="cstat-no" title="statement not covered" >    try {</span>
       // Check for common root indicators
       const rootIndicators = <span class="cstat-no" title="statement not covered" >[</span>
-        '/system/app/Superuser.apk',
-        '/sbin/su',
-        '/system/bin/su',
-        '/system/xbin/su',
-        '/data/local/xbin/su',
-        '/data/local/bin/su',
-        '/system/sd/xbin/su',
-        '/system/bin/failsafe/su',
-        '/data/local/su',
+        "/system/app/Superuser.apk",
+        "/sbin/su",
+        "/system/bin/su",
+        "/system/xbin/su",
+        "/data/local/xbin/su",
+        "/data/local/bin/su",
+        "/system/sd/xbin/su",
+        "/system/bin/failsafe/su",
+        "/data/local/su",
       ];
 &nbsp;
       // Use react-native-device-info's built-in check
-      const isRooted = <span class="cstat-no" title="statement not covered" >await DeviceInfo.isRooted();</span>
-      
+      const isRooted =
+<span class="cstat-no" title="statement not covered" >        (await (DeviceInfo as typeof DeviceInfo &amp; { isRooted?: () =&gt; Promise&lt;boolean&gt; })</span>
+          .isRooted?.()
+          .catch(<span class="fstat-no" title="function not covered" >()</span> =&gt; <span class="cstat-no" title="statement not covered" >false)</span>) ?? false;
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      if (isRooted) {</span>
-<span class="cstat-no" title="statement not covered" >        logger.security('Root detected', { indicators: rootIndicators });</span>
+<span class="cstat-no" title="statement not covered" >        logger.security("Root detected", { indicators: rootIndicators });</span>
       }
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      return isRooted;</span>
     } catch (error) {
-<span class="cstat-no" title="statement not covered" >      logger.error('Root check failed', error, 'security');</span>
+<span class="cstat-no" title="statement not covered" >      logger.error("Root check failed", error, "security");</span>
 <span class="cstat-no" title="statement not covered" >      return false;</span>
     }
   }
@@ -888,12 +906,12 @@ class DeviceSecurity {
    */
 <span class="fstat-no" title="function not covered" >  pr</span>ivate async handleSecurityThreat(status: SecurityStatus): Promise&lt;void&gt; {
 <span class="cstat-no" title="statement not covered" >    try {</span>
-<span class="cstat-no" title="statement not covered" >      logger.security('Security threat detected', status);</span>
+<span class="cstat-no" title="statement not covered" >      logger.security("Security threat detected", status);</span>
 &nbsp;
       // Log to Sentry
-<span class="cstat-no" title="statement not covered" >      captureException(new Error('Security threat detected'), {</span>
-        action: 'security_threat_detected',
-        screen: 'security_module',
+<span class="cstat-no" title="statement not covered" >      captureException(new Error("Security threat detected"), {</span>
+        action: "security_threat_detected",
+        screen: "security_module",
         additionalData: status,
       });
 &nbsp;
@@ -907,12 +925,11 @@ class DeviceSecurity {
       // - Limit functionality
       // - Require additional authentication
       // - Send alert to backend
-&nbsp;
     } catch (error) {
-<span class="cstat-no" title="statement not covered" >      logger.error('Failed to handle security threat', error, 'security');</span>
+<span class="cstat-no" title="statement not covered" >      logger.error("Failed to handle security threat", error, "security");</span>
 <span class="cstat-no" title="statement not covered" >      captureException(error as Error, {</span>
-        action: 'handle_security_threat',
-        screen: 'security_module',
+        action: "handle_security_threat",
+        screen: "security_module",
       });
     }
   }
@@ -921,35 +938,35 @@ class DeviceSecurity {
    * Show security warning to user
    */
 <span class="fstat-no" title="function not covered" >  pr</span>ivate showSecurityWarning(status: SecurityStatus): void {
-    const title = <span class="cstat-no" title="statement not covered" >'Security Warning';</span>
-    let message = <span class="cstat-no" title="statement not covered" >'Your device may not be secure. Detected issues:\n\n';</span>
+    const title = <span class="cstat-no" title="statement not covered" >"Security Warning";</span>
+    let message = <span class="cstat-no" title="statement not covered" >"Your device may not be secure. Detected issues:\n\n";</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (status.isJailbroken) {</span>
-<span class="cstat-no" title="statement not covered" >      message += '• Device appears to be jailbroken\n';</span>
+<span class="cstat-no" title="statement not covered" >      message += "• Device appears to be jailbroken\n";</span>
     }
 <span class="cstat-no" title="statement not covered" >    if (status.isRooted) {</span>
-<span class="cstat-no" title="statement not covered" >      message += '• Device appears to be rooted\n';</span>
+<span class="cstat-no" title="statement not covered" >      message += "• Device appears to be rooted\n";</span>
     }
 <span class="cstat-no" title="statement not covered" >    if (status.isEmulator) {</span>
-<span class="cstat-no" title="statement not covered" >      message += '• Running on an emulator\n';</span>
+<span class="cstat-no" title="statement not covered" >      message += "• Running on an emulator\n";</span>
     }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    message += '\nFor your security, some features may be limited.';</span>
+<span class="cstat-no" title="statement not covered" >    message += "\nFor your security, some features may be limited.";</span>
 &nbsp;
     const buttons = <span class="cstat-no" title="statement not covered" >[</span>
       {
-        text: 'OK',
+        text: "OK",
         onPress: <span class="fstat-no" title="function not covered" >()</span> =&gt; {
-<span class="cstat-no" title="statement not covered" >          logger.userInteraction('security_warning_dismissed', 'alert');</span>
+<span class="cstat-no" title="statement not covered" >          logger.userInteraction("security_warning_dismissed", "alert");</span>
         },
       },
     ];
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (__DEV__) {</span>
 <span class="cstat-no" title="statement not covered" >      buttons.push({</span>
-        text: 'Ignore (Dev Only)',
+        text: "Ignore (Dev Only)",
         onPress: <span class="fstat-no" title="function not covered" >()</span> =&gt; {
-<span class="cstat-no" title="statement not covered" >          logger.userInteraction('security_warning_ignored', 'alert');</span>
+<span class="cstat-no" title="statement not covered" >          logger.userInteraction("security_warning_ignored", "alert");</span>
 <span class="cstat-no" title="statement not covered" >          this.updateConfig({ enabled: false });</span>
         },
       });
@@ -1008,7 +1025,8 @@ const deviceSecurity = <span class="cstat-no" title="statement not covered" >new
 export const checkDeviceSecurity = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >()</span> =&gt; <span class="cstat-no" title="statement not covered" >deviceSecurity.checkDeviceSecurity();</span></span>
 export const getSecurityStatus = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >()</span> =&gt; <span class="cstat-no" title="statement not covered" >deviceSecurity.getSecurityStatus();</span></span>
 export const isDeviceSecure = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >()</span> =&gt; <span class="cstat-no" title="statement not covered" >deviceSecurity.isDeviceSecure();</span></span>
-export const updateSecurityConfig = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(c</span>onfig: Partial&lt;SecurityConfig&gt;) =&gt; <span class="cstat-no" title="statement not covered" >deviceSecurity.updateConfig(config);</span></span>
+export const updateSecurityConfig = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(c</span>onfig: Partial&lt;SecurityConfig&gt;) =&gt;</span>
+<span class="cstat-no" title="statement not covered" >  deviceSecurity.updateConfig(config);</span>
 export const refreshSecurityStatus = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >()</span> =&gt; <span class="cstat-no" title="statement not covered" >deviceSecurity.refreshSecurityStatus();</span></span>
 &nbsp;
 // Export class and instance
@@ -1021,7 +1039,7 @@ export default deviceSecurity;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-09T11:13:21.831Z
+                at 2026-09-04T17:33:58.686Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

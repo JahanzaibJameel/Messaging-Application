@@ -291,9 +291,9 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { formatDistanceToNow, format } from 'date-fns';
-import { enUS, arSA } from 'date-fns/locale';
-import i18n from './index';
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { formatDistanceToNow, format } from "date-fns";
+import { enUS, arSA } from "date-fns/locale";
+import i18n from "./index";
 &nbsp;
 const locales = <span class="cstat-no" title="statement not covered" >{</span>
   en: enUS,
@@ -305,22 +305,22 @@ const locales = <span class="cstat-no" title="statement not covered" >{</span>
  * Uses date-fns with proper locale support
  */
 export const timeAgo = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(d</span>ate: Date): string =&gt; {</span>
-  const lang = <span class="cstat-no" title="statement not covered" >i18n.language.split('-')[0] as keyof typeof locales;</span>
+  const lang = <span class="cstat-no" title="statement not covered" >i18n.language.split("-")[0] as keyof typeof locales;</span>
   const locale = <span class="cstat-no" title="statement not covered" >locales[lang] || enUS;</span>
-  
-<span class="cstat-no" title="statement not covered" >  return formatDistanceToNow(date, { </span>
-    addSuffix: true, 
-    locale 
+&nbsp;
+<span class="cstat-no" title="statement not covered" >  return formatDistanceToNow(date, {</span>
+    addSuffix: true,
+    locale,
   });
 };
 &nbsp;
 /**
  * Returns a localized date string (e.g., "January 1, 2023")
  */
-export const formatDate = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(d</span>ate: Date, formatStr: string = <span class="branch-0 cbranch-no" title="branch not covered" >'PPP')</span>: string =&gt; {</span>
-  const lang = <span class="cstat-no" title="statement not covered" >i18n.language.split('-')[0] as keyof typeof locales;</span>
+export const formatDate = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(d</span>ate: Date, formatStr: string = <span class="branch-0 cbranch-no" title="branch not covered" >"PPP")</span>: string =&gt; {</span>
+  const lang = <span class="cstat-no" title="statement not covered" >i18n.language.split("-")[0] as keyof typeof locales;</span>
   const locale = <span class="cstat-no" title="statement not covered" >locales[lang] || enUS;</span>
-  
+&nbsp;
 <span class="cstat-no" title="statement not covered" >  return format(date, formatStr, { locale });</span>
 };
 &nbsp;
@@ -328,20 +328,20 @@ export const formatDate = <span class="cstat-no" title="statement not covered" >
  * Returns a localized time string (e.g., "3:30 PM")
  */
 export const formatTime = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(d</span>ate: Date): string =&gt; {</span>
-  const lang = <span class="cstat-no" title="statement not covered" >i18n.language.split('-')[0] as keyof typeof locales;</span>
+  const lang = <span class="cstat-no" title="statement not covered" >i18n.language.split("-")[0] as keyof typeof locales;</span>
   const locale = <span class="cstat-no" title="statement not covered" >locales[lang] || enUS;</span>
-  
-<span class="cstat-no" title="statement not covered" >  return format(date, 'p', { locale });</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >  return format(date, "p", { locale });</span>
 };
 &nbsp;
 /**
  * Returns a localized date and time string
  */
 export const formatDateTime = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(d</span>ate: Date): string =&gt; {</span>
-  const lang = <span class="cstat-no" title="statement not covered" >i18n.language.split('-')[0] as keyof typeof locales;</span>
+  const lang = <span class="cstat-no" title="statement not covered" >i18n.language.split("-")[0] as keyof typeof locales;</span>
   const locale = <span class="cstat-no" title="statement not covered" >locales[lang] || enUS;</span>
-  
-<span class="cstat-no" title="statement not covered" >  return format(date, 'PPp', { locale });</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >  return format(date, "PPp", { locale });</span>
 };
 &nbsp;
 /**
@@ -351,34 +351,34 @@ export const formatDateTime = <span class="cstat-no" title="statement not covere
 export const getRelativeTime = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(d</span>ate: Date): string =&gt; {</span>
   const now = <span class="cstat-no" title="statement not covered" >new Date();</span>
   const diffInSeconds = <span class="cstat-no" title="statement not covered" >Math.floor((now.getTime() - date.getTime()) / 1000);</span>
-  
+&nbsp;
   // Use i18n translations for common time ranges
 <span class="cstat-no" title="statement not covered" >  if (diffInSeconds &lt; 60) {</span>
-<span class="cstat-no" title="statement not covered" >    return i18n.t('time.justNow');</span>
+<span class="cstat-no" title="statement not covered" >    return i18n.t("time.justNow");</span>
   }
-  
+&nbsp;
   const diffInMinutes = <span class="cstat-no" title="statement not covered" >Math.floor(diffInSeconds / 60);</span>
 <span class="cstat-no" title="statement not covered" >  if (diffInMinutes &lt; 60) {</span>
-<span class="cstat-no" title="statement not covered" >    return i18n.t('time.minutesAgo', { count: diffInMinutes });</span>
+<span class="cstat-no" title="statement not covered" >    return i18n.t("time.minutesAgo", { count: diffInMinutes });</span>
   }
-  
+&nbsp;
   const diffInHours = <span class="cstat-no" title="statement not covered" >Math.floor(diffInMinutes / 60);</span>
 <span class="cstat-no" title="statement not covered" >  if (diffInHours &lt; 24) {</span>
-<span class="cstat-no" title="statement not covered" >    return i18n.t('time.hoursAgo', { count: diffInHours });</span>
+<span class="cstat-no" title="statement not covered" >    return i18n.t("time.hoursAgo", { count: diffInHours });</span>
   }
-  
+&nbsp;
   const diffInDays = <span class="cstat-no" title="statement not covered" >Math.floor(diffInHours / 24);</span>
 <span class="cstat-no" title="statement not covered" >  if (diffInDays &lt; 7) {</span>
-<span class="cstat-no" title="statement not covered" >    return i18n.t('time.daysAgo', { count: diffInDays });</span>
+<span class="cstat-no" title="statement not covered" >    return i18n.t("time.daysAgo", { count: diffInDays });</span>
   }
-  
+&nbsp;
   const diffInWeeks = <span class="cstat-no" title="statement not covered" >Math.floor(diffInDays / 7);</span>
 <span class="cstat-no" title="statement not covered" >  if (diffInWeeks &lt; 4) {</span>
-<span class="cstat-no" title="statement not covered" >    return i18n.t('time.weeksAgo', { count: diffInWeeks });</span>
+<span class="cstat-no" title="statement not covered" >    return i18n.t("time.weeksAgo", { count: diffInWeeks });</span>
   }
-  
+&nbsp;
   const diffInMonths = <span class="cstat-no" title="statement not covered" >Math.floor(diffInDays / 30);</span>
-<span class="cstat-no" title="statement not covered" >  return i18n.t('time.monthsAgo', { count: diffInMonths });</span>
+<span class="cstat-no" title="statement not covered" >  return i18n.t("time.monthsAgo", { count: diffInMonths });</span>
 };
 &nbsp;
 /**
@@ -388,12 +388,12 @@ export const getRelativeTime = <span class="cstat-no" title="statement not cover
 export const formatMessageTime = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(d</span>ate: Date): string =&gt; {</span>
   const now = <span class="cstat-no" title="statement not covered" >new Date();</span>
   const diffInHours = <span class="cstat-no" title="statement not covered" >(now.getTime() - date.getTime()) / (1000 * 60 * 60);</span>
-  
+&nbsp;
   // Use relative time for messages less than 24 hours old
 <span class="cstat-no" title="statement not covered" >  if (diffInHours &lt; 24) {</span>
 <span class="cstat-no" title="statement not covered" >    return getRelativeTime(date);</span>
   }
-  
+&nbsp;
   // Use absolute time for older messages
 <span class="cstat-no" title="statement not covered" >  return formatTime(date);</span>
 };
@@ -402,7 +402,7 @@ export const formatMessageTime = <span class="cstat-no" title="statement not cov
  * Returns the current locale for date-fns
  */
 export const getCurrentLocale = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >()</span> =&gt; {</span>
-  const lang = <span class="cstat-no" title="statement not covered" >i18n.language.split('-')[0] as keyof typeof locales;</span>
+  const lang = <span class="cstat-no" title="statement not covered" >i18n.language.split("-")[0] as keyof typeof locales;</span>
 <span class="cstat-no" title="statement not covered" >  return locales[lang] || enUS;</span>
 };
 &nbsp;</pre></td></tr></table></pre>
@@ -412,7 +412,7 @@ export const getCurrentLocale = <span class="cstat-no" title="statement not cove
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-09T11:13:20.106Z
+                at 2026-09-04T17:33:57.298Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

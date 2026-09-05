@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/32</span>
+                <span class='fraction'>0/31</span>
             </div>
         
             
@@ -371,12 +371,7 @@
 <a name='L306'></a><a href='#L306'>306</a>
 <a name='L307'></a><a href='#L307'>307</a>
 <a name='L308'></a><a href='#L308'>308</a>
-<a name='L309'></a><a href='#L309'>309</a>
-<a name='L310'></a><a href='#L310'>310</a>
-<a name='L311'></a><a href='#L311'>311</a>
-<a name='L312'></a><a href='#L312'>312</a>
-<a name='L313'></a><a href='#L313'>313</a>
-<a name='L314'></a><a href='#L314'>314</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L309'></a><a href='#L309'>309</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -436,33 +431,31 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -588,9 +581,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -694,16 +684,16 @@
  * Uses FlashList for high-performance rendering with 60fps target
  */
 &nbsp;
-import React, { useCallback, useMemo, useRef } from 'react';
-import { 
-  FlashList, 
+import React, { useCallback, useMemo, useRef } from "react";
+import {
+  FlashList,
   FlashListProps as FlashListPropsType,
-  ListRenderItemInfo 
-} from '@shopify/flash-list';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import { MessageEntity } from '../../domain/entities/Message';
-import { useFeatureFlag } from '@/core/featureFlags/FeatureFlags';
-import { useAccessibility } from '@/core/accessibility/AccessibilityManager';
+  ListRenderItemInfo,
+} from "@shopify/flash-list";
+import { View, Text, StyleSheet, Dimensions } from "react-native";
+import { MessageEntity } from "../../domain/entities/Message";
+import { useFeatureFlag } from "@/core/featureFlags/FeatureFlags";
+import { useAccessibility } from "@/core/accessibility/AccessibilityManager";
 &nbsp;
 interface OptimizedMessageListProps {
   messages: MessageEntity[];
@@ -717,7 +707,7 @@ interface OptimizedMessageListProps {
   ListFooterComponent?: React.ComponentType;
 }
 &nbsp;
-const { width: screenWidth } = <span class="cstat-no" title="statement not covered" >Dimensions.get('window');</span>
+const { width: screenWidth } = <span class="cstat-no" title="statement not covered" >Dimensions.get("window");</span>
 const MESSAGE_HEIGHT = <span class="cstat-no" title="statement not covered" >80;</span> // Fixed height for getItemLayout
 const MESSAGE_ESTIMATED_WIDTH = <span class="cstat-no" title="statement not covered" >screenWidth - 80;</span> // Account for padding/avatar
 &nbsp;
@@ -738,208 +728,203 @@ const getItemLayout = <span class="cstat-no" title="statement not covered" >useC
  * Optimized Message List Component
  * Enterprise-grade performance with FlashList
  */
-export const OptimizedMessageList: React.FC&lt;OptimizedMessageListProps&gt; = <span class="cstat-no" title="statement not covered" >React.memo(<span class="fstat-no" title="function not covered" >({</span></span>
-  messages,
-  onMessagePress,
-  onMessageLongPress,
-  onRefresh,
-  refreshing = <span class="branch-0 cbranch-no" title="branch not covered" >false,</span>
-  isLoading = <span class="branch-0 cbranch-no" title="branch not covered" >false,</span>
-  ListHeaderComponent,
-  ListEmptyComponent,
-  ListFooterComponent,
-}) =&gt; {
-  const { isEnabled: flashListEnabled } = <span class="cstat-no" title="statement not covered" >useFeatureFlag('flashlist-optimization');</span>
-  const { screenReader } = <span class="cstat-no" title="statement not covered" >useAccessibility();</span>
-&nbsp;
-  // Memoize data for FlashList
-  const flashListData = <span class="cstat-no" title="statement not covered" >useMemo(</span>
-<span class="fstat-no" title="function not covered" >    ()</span> =&gt; <span class="cstat-no" title="statement not covered" >messages.map(<span class="fstat-no" title="function not covered" >(m</span>essage, index) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
-      type: message.type,
-      id: message.id,
-      message,
-      index,
-    })),
-    [messages]
-  );
-&nbsp;
-  // Memoize key extractor
-  const keyExtractor = <span class="cstat-no" title="statement not covered" >useCallback(</span>
-<span class="fstat-no" title="function not covered" >    (i</span>tem: any) =&gt; <span class="cstat-no" title="statement not covered" >item.id,</span>
-    []
-  );
-&nbsp;
-  // Render individual message with accessibility
-  const renderItem = <span class="cstat-no" title="statement not covered" >useCallback(</span>
-<span class="fstat-no" title="function not covered" >    ({</span> item, index }: ListRenderItemInfo&lt;any&gt;) =&gt; {
-      const message = <span class="cstat-no" title="statement not covered" >item.message as MessageEntity;</span>
-      
-<span class="cstat-no" title="statement not covered" >      return (</span>
-        &lt;View
-          style={[
-            styles.messageContainer,
-            message.senderId === 'current-user' &amp;&amp; styles.ownMessage,
-          ]}
-          accessible={true}
-          accessibilityLabel={`Message: ${message.text || 'Media message'}`}
-          accessibilityHint={screenReader ? 'Double tap to reply, long press for options' : undefined}
-          accessibilityRole="list"
-        &gt;
-          &lt;View style={styles.avatarContainer}&gt;
-            &lt;View style={styles.avatar} /&gt;
-          &lt;/View&gt;
-          
-          &lt;View style={styles.contentContainer}&gt;
-            &lt;Text
-              style={[
-                styles.messageText,
-                message.status === 'read' &amp;&amp; styles.readMessage,
-              ]}
-              numberOfLines={3}
-              ellipsizeMode="tail"
-            &gt;
-              {message.text || '📎 Media'}
-            &lt;/Text&gt;
-            
-            &lt;Text style={styles.timestamp}&gt;
-              {new Date(message.timestamp).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            &lt;/Text&gt;
-          &lt;/View&gt;
-        &lt;/View&gt;
-      );
-    },
-    [screenReader]
-  );
-&nbsp;
-  // Optimized FlashList configuration
-  const flashListProps: FlashListPropsType&lt;any&gt; = <span class="cstat-no" title="statement not covered" >useMemo(<span class="fstat-no" title="function not covered" >()</span> =&gt; {</span>
-    const baseProps: FlashListPropsType&lt;any&gt; = <span class="cstat-no" title="statement not covered" >{</span>
-      data: flashListData,
-      renderItem,
-      keyExtractor,
-      estimatedItemSize: MESSAGE_HEIGHT,
-      // getItemLayout: flashListEnabled ? getItemLayout : undefined,
-      
-      // Performance optimizations
-      removeClippedSubviews: true,
-      // initialNumToRender: 15, // Initial render count
-      
-      // Accessibility
-      accessibilityLabel: 'Messages list',
-      accessibilityRole: 'list',
-      
-      // Loading states
-      ListEmptyComponent: ListEmptyComponent || (
-        &lt;View style={styles.emptyContainer}&gt;
-          &lt;Text style={styles.emptyText}&gt;No messages yet&lt;/Text&gt;
-        &lt;/View&gt;
-      ),
-      
-      // Refresh functionality
-      onRefresh: onRefresh,
-      refreshing,
-    };
-&nbsp;
-    // Add header/footer if provided
-<span class="cstat-no" title="statement not covered" >    if (ListHeaderComponent) {</span>
-<span class="cstat-no" title="statement not covered" >      baseProps.ListHeaderComponent = ListHeaderComponent;</span>
-    }
-    
-<span class="cstat-no" title="statement not covered" >    if (ListFooterComponent) {</span>
-<span class="cstat-no" title="statement not covered" >      baseProps.ListFooterComponent = ListFooterComponent;</span>
-    }
-&nbsp;
-    // Loading state
-<span class="cstat-no" title="statement not covered" >    if (isLoading) {</span>
-<span class="cstat-no" title="statement not covered" >      baseProps.ListFooterComponent = (</span>
-        &lt;View style={styles.loadingContainer}&gt;
-          &lt;Text style={styles.loadingText}&gt;Loading...&lt;/Text&gt;
-        &lt;/View&gt;
-      );
-    }
-&nbsp;
-<span class="cstat-no" title="statement not covered" >    return baseProps;</span>
-  }, [
-    flashListData,
-    renderItem,
-    keyExtractor,
-    flashListEnabled,
+export const OptimizedMessageList: React.FC&lt;OptimizedMessageListProps&gt; = <span class="cstat-no" title="statement not covered" >React.memo(</span>
+<span class="fstat-no" title="function not covered" >  ({</span>
+    messages,
+    onMessagePress,
+    onMessageLongPress,
+    onRefresh,
+    refreshing = <span class="branch-0 cbranch-no" title="branch not covered" >false,</span>
+    isLoading = <span class="branch-0 cbranch-no" title="branch not covered" >false,</span>
+    ListHeaderComponent,
     ListEmptyComponent,
     ListFooterComponent,
-    isLoading,
-    onRefresh,
-    refreshing,
-  ]);
+  }) =&gt; {
+    const { isEnabled: flashListEnabled } = <span class="cstat-no" title="statement not covered" >useFeatureFlag("flashlist-optimization");</span>
+    const { screenReader } = <span class="cstat-no" title="statement not covered" >useAccessibility();</span>
 &nbsp;
-  // Handle message press
-  const handleMessagePress = <span class="cstat-no" title="statement not covered" >useCallback(</span>
-<span class="fstat-no" title="function not covered" >    (m</span>essage: MessageEntity) =&gt; {
-<span class="cstat-no" title="statement not covered" >      onMessagePress?.(message);</span>
-      
-      // Add haptic feedback
-<span class="cstat-no" title="statement not covered" >      if (onMessagePress) {</span>
+    // Memoize data for FlashList
+    const flashListData = <span class="cstat-no" title="statement not covered" >useMemo(</span>
+<span class="fstat-no" title="function not covered" >      ()</span> =&gt;
+<span class="cstat-no" title="statement not covered" >        messages.map(<span class="fstat-no" title="function not covered" >(m</span>essage, index) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+          type: message.type,
+          id: message.id,
+          message,
+          index,
+        })),
+      [messages]
+    );
+&nbsp;
+    // Memoize key extractor
+    const keyExtractor = <span class="cstat-no" title="statement not covered" >useCallback(<span class="fstat-no" title="function not covered" >(i</span>tem: any) =&gt; <span class="cstat-no" title="statement not covered" >item.id,</span> []);</span>
+&nbsp;
+    // Render individual message with accessibility
+    const renderItem = <span class="cstat-no" title="statement not covered" >useCallback(</span>
+<span class="fstat-no" title="function not covered" >      ({</span> item, index }: ListRenderItemInfo&lt;any&gt;) =&gt; {
+        const message = <span class="cstat-no" title="statement not covered" >item.message as MessageEntity;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        return (</span>
+          &lt;View
+            style={[
+              styles.messageContainer,
+              message.senderId === "current-user" &amp;&amp; styles.ownMessage,
+            ]}
+            accessible={true}
+            accessibilityLabel={`Message: ${message.text || "Media message"}`}
+            accessibilityHint={
+              screenReader ? "Double tap to reply, long press for options" : undefined
+            }
+            accessibilityRole="list"
+          &gt;
+            &lt;View style={styles.avatarContainer}&gt;
+              &lt;View style={styles.avatar} /&gt;
+            &lt;/View&gt;
+&nbsp;
+            &lt;View style={styles.contentContainer}&gt;
+              &lt;Text
+                style={[styles.messageText, message.status === "read" &amp;&amp; styles.readMessage]}
+                numberOfLines={3}
+                ellipsizeMode="tail"
+              &gt;
+                {message.text || "📎 Media"}
+              &lt;/Text&gt;
+&nbsp;
+              &lt;Text style={styles.timestamp}&gt;
+                {new Date(message.timestamp).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              &lt;/Text&gt;
+            &lt;/View&gt;
+          &lt;/View&gt;
+        );
+      },
+      [screenReader]
+    );
+&nbsp;
+    // Optimized FlashList configuration
+    const flashListProps: FlashListPropsType&lt;any&gt; = <span class="cstat-no" title="statement not covered" >useMemo(<span class="fstat-no" title="function not covered" >()</span> =&gt; {</span>
+      const baseProps: FlashListPropsType&lt;any&gt; = <span class="cstat-no" title="statement not covered" >{</span>
+        data: flashListData,
+        renderItem,
+        keyExtractor,
+        estimatedItemSize: MESSAGE_HEIGHT,
+        // getItemLayout: flashListEnabled ? getItemLayout : undefined,
+&nbsp;
+        // Performance optimizations
+        removeClippedSubviews: true,
+        // initialNumToRender: 15, // Initial render count
+&nbsp;
+        // Accessibility
+        accessibilityLabel: "Messages list",
+        accessibilityRole: "list",
+&nbsp;
+        // Loading states
+        ListEmptyComponent: ListEmptyComponent || (
+          &lt;View style={styles.emptyContainer}&gt;
+            &lt;Text style={styles.emptyText}&gt;No messages yet&lt;/Text&gt;
+          &lt;/View&gt;
+        ),
+&nbsp;
+        // Refresh functionality
+        onRefresh: onRefresh,
+        refreshing,
+      };
+&nbsp;
+      // Add header/footer if provided
+<span class="cstat-no" title="statement not covered" >      if (ListHeaderComponent) {</span>
+<span class="cstat-no" title="statement not covered" >        baseProps.ListHeaderComponent = ListHeaderComponent;</span>
+      }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      if (ListFooterComponent) {</span>
+<span class="cstat-no" title="statement not covered" >        baseProps.ListFooterComponent = ListFooterComponent;</span>
+      }
+&nbsp;
+      // Loading state
+<span class="cstat-no" title="statement not covered" >      if (isLoading) {</span>
+<span class="cstat-no" title="statement not covered" >        baseProps.ListFooterComponent = (</span>
+          &lt;View style={styles.loadingContainer}&gt;
+            &lt;Text style={styles.loadingText}&gt;Loading...&lt;/Text&gt;
+          &lt;/View&gt;
+        );
+      }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      return baseProps;</span>
+    }, [
+      flashListData,
+      renderItem,
+      keyExtractor,
+      flashListEnabled,
+      ListEmptyComponent,
+      ListFooterComponent,
+      isLoading,
+      onRefresh,
+      refreshing,
+    ]);
+&nbsp;
+    // Handle message press
+    const handleMessagePress = <span class="cstat-no" title="statement not covered" >useCallback(</span>
+<span class="fstat-no" title="function not covered" >      (m</span>essage: MessageEntity) =&gt; {
+<span class="cstat-no" title="statement not covered" >        onMessagePress?.(message);</span>
+&nbsp;
+        // Add haptic feedback
+<span class="cstat-no" title="statement not covered" >        if (onMessagePress) {</span>
+          // TODO: Add haptics when @expo/haptics is properly installed
+          // Haptic feedback would be added here
+        }
+      },
+      [onMessagePress]
+    );
+&nbsp;
+    // Handle message long press
+    const handleMessageLongPress = <span class="cstat-no" title="statement not covered" >useCallback(</span>
+<span class="fstat-no" title="function not covered" >      (m</span>essage: MessageEntity) =&gt; {
+<span class="cstat-no" title="statement not covered" >        onMessageLongPress?.(message);</span>
+&nbsp;
+        // Stronger haptic for long press
         // TODO: Add haptics when @expo/haptics is properly installed
         // Haptic feedback would be added here
-      }
-    },
-    [onMessagePress]
-  );
+      },
+      [onMessageLongPress]
+    );
 &nbsp;
-  // Handle message long press
-  const handleMessageLongPress = <span class="cstat-no" title="statement not covered" >useCallback(</span>
-<span class="fstat-no" title="function not covered" >    (m</span>essage: MessageEntity) =&gt; {
-<span class="cstat-no" title="statement not covered" >      onMessageLongPress?.(message);</span>
-      
-      // Stronger haptic for long press
-      // TODO: Add haptics when @expo/haptics is properly installed
-      // Haptic feedback would be added here
-    },
-    [onMessageLongPress]
-  );
+<span class="cstat-no" title="statement not covered" >    return (</span>
+      &lt;View style={styles.container}&gt;
+        {flashListEnabled ? (
+          &lt;FlashList {...flashListProps} /&gt;
+        ) : (
+          // Fallback to regular FlatList if FlashList is disabled
+          &lt;View style={styles.fallbackContainer}&gt;
+            &lt;Text style={styles.fallbackText}&gt;Optimized rendering disabled&lt;/Text&gt;
+          &lt;/View&gt;
+        )}
+      &lt;/View&gt;
+    );
+  }
+);
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return (</span>
-    &lt;View style={styles.container}&gt;
-      {flashListEnabled ? (
-        &lt;FlashList
-          {...flashListProps}
-        /&gt;
-      ) : (
-        // Fallback to regular FlatList if FlashList is disabled
-        &lt;View style={styles.fallbackContainer}&gt;
-          &lt;Text style={styles.fallbackText}&gt;
-            Optimized rendering disabled
-          &lt;/Text&gt;
-        &lt;/View&gt;
-      )}
-    &lt;/View&gt;
-  );
-});
-&nbsp;
-<span class="cstat-no" title="statement not covered" >OptimizedMessageList.displayName = 'OptimizedMessageList';</span>
+<span class="cstat-no" title="statement not covered" >OptimizedMessageList.displayName = "OptimizedMessageList";</span>
 &nbsp;
 const styles = <span class="cstat-no" title="statement not covered" >StyleSheet.create({</span>
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   messageContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 12,
     marginVertical: 2,
     marginHorizontal: 8,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
   },
   ownMessage: {
-    backgroundColor: '#e3f2fd',
+    backgroundColor: "#e3f2fd",
     marginLeft: 60,
   },
   avatarContainer: {
@@ -949,16 +934,16 @@ const styles = <span class="cstat-no" title="statement not covered" >StyleSheet.
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
   },
   contentContainer: {
     flex: 1,
-  justifyContent: 'center',
+    justifyContent: "center",
   },
   messageText: {
     fontSize: 16,
     lineHeight: 22,
-    color: '#333333',
+    color: "#333333",
     marginBottom: 4,
   },
   readMessage: {
@@ -966,38 +951,38 @@ const styles = <span class="cstat-no" title="statement not covered" >StyleSheet.
   },
   timestamp: {
     fontSize: 12,
-    color: '#999999',
-    alignSelf: 'flex-end',
+    color: "#999999",
+    alignSelf: "flex-end",
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingVertical: 40,
   },
   emptyText: {
     fontSize: 16,
-    color: '#999999',
-    textAlign: 'center',
+    color: "#999999",
+    textAlign: "center",
   },
   loadingContainer: {
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   loadingText: {
     fontSize: 16,
-    color: '#666666',
+    color: "#666666",
   },
   fallbackContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   fallbackText: {
     fontSize: 14,
-    color: '#ff6b6b',
-    textAlign: 'center',
+    color: "#ff6b6b",
+    textAlign: "center",
   },
 });
 &nbsp;
@@ -1009,7 +994,7 @@ export default OptimizedMessageList;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-09T11:13:21.831Z
+                at 2026-09-04T17:33:58.686Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/116</span>
+                <span class='fraction'>0/117</span>
             </div>
         
             
@@ -404,7 +404,11 @@
 <a name='L339'></a><a href='#L339'>339</a>
 <a name='L340'></a><a href='#L340'>340</a>
 <a name='L341'></a><a href='#L341'>341</a>
-<a name='L342'></a><a href='#L342'>342</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L342'></a><a href='#L342'>342</a>
+<a name='L343'></a><a href='#L343'>343</a>
+<a name='L344'></a><a href='#L344'>344</a>
+<a name='L345'></a><a href='#L345'>345</a>
+<a name='L346'></a><a href='#L346'>346</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -485,6 +489,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -750,7 +758,7 @@
  * Code splitting, tree shaking, and bundle analysis
  */
 &nbsp;
-import React from 'react';
+import React from "react";
 import { Platform } from "react-native";
 import { logger } from "../logger";
 &nbsp;
@@ -806,7 +814,7 @@ class BundleOptimizerClass {
 <span class="cstat-no" title="statement not covered" >    return importFn()</span>
       .then(<span class="fstat-no" title="function not covered" >(m</span>odule) =&gt; {
         const loadTime = <span class="cstat-no" title="statement not covered" >Date.now() - startTime;</span>
-<span class="cstat-no" title="statement not covered" >        logger.info("Lazy loaded module", { loadTime });</span>
+<span class="cstat-no" title="statement not covered" >        logger.info("Lazy loaded module", "BundleOptimizer", { loadTime });</span>
 <span class="cstat-no" title="statement not covered" >        return module;</span>
       })
       .catch(<span class="fstat-no" title="function not covered" >(e</span>rror) =&gt; {
@@ -825,7 +833,11 @@ class BundleOptimizerClass {
     ];
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    try {</span>
-<span class="cstat-no" title="statement not covered" >      await Promise.all(criticalModules.map(<span class="fstat-no" title="function not covered" >(m</span>odule) =&gt; <span class="cstat-no" title="statement not covered" >this.lazyLoad(module))</span>);</span>
+<span class="cstat-no" title="statement not covered" >      await Promise.all(</span>
+        criticalModules.map(<span class="fstat-no" title="function not covered" >(m</span>odule) =&gt;
+<span class="cstat-no" title="statement not covered" >          this.lazyLoad(module as () =&gt; Promise&lt;typeof import("@/presentation/stores/authStore")&gt;)</span>
+        )
+      );
 <span class="cstat-no" title="statement not covered" >      logger.info("Critical modules preloaded");</span>
     } catch (error) {
 <span class="cstat-no" title="statement not covered" >      logger.error("Failed to preload critical modules:", error);</span>
@@ -884,7 +896,7 @@ class BundleOptimizerClass {
 <span class="cstat-no" title="statement not covered" >      analysis.recommendations = this.generateRecommendations(analysis);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      this.analysis = analysis;</span>
-<span class="cstat-no" title="statement not covered" >      logger.info("Bundle analysis completed", analysis);</span>
+<span class="cstat-no" title="statement not covered" >      logger.info("Bundle analysis completed", "BundleOptimizer", analysis);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      return analysis;</span>
     } catch (error) {
@@ -1025,7 +1037,7 @@ CONFIGURATION:
   // Update configuration
   public updateConfig = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(u</span>pdates: Partial&lt;BundleConfig&gt;): void =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    this.config = { ...this.config, ...updates };</span>
-<span class="cstat-no" title="statement not covered" >    logger.info("Bundle optimizer config updated", this.config);</span>
+<span class="cstat-no" title="statement not covered" >    logger.info("Bundle optimizer config updated", "BundleOptimizer", this.config);</span>
   };
 }
 &nbsp;
@@ -1093,7 +1105,7 @@ export const monitorBundleSize = <span class="cstat-no" title="statement not cov
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-09T11:13:20.106Z
+                at 2026-09-04T17:33:57.298Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>
