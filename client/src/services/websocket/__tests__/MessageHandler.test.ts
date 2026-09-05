@@ -270,7 +270,12 @@ describe("MessageHandler", () => {
       expect(message?.reactions).toHaveLength(1);
       expect(message?.reactions[0]).toMatchObject({ userId: "u3", emoji: "ðŸ‘" });
 
-      dispatch("reaction", { messageId: "msg_react", userId: "u3", emoji: "ðŸ‘", action: "remove" });
+      dispatch("reaction", {
+        messageId: "msg_react",
+        userId: "u3",
+        emoji: "ðŸ‘",
+        action: "remove",
+      });
       message = useMessageStore.getState().getMessageById("msg_react");
       expect(message?.reactions).toHaveLength(0);
     });
@@ -347,7 +352,11 @@ describe("MessageHandler", () => {
       expect(mockWsClient.send).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "send_message",
-          payload: expect.objectContaining({ chatId: "c_out", messageId: "m_out", text: "outgoing" }),
+          payload: expect.objectContaining({
+            chatId: "c_out",
+            messageId: "m_out",
+            text: "outgoing",
+          }),
         })
       );
     });
@@ -360,13 +369,7 @@ describe("MessageHandler", () => {
       handler.leaveChat("c9");
 
       const types = mockWsClient.send.mock.calls.map(([msg]) => (msg as any).type);
-      expect(types).toEqual([
-        "typing",
-        "message_status",
-        "reaction",
-        "join_chat",
-        "leave_chat",
-      ]);
+      expect(types).toEqual(["typing", "message_status", "reaction", "join_chat", "leave_chat"]);
     });
 
     it("returns false when the client cannot send", () => {
