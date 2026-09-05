@@ -4,14 +4,13 @@
  */
 
 import React from "react";
-import { View, StyleSheet, Alert, ScrollView } from "react-native";
+import { View, StyleSheet, Alert, ScrollView, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import * as Haptics from "expo-haptics";
 import Constants from "expo-constants";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useColorScheme } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { ThemedText } from "@/components/ThemedText";
