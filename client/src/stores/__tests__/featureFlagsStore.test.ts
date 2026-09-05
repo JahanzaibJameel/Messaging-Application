@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Feature Flags Store Tests
  * Tests for Zustand store with MMKV persistence and A/B testing
@@ -217,7 +216,7 @@ describe("FeatureFlagsStore", () => {
         useFeatureFlagsStore.getState().setOverride("enableVoiceMessages", true);
       });
 
-      const write = mockMMKV.set.mock.calls.find(([key]) => key === "developer_overrides");
+      const write = mockMMKV.set.mock.calls.find((call: any) => call[0] === "developer_overrides");
       expect(write).toBeDefined();
       expect(JSON.parse(write[1])).toEqual({ enableVoiceMessages: true });
     });
