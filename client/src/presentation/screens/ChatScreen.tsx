@@ -1,19 +1,11 @@
 /**
  * Chat Screen
  * Real-time messaging screen using useChatStore, useMessageStore,
- * useAuthStore, and the SyncEngine.
- *
- * Delivery status progression happens exclusively via SyncEngine /
- * WebSocket server — no setTimeout-based fake receipts.
+ * useAuthStore, and the ChatService.
  */
 
 import React, { useState, useCallback, useMemo, useEffect } from "react";
-import {
-  View,
-  StyleSheet,
-  FlatList,
-  Pressable,
-} from "react-native";
+import { View, StyleSheet, FlatList, Pressable } from "react-native";
 import Clipboard from "@react-native-clipboard/clipboard";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
@@ -21,6 +13,7 @@ import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 
+import { useChatService } from "@/services/websocket";
 import { ChatBubble } from "@/components/ChatBubble";
 import { MessageInput } from "@/components/MessageInput";
 import { MessageActionSheet } from "@/components/MessageActionSheet";
@@ -30,16 +23,10 @@ import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing } from "@/constants/theme";
 
-import {
-  useChatStore,
-  useMessageStore,
-  useUIStore,
-  useAuthStore,
-} from "@/presentation/stores";
+import { useChatStore, useMessageStore, useUIStore, useAuthStore } from "@/presentation/stores";
 import { MessageEntity } from "@/domain/entities/Message";
 import type { Message } from "@/domain/entities/Message";
 import type { GroupChat } from "@/domain/entities/Chat";
-import { getSyncEngine } from "@/core/sync";
 import type { ChatNavProp, ChatRouteProp } from "@/navigation/types";
 
 interface Props {
@@ -55,16 +42,13 @@ export default function ChatScreen({ navigation, route }: Props) {
 
   const { currentUser } = useAuthStore();
   const { getChatById, markChatAsRead } = useChatStore();
-  const {
-    getMessagesByChatId,
-    deleteMessage,
-    setReplyingTo,
-    replyingTo,
-  } = useMessageStore();
+  const { getMessagesByChatId, deleteMessage, setReplyingTo, replyingTo } = useMessageStore();
   const { showToast } = useUIStore();
 
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [showActionSheet, setShowActionSheet] = useState(false);
+
+  const { sendMessage } = useChatService(chatId);
 
   const messages = getMessagesByChatId(chatId);
   const chat = getChatById(chatId);
@@ -91,7 +75,10 @@ export default function ChatScreen({ navigation, route }: Props) {
               <ThemedText style={styles.headerTitle} numberOfLines={1}>
                 {group.name}
               </ThemedText>
-              <ThemedText style={[styles.headerSubtitle, { color: theme.textSecondary }]} numberOfLines={1}>
+              <ThemedText
+                style={[styles.headerSubtitle, { color: theme.textSecondary }]}
+                numberOfLines={1}
+              >
                 {group.participantIds.length} participants
               </ThemedText>
             </View>
@@ -112,7 +99,10 @@ export default function ChatScreen({ navigation, route }: Props) {
               <ThemedText style={styles.headerTitle} numberOfLines={1}>
                 Chat
               </ThemedText>
-              <ThemedText style={[styles.headerSubtitle, { color: theme.textSecondary }]} numberOfLines={1}>
+              <ThemedText
+                style={[styles.headerSubtitle, { color: theme.textSecondary }]}
+                numberOfLines={1}
+              >
                 online
               </ThemedText>
             </View>
@@ -134,13 +124,11 @@ export default function ChatScreen({ navigation, route }: Props) {
         replyTo: replyingTo?.id,
       });
 
-      // Queue through SyncEngine — it adds to messageStore and sends via WS
-      getSyncEngine().queueMessage(message);
+      sendMessage(text, replyingTo?.id);
 
-      setReplyingTo(null);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     },
-    [chatId, currentUser, replyingTo, setReplyingTo]
+    [chatId, currentUser, replyingTo, sendMessage]
   );
 
   const handleLongPress = useCallback((message: Message) => {

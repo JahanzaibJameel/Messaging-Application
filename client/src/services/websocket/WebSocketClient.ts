@@ -258,12 +258,9 @@ export function getWebSocketClient(
   config?: Partial<Omit<WebSocketConfig, "authToken">>
 ): WebSocketClient {
   if (!wsClientInstance) {
-    const wsUrl = process.env.EXPO_PUBLIC_WS_URL || "wss://api.chatapp.com/ws";
-    const { currentUser } = useAuthStore.getState();
-
+    const wsUrl = process.env.EXPO_PUBLIC_WS_URL || "ws://localhost:8080";
     wsClientInstance = new WebSocketClient({
       url: wsUrl,
-      authToken: currentUser?.id,
       reconnectInterval: 3000,
       maxReconnectAttempts: 10,
       heartbeatInterval: 30000,
