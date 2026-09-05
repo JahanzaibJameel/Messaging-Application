@@ -41,6 +41,7 @@ export interface MessageModel {
   retryCount?: number;
 }
 
+// Serializable representation of Chat entity
 export interface ChatModel {
   id: string;
   type: "private" | "group";
@@ -50,6 +51,7 @@ export interface ChatModel {
   isPinned: boolean;
   isMuted: boolean;
   isArchived: boolean;
+  lastActivity?: string;
   createdAt: string;
   updatedAt: string;
   // Group specific
