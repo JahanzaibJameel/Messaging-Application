@@ -57,7 +57,7 @@ export const useAuthStore = create<AuthStore>()(
             logger.info("Sending OTP request", "Auth", { phone });
 
             const response = await remoteApiDataSource.login(phone);
-            
+
             if (!response.success) {
               throw new Error("Failed to send OTP");
             }
@@ -101,13 +101,7 @@ export const useAuthStore = create<AuthStore>()(
               throw new Error("No pending phone number found. Please request OTP again.");
             }
 
-            const response = await remoteApiDataSource.verifyOtp(phone, otp);
-            
-            if (!response.success) {
-              throw new Error(response.data?.error || "Verification failed");
-            }
-
-            const { token, user } = response.data;
+            const { token, user } = await remoteApiDataSource.verifyOtp(phone, otp);
 
             // Store token securely
             await setToken(token);
@@ -154,7 +148,7 @@ export const useAuthStore = create<AuthStore>()(
             logger.info("Logging out", "Auth");
 
             await remoteApiDataSource.logout();
-            
+
             // Clear tokens from secure storage
             await resetToken();
 
