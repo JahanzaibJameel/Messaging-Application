@@ -1,12 +1,13 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "strict": false,
-    "noImplicitAny": false,
-    "strictNullChecks": false,
-    "strictPropertyInitialization": false,
-    "strictFunctionTypes": false,
-    "strictBindCallApply": false
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "types": ["node", "react", "react-native", "jest"]
   },
   "include": [
     "**/*.test.ts",
@@ -15,14 +16,5 @@
     "**/__tests__/**/*.tsx",
     "client/src/test-utils/**/*.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "build",
-    "dist",
-    ".expo",
-    "coverage",
-    "client/src/data/repositories/__tests__/ChatRepositoryImpl.test.ts",
-    "client/src/domain/entities/__tests__/Message.test.ts",
-    "client/src/presentation/hooks/__tests__/useAuth.test.ts"
-  ]
+  "exclude": ["node_modules", "build", "dist", ".expo", "coverage"]
 }
