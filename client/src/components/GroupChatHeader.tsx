@@ -17,7 +17,7 @@ export function GroupChatHeader({ group, onPress }: GroupChatHeaderProps) {
   const { theme } = useTheme();
   const currentUserId = useAuthStore((state) => state.currentUser?.id ?? "currentUser");
 
-  const participantNames = (group.participants || [])
+  const participantNames = (group.participantIds || [])
     .slice(0, 3)
     .map((id) => {
       if (id === "currentUser" || id === currentUserId) return "You";
@@ -25,7 +25,7 @@ export function GroupChatHeader({ group, onPress }: GroupChatHeaderProps) {
     })
     .join(", ");
 
-  const moreCount = (group.participants?.length || 0) - 3;
+  const moreCount = (group.participantIds?.length || 0) - 3;
 
   return (
     <Pressable onPress={onPress} style={styles.container}>
