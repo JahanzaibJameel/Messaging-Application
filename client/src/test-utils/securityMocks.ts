@@ -318,7 +318,7 @@ export const expectSecureStorageCall = (functionName: string, ...args: any[]) =>
 };
 
 export const expectLoggerCall = (level: string, message: string, data?: any) => {
-  expect(mockLogger[level]).toHaveBeenCalledWith(message, data, expect.any(String));
+  expect((mockLogger as any)[level]).toHaveBeenCalledWith(message, data, expect.any(String));
 };
 
 export const expectSecurityCheck = () => {
