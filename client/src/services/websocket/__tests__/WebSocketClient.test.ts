@@ -332,9 +332,7 @@ describe("WebSocketClient", () => {
 
       jest.advanceTimersByTime(3500);
 
-      const sentTypes = lastSocket().send.mock.calls.map(
-        ([raw]) => JSON.parse(raw as string).type
-      );
+      const sentTypes = lastSocket().send.mock.calls.map(([raw]) => JSON.parse(raw as string).type);
       expect(sentTypes.filter((t) => t === "ping")).toHaveLength(3);
 
       client.disconnect();
