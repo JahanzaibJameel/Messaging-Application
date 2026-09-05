@@ -122,9 +122,7 @@ describe("useAuth", () => {
 
       expect(ok).toBe(true);
       expect(mockLogin).toHaveBeenCalledWith("+12345678901");
-      expect(mockShowToast).toHaveBeenCalledWith(
-        expect.objectContaining({ type: "success" })
-      );
+      expect(mockShowToast).toHaveBeenCalledWith(expect.objectContaining({ type: "success" }));
       expect(result.current.step).toBe("otp");
     });
 
@@ -183,9 +181,7 @@ describe("useAuth", () => {
       expect(mockVerifyOtp).toHaveBeenCalledWith("123456");
       expect(mockSetUser).toHaveBeenCalledWith(user);
       expect(result.current.step).toBe("complete");
-      expect(mockShowToast).toHaveBeenCalledWith(
-        expect.objectContaining({ type: "success" })
-      );
+      expect(mockShowToast).toHaveBeenCalledWith(expect.objectContaining({ type: "success" }));
     });
 
     it("reports invalid codes when verification fails", async () => {
@@ -240,9 +236,7 @@ describe("useAuth", () => {
 
       expect(mockRepoLogout).toHaveBeenCalled();
       expect(mockStoreLogout).toHaveBeenCalled();
-      expect(mockShowToast).toHaveBeenCalledWith(
-        expect.objectContaining({ type: "success" })
-      );
+      expect(mockShowToast).toHaveBeenCalledWith(expect.objectContaining({ type: "success" }));
     });
   });
 
