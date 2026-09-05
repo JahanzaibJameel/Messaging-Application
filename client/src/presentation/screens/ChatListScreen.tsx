@@ -4,14 +4,7 @@
  */
 
 import React, { useCallback, useState } from "react";
-import {
-  View,
-  StyleSheet,
-  FlatList,
-  TextInput,
-  Pressable,
-  RefreshControl,
-} from "react-native";
+import { View, StyleSheet, FlatList, TextInput, Pressable, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -84,7 +77,8 @@ export default function ChatListScreen({ navigation }: Props) {
     if (isGroupChat(chat)) {
       navigation.navigate("Chat", { chatId: chat.id, participantId: "", isGroup: true });
     } else {
-      const other = chat.participantIds.find((id) => id !== "currentUser") ?? chat.participantIds[0] ?? "";
+      const other =
+        chat.participantIds.find((id) => id !== "currentUser") ?? chat.participantIds[0] ?? "";
       navigation.navigate("Chat", { chatId: chat.id, participantId: other });
     }
   };
@@ -93,8 +87,7 @@ export default function ChatListScreen({ navigation }: Props) {
     ({ item, index }: { item: Chat | GroupChat; index: number }) => {
       const chatName = isGroupChat(item) ? item.name : "Private Chat";
       const lastMessageText =
-        item.lastMessage?.text ||
-        (item.lastMessage?.attachment ? "Media" : t("chatList.empty"));
+        item.lastMessage?.text || (item.lastMessage?.attachment ? "Media" : t("chatList.empty"));
       const timestamp = item.lastMessage?.timestamp;
 
       return (
@@ -110,13 +103,23 @@ export default function ChatListScreen({ navigation }: Props) {
               <View style={styles.topRow}>
                 <View style={styles.nameRow}>
                   {item.isPinned ? (
-                    <Feather name="bookmark" size={12} color={theme.primary} style={styles.pinIcon} />
+                    <Feather
+                      name="bookmark"
+                      size={12}
+                      color={theme.primary}
+                      style={styles.pinIcon}
+                    />
                   ) : null}
                   <ThemedText style={styles.chatName} numberOfLines={1}>
                     {chatName}
                   </ThemedText>
                   {item.isMuted ? (
-                    <Feather name="volume-x" size={14} color={theme.textSecondary} style={styles.muteIcon} />
+                    <Feather
+                      name="volume-x"
+                      size={14}
+                      color={theme.textSecondary}
+                      style={styles.muteIcon}
+                    />
                   ) : null}
                 </View>
                 {timestamp ? (
@@ -182,7 +185,12 @@ export default function ChatListScreen({ navigation }: Props) {
             autoFocus
           />
           {searchQuery ? (
-            <Feather name="x" size={18} color={theme.textSecondary} onPress={() => setSearchQuery("")} />
+            <Feather
+              name="x"
+              size={18}
+              color={theme.textSecondary}
+              onPress={() => setSearchQuery("")}
+            />
           ) : null}
         </View>
       ) : null}
@@ -266,5 +274,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xs,
   },
   badgeText: { color: "#FFFFFF", fontSize: 11, fontWeight: "600" },
-  separator: { height: StyleSheet.hairlineWidth, marginLeft: Spacing.lg + Spacing.avatarMedium + Spacing.md },
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    marginLeft: Spacing.lg + Spacing.avatarMedium + Spacing.md,
+  },
 });
