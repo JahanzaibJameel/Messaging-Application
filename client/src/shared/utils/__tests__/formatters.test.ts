@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Unit tests for formatters utility
  * Testing date/time formatting and other utility functions
