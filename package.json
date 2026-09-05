@@ -8,7 +8,7 @@
     "web": "npx expo start --web",
     "android": "npx expo start --android",
     "ios": "npx expo start --ios",
-    "build:web": "npx expo export --platform web",
+    "build:web": "npx expo export --platform web && node fix-index.js",
     "preview:web": "npx http-server ./dist -p 3000",
     "server:dev": "cross-env NODE_ENV=development tsx server/index.ts",
     "server:start": "tsx server/index.ts",
