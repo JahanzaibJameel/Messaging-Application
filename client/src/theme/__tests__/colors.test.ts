@@ -322,10 +322,7 @@ describe("Theme Colors", () => {
     });
 
     it("should have consistent color naming", () => {
-      const allColors = [
-        ...Object.keys(lightTheme),
-        ...Object.keys(darkTheme),
-      ];
+      const allColors = [...Object.keys(lightTheme), ...Object.keys(darkTheme)];
 
       allColors.forEach((color) => {
         expect(color.length).toBeGreaterThan(0);
