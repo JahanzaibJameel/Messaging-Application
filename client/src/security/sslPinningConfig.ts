@@ -7,24 +7,16 @@
 const isDevelopment = __DEV__;
 const isProduction = !isDevelopment;
 
-// Placeholder backend domain (to be replaced with actual domain)
-const BACKEND_DOMAIN = "api.chatapp.com";
-const BACKEND_WS_DOMAIN = "ws.chatapp.com";
+// Backend domains from environment
+const BACKEND_DOMAIN = process.env.EXOCORE_BACKEND_DOMAIN || "api.chatapp.com";
+const BACKEND_WS_DOMAIN = process.env.EXOCORE_BACKEND_WS_DOMAIN || "ws.chatapp.com";
 
-// Placeholder certificate hashes (to be replaced with actual backend certificates)
-// These are SHA-256 hashes of the backend's public key certificates
-const PLACEHOLDER_CERT_HASHES: string[] = [
-  // This is a placeholder hash - replace with actual backend certificate hash
-  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
-  // Add backup certificates for rotation
-  "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=",
-];
-
-// Development localhost certificates (for testing)
-const DEV_CERT_HASHES: string[] = [
-  // Allow any certificate in development for localhost testing
-  // In production, this should be empty or contain actual dev server certificates
-];
+// SSL certificate pinning hashes
+// In production, these MUST be provided via environment variables or config file
+// If no hashes are provided in production, an error will be thrown during configuration validation
+const PROD_CERT_HASHES: string[] = process.env.EXOCORE_CERT_HASHES
+  ? process.env.EXOCORE_CERT_HASHES.split(",")
+  : [];
 
 /**
  * SSL Pinning configuration interface
@@ -46,18 +38,24 @@ export const getSSLPinningConfig = (): SSLPinningConfig => {
     return {
       domain: "localhost:8080",
       wsDomain: "localhost:8080",
-      enabled: false, // Disable pinning in development for flexibility
-      certificateHashes: DEV_CERT_HASHES,
+      enabled: false, // Disable pinning in development
+      certificateHashes: [],
       allowInsecureConnections: true, // Allow HTTP in development
       timeout: 10000,
     };
   }
 
+  if (isProduction && PROD_CERT_HASHES.length === 0) {
+    throw new Error(
+      "SSL certificate pinning hashes not configured. Set EXOCORE_CERT_HASHES environment variable in production."
+    );
+  }
+
   return {
     domain: BACKEND_DOMAIN,
     wsDomain: BACKEND_WS_DOMAIN,
-    enabled: true, // Enable pinning in production
-    certificateHashes: PLACEHOLDER_CERT_HASHES,
+    enabled: isProduction,
+    certificateHashes: PROD_CERT_HASHES,
     allowInsecureConnections: false, // Force HTTPS in production
     timeout: 15000,
   };
@@ -76,10 +74,7 @@ export const validateSSLPinningConfig = (): boolean => {
       return false;
     }
 
-    if (
-      config.certificateHashes.length === 0 ||
-      config.certificateHashes[0] === "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-    ) {
+    if (config.certificateHashes.length === 0) {
       console.error("Production SSL pinning must use real certificate hashes");
       return false;
     }
@@ -152,13 +147,13 @@ export const SSL_CONFIG = {
   staging: {
     enabled: true,
     allowInsecureConnections: false,
-    certificateHashes: PLACEHOLDER_CERT_HASHES,
+    certificateHashes: PROD_CERT_HASHES,
     timeout: 12000,
   },
   production: {
     enabled: true,
     allowInsecureConnections: false,
-    certificateHashes: PLACEHOLDER_CERT_HASHES,
+    certificateHashes: PROD_CERT_HASHES,
     timeout: 15000,
   },
 };
