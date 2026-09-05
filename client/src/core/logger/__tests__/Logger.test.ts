@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Unit tests for Logger utility
  * Testing enterprise-grade logging with levels, filtering, and performance tracking
