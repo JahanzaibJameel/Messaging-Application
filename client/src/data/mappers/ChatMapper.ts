@@ -38,6 +38,7 @@ export class ChatMapper {
   }
 
   static toModel(domain: Chat): ChatModel {
+    const lastActivity = domain.lastActivity ?? domain.updatedAt;
     const baseModel = {
       id: domain.id,
       type: domain.type,
@@ -47,6 +48,7 @@ export class ChatMapper {
       isPinned: domain.isPinned,
       isMuted: domain.isMuted,
       isArchived: domain.isArchived,
+      lastActivity: lastActivity.toISOString(),
       createdAt: domain.createdAt.toISOString(),
       updatedAt: domain.updatedAt.toISOString(),
     };
