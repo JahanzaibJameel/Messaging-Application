@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Unit tests for LocalStorageDataSource
  * Testing local data storage operations
@@ -833,6 +832,7 @@ describe("LocalStorageDataSource", () => {
 
       await dataSource.saveChat(chat);
       const result = await dataSource.getChatById("chat_consistency");
+      if (!result) throw new Error("Expected chat to be defined");
 
       expect(result).toEqual(chat);
       expect(typeof result.id).toBe("string");
