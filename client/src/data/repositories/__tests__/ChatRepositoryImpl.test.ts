@@ -13,7 +13,9 @@ import type { Message } from "../../../domain/entities/Message";
 jest.mock("../../datasources/LocalStorageDataSource");
 jest.mock("../../datasources/RemoteApiDataSource");
 
-const MockedLocalStorage = LocalStorageDataSource as jest.MockedClass<typeof LocalStorageDataSource>;
+const MockedLocalStorage = LocalStorageDataSource as jest.MockedClass<
+  typeof LocalStorageDataSource
+>;
 const MockedRemoteApi = RemoteApiDataSource as jest.MockedClass<typeof RemoteApiDataSource>;
 
 describe("ChatRepositoryImpl", () => {
@@ -24,8 +26,8 @@ describe("ChatRepositoryImpl", () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    mockLocalStorage = new MockedLocalStorage();
-    mockRemoteApi = new MockedRemoteApi();
+    mockLocalStorage = new MockedLocalStorage() as jest.Mocked<LocalStorageDataSource>;
+    mockRemoteApi = new MockedRemoteApi() as jest.Mocked<RemoteApiDataSource>;
 
     chatRepository = new ChatRepositoryImpl(mockLocalStorage, mockRemoteApi);
   });
@@ -44,6 +46,7 @@ describe("ChatRepositoryImpl", () => {
         type: "private" as const,
         participantIds: ["user_1", "user_2"],
         unreadCount: 0,
+        lastActivity: undefined,
         isPinned: false,
         isMuted: false,
         isArchived: false,
@@ -86,6 +89,7 @@ describe("ChatRepositoryImpl", () => {
           type: "private" as const,
           participantIds: ["user_1", "user_2"],
           unreadCount: 0,
+          lastActivity: undefined,
           isPinned: false,
           isMuted: false,
           isArchived: false,
@@ -98,6 +102,7 @@ describe("ChatRepositoryImpl", () => {
           type: "group" as const,
           participantIds: ["user_1", "user_2", "user_3"],
           unreadCount: 5,
+          lastActivity: undefined,
           isPinned: false,
           isMuted: false,
           isArchived: false,
@@ -131,6 +136,7 @@ describe("ChatRepositoryImpl", () => {
         type: "private",
         participantIds: ["user_1", "user_2"],
         unreadCount: 0,
+        lastActivity: undefined,
         isPinned: false,
         isMuted: false,
         isArchived: false,
@@ -152,6 +158,7 @@ describe("ChatRepositoryImpl", () => {
         type: "private",
         participantIds: ["user_1", "user_2"],
         unreadCount: 0,
+        lastActivity: undefined,
         isPinned: false,
         isMuted: false,
         isArchived: false,
@@ -191,6 +198,7 @@ describe("ChatRepositoryImpl", () => {
           type: "private" as const,
           participantIds: ["user_1", "user_2"],
           unreadCount: 3,
+          lastActivity: undefined,
           isPinned: false,
           isMuted: false,
           isArchived: false,
@@ -202,6 +210,7 @@ describe("ChatRepositoryImpl", () => {
           type: "group" as const,
           participantIds: ["user_1", "user_2", "user_3"],
           unreadCount: 5,
+          lastActivity: undefined,
           isPinned: false,
           isMuted: false,
           isArchived: false,
@@ -213,6 +222,7 @@ describe("ChatRepositoryImpl", () => {
           type: "private" as const,
           participantIds: ["user_1", "user_4"],
           unreadCount: 0,
+          lastActivity: undefined,
           isPinned: false,
           isMuted: false,
           isArchived: false,
@@ -235,6 +245,7 @@ describe("ChatRepositoryImpl", () => {
           type: "private" as const,
           participantIds: ["user_1", "user_2"],
           unreadCount: 0,
+          lastActivity: undefined,
           isPinned: false,
           isMuted: false,
           isArchived: false,
@@ -255,7 +266,11 @@ describe("ChatRepositoryImpl", () => {
     it("should create group chat and save locally", async () => {
       mockRemoteApi.createGroup.mockRejectedValue(new Error("Offline"));
 
-      const result = await chatRepository.createGroup("New Group", ["user_1", "user_2", "user_3"], "user_1");
+      const result = await chatRepository.createGroup(
+        "New Group",
+        ["user_1", "user_2", "user_3"],
+        "user_1"
+      );
 
       expect(result.name).toBe("New Group");
       expect(result.type).toBe("group");
@@ -279,6 +294,7 @@ describe("ChatRepositoryImpl", () => {
         type: "group",
         participantIds: ["user_1", "user_2"],
         unreadCount: 0,
+        lastActivity: undefined,
         isPinned: false,
         isMuted: false,
         isArchived: false,
@@ -301,6 +317,7 @@ describe("ChatRepositoryImpl", () => {
         type: "private",
         participantIds: ["user_1", "user_2"],
         unreadCount: 0,
+        lastActivity: undefined,
         isPinned: false,
         isMuted: false,
         isArchived: false,
@@ -323,6 +340,7 @@ describe("ChatRepositoryImpl", () => {
         type: "group",
         participantIds: ["user_1", "user_2", "user_3"],
         unreadCount: 0,
+        lastActivity: undefined,
         isPinned: false,
         isMuted: false,
         isArchived: false,
@@ -346,6 +364,7 @@ describe("ChatRepositoryImpl", () => {
         type: "group",
         participantIds: ["user_1", "user_2", "user_3"],
         unreadCount: 0,
+        lastActivity: undefined,
         isPinned: false,
         isMuted: false,
         isArchived: false,
@@ -368,6 +387,7 @@ describe("ChatRepositoryImpl", () => {
         type: "group",
         participantIds: ["user_1", "user_2"],
         unreadCount: 0,
+        lastActivity: undefined,
         isPinned: false,
         isMuted: false,
         isArchived: false,
@@ -396,6 +416,7 @@ describe("ChatRepositoryImpl", () => {
             type: "private" as const,
             participantIds: ["user_1", "user_2"],
             unreadCount: 1,
+            lastActivity: undefined,
             isPinned: false,
             isMuted: false,
             isArchived: false,
@@ -460,6 +481,7 @@ describe("ChatRepositoryImpl", () => {
         type: "group",
         participantIds: [],
         unreadCount: 0,
+        lastActivity: undefined,
         isPinned: false,
         isMuted: false,
         isArchived: false,
@@ -483,6 +505,7 @@ describe("ChatRepositoryImpl", () => {
         type: "group",
         participantIds: manyParticipants,
         unreadCount: 0,
+        lastActivity: undefined,
         isPinned: false,
         isMuted: false,
         isArchived: false,
@@ -507,6 +530,7 @@ describe("ChatRepositoryImpl", () => {
         name: "Chat 🌍 with émojis and àccénts",
         participantIds: ["user_1", "user_2"],
         unreadCount: 0,
+        lastActivity: undefined,
         isPinned: false,
         isMuted: false,
         isArchived: false,
