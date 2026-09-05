@@ -11,11 +11,17 @@ export interface Chat {
   id: string;
   type: ChatType;
   participantIds: string[];
+  name?: string;
+  description?: string;
+  avatar?: string;
+  adminIds?: string[];
+  createdBy?: string;
   lastMessage?: Message;
   unreadCount: number;
   isPinned: boolean;
   isMuted: boolean;
   isArchived: boolean;
+  lastActivity?: Date;
   createdAt: Date;
   updatedAt: Date;
   metadata?: Record<string, unknown>;
@@ -28,6 +34,7 @@ export interface GroupChat extends Chat {
   avatar?: string;
   adminIds: string[];
   createdBy: string;
+  lastActivity?: Date;
 }
 
 export interface PrivateChat extends Chat {
@@ -51,6 +58,7 @@ export class ChatEntity implements Chat {
   isPinned: boolean;
   isMuted: boolean;
   isArchived: boolean;
+  lastActivity: Date;
   createdAt: Date;
   updatedAt: Date;
   metadata?: Record<string, unknown>;
@@ -72,6 +80,7 @@ export class ChatEntity implements Chat {
     this.isPinned = props.isPinned ?? false;
     this.isMuted = props.isMuted ?? false;
     this.isArchived = props.isArchived ?? false;
+    this.lastActivity = props.lastActivity ?? new Date();
     this.createdAt = props.createdAt ?? new Date();
     this.updatedAt = props.updatedAt ?? new Date();
     this.metadata = props.metadata;
@@ -100,6 +109,7 @@ export class ChatEntity implements Chat {
       isPinned: false,
       isMuted: false,
       isArchived: false,
+      lastActivity: now,
       createdAt: now,
       updatedAt: now,
     });
@@ -123,6 +133,7 @@ export class ChatEntity implements Chat {
       isPinned: false,
       isMuted: false,
       isArchived: false,
+      lastActivity: now,
       createdAt: now,
       updatedAt: now,
     } as ChatEntity & GroupChat;
@@ -130,6 +141,7 @@ export class ChatEntity implements Chat {
 
   updateLastMessage(message: Message): void {
     this.lastMessage = message;
+    this.lastActivity = new Date();
     this.updatedAt = new Date();
   }
 
