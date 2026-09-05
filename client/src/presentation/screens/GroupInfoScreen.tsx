@@ -116,9 +116,7 @@ export default function GroupInfoScreen({ navigation, route }: Props) {
                 <View style={styles.participant}>
                   <Avatar size="medium" />
                   <View style={styles.participantInfo}>
-                    <ThemedText style={styles.participantName}>
-                      {displayName}
-                    </ThemedText>
+                    <ThemedText style={styles.participantName}>{displayName}</ThemedText>
                     {isUserAdmin ? (
                       <ThemedText style={[styles.adminBadge, { color: theme.primary }]}>
                         Admin
@@ -160,7 +158,13 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     marginBottom: Spacing.xl,
   },
-  groupName: { fontSize: 24, fontWeight: "700", marginTop: Spacing.md, marginBottom: Spacing.xs, textAlign: "center" },
+  groupName: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginTop: Spacing.md,
+    marginBottom: Spacing.xs,
+    textAlign: "center",
+  },
   groupInfo: { fontSize: 14 },
   description: { fontSize: 14, marginTop: Spacing.md, textAlign: "center" },
   section: { marginBottom: Spacing.xl },
@@ -177,5 +181,8 @@ const styles = StyleSheet.create({
   participantInfo: { flex: 1 },
   participantName: { fontSize: 16, fontWeight: "500" },
   adminBadge: { fontSize: 12, fontWeight: "600", marginTop: 2 },
-  separator: { height: StyleSheet.hairlineWidth, marginLeft: Spacing.lg + Spacing.avatarMedium + Spacing.md },
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    marginLeft: Spacing.lg + Spacing.avatarMedium + Spacing.md,
+  },
 });
