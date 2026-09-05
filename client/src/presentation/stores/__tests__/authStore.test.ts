@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Unit tests for authStore
  * Tests the real authentication store API.
@@ -71,7 +70,7 @@ describe("authStore", () => {
       const { isAuthenticated, currentUser, isLoading } = useAuthStore.getState();
       expect(isAuthenticated).toBe(true);
       expect(currentUser).not.toBeNull();
-      expect(currentUser.name).toBe("You");
+      expect(currentUser?.name).toBe("You");
       expect(isLoading).toBe(false);
     });
 
