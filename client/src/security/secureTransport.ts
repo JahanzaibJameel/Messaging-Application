@@ -7,19 +7,12 @@ import { fetch as sslFetch } from "react-native-ssl-pinning";
 import { captureException, addUserActionBreadcrumb } from "../monitoring/sentry";
 import { getSSLPinningConfig } from "./sslPinningConfig";
 
-/** Replace with your server leaf/SPKI pin before shipping production. */
-export const PLACEHOLDER_SSL_PINS = [
-  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
-  "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=",
-];
-
 export interface SecureRequestOptions {
   url: string;
   method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
   headers?: Record<string, string>;
   body?: string;
   timeout?: number;
-  certificateHashes?: string[];
 }
 
 export interface SecureResponse {
@@ -32,7 +25,6 @@ export interface SecureResponse {
 export interface SecureWebSocketOptions {
   url: string;
   protocols?: string | string[];
-  certificateHashes?: string[];
   timeout?: number;
 }
 
@@ -105,10 +97,8 @@ export const secureFetch = async (options: SecureRequestOptions): Promise<Secure
       return secureResponse;
     }
 
-    const certs =
-      options.certificateHashes && options.certificateHashes.length > 0
-        ? options.certificateHashes
-        : PLACEHOLDER_SSL_PINS;
+    const config = getSSLPinningConfig();
+    const certs = config.certificateHashes;
 
     const sslRes = await sslFetch(options.url, {
       method,
