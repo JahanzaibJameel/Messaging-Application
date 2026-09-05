@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Unit tests for Chat entity
  * Testing core chat business logic and validation
