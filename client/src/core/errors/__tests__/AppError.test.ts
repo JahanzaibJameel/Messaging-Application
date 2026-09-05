@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { AppError, ErrorCode, ErrorDetails } from "../AppError";
 
 describe("AppError", () => {
@@ -416,9 +415,9 @@ describe("AppError", () => {
       });
 
       expect(error.context).toEqual(context);
-      expect(error.context?.request.url).toBe("https://api.example.com");
-      expect(error.context?.response.statusCode).toBe(500);
-      expect(error.context?.metadata.requestId).toBe("req_123");
+      expect((error.context?.request as { url: string })?.url).toBe("https://api.example.com");
+      expect((error.context?.response as { statusCode: number })?.statusCode).toBe(500);
+      expect((error.context?.metadata as { requestId: string })?.requestId).toBe("req_123");
     });
 
     it("should handle context with various data types", () => {
