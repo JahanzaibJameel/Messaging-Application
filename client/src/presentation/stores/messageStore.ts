@@ -73,10 +73,7 @@ const initialState: MessageState = {
 // ---------------------------------------------------------------------------
 
 /** Appends a message to the normalized entities and the chat index. */
-function _addToIndex(
-  state: MessageState,
-  message: Message
-): void {
+function _addToIndex(state: MessageState, message: Message): void {
   // Entities
   if (!state.messages.entities[message.id]) {
     state.messages.ids.push(message.id);
@@ -93,10 +90,7 @@ function _addToIndex(
 }
 
 /** Removes a message from the normalized entities and the chat index. */
-function _removeFromIndex(
-  state: MessageState,
-  messageId: string
-): void {
+function _removeFromIndex(state: MessageState, messageId: string): void {
   const message = state.messages.entities[messageId];
   if (!message) return;
 
