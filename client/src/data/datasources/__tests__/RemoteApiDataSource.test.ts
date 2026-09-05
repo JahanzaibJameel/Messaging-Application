@@ -1,10 +1,11 @@
-// @ts-nocheck
 /**
  * Unit tests for RemoteApiDataSource
  * Testing remote API data source functionality
  */
 
 import { RemoteApiDataSource } from "../RemoteApiDataSource";
+import type { MessageType } from "@/domain/entities/Message";
+import type { MessageModel } from "../../models/MessageModel";
 
 describe("RemoteApiDataSource", () => {
   let dataSource: RemoteApiDataSource;
@@ -357,7 +358,7 @@ describe("RemoteApiDataSource", () => {
         id: "msg_new",
         chatId: "chat_123",
         senderId: "user_1",
-        type: "text",
+        type: "text" as MessageType,
         text: "New message",
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
@@ -366,7 +367,7 @@ describe("RemoteApiDataSource", () => {
         edited: false,
       };
 
-      const result = await dataSource.sendMessage(messageData);
+      const result = await dataSource.sendMessage(messageData as MessageModel);
 
       expect(result).toBeDefined();
       expect(result?.id).toBe("msg_new");
