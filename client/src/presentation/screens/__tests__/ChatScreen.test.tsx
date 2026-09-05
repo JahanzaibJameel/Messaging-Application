@@ -1,12 +1,17 @@
-// @ts-nocheck
-
 import "../../../test-utils/i18nMock";
 
 import React from "react";
 import { render, fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 const mockAuthStoreState = {
-  currentUser: { id: "user_me", name: "Me", phone: "+111", isOnline: true, createdAt: new Date(), updatedAt: new Date() },
+  currentUser: {
+    id: "user_me",
+    name: "Me",
+    phone: "+111",
+    isOnline: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
   isAuthenticated: true,
   isLoading: false,
   error: null,
@@ -47,22 +52,12 @@ jest.mock("../../../core/sync", () => ({
 }));
 
 jest.mock("../../../presentation/stores", () => ({
-  useAuthStore: Object.assign(
-    () => mockAuthStoreState,
-    { getState: () => mockAuthStoreState }
-  ),
-  useChatStore: Object.assign(
-    () => mockChatStoreState,
-    { getState: () => mockChatStoreState }
-  ),
-  useMessageStore: Object.assign(
-    () => mockMessageStoreState,
-    { getState: () => mockMessageStoreState }
-  ),
-  useUIStore: Object.assign(
-    () => mockUIStoreState,
-    { getState: () => mockUIStoreState }
-  ),
+  useAuthStore: Object.assign(() => mockAuthStoreState, { getState: () => mockAuthStoreState }),
+  useChatStore: Object.assign(() => mockChatStoreState, { getState: () => mockChatStoreState }),
+  useMessageStore: Object.assign(() => mockMessageStoreState, {
+    getState: () => mockMessageStoreState,
+  }),
+  useUIStore: Object.assign(() => mockUIStoreState, { getState: () => mockUIStoreState }),
 }));
 
 jest.mock("expo-haptics", () => ({
@@ -117,7 +112,14 @@ jest.mock("react-native-keyboard-controller", () => ({
 describe("ChatScreen Store Integration", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockAuthStoreState.currentUser = { id: "user_me", name: "Me", phone: "+111", isOnline: true, createdAt: new Date(), updatedAt: new Date() };
+    mockAuthStoreState.currentUser = {
+      id: "user_me",
+      name: "Me",
+      phone: "+111",
+      isOnline: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
     mockMessageStoreState.getMessagesByChatId.mockReturnValue([]);
     mockChatStoreState.getChatById.mockReturnValue(null);
     mockMessageStoreState.replyingTo = null;
