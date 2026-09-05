@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Unit tests for validation utility
  * Testing input validation and sanitization functions
