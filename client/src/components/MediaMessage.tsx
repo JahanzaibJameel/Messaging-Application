@@ -1,5 +1,12 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable, ActivityIndicator, type ImageStyle } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  ActivityIndicator,
+  type ImageStyle,
+} from "react-native";
 import { Image } from "expo-image";
 import { Feather } from "@expo/vector-icons";
 
