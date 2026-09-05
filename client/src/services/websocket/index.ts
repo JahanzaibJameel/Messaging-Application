@@ -12,3 +12,17 @@ export {
 } from "./WebSocketClient";
 export { MessageHandler, getMessageHandler, resetMessageHandler } from "./MessageHandler";
 export { useWebSocket, useChatWebSocket, cleanupWebSocket } from "./useWebSocket";
+export {
+  initializeChatService,
+  disconnectChatService,
+  sendChatMessage,
+  joinChat,
+  leaveChat,
+  sendTypingIndicator,
+  sendMessageStatus,
+  sendReaction,
+  isConnected,
+  getConnectionStatus,
+  resetChatService,
+  useChatService,
+} from "./ChatService";
