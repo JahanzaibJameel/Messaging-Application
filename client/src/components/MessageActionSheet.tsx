@@ -7,7 +7,6 @@ import Animated, {
   useSharedValue,
   withSpring,
   withTiming,
-  runOnJS,
 } from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -41,7 +40,7 @@ export function MessageActionSheet({
       opacity.value = withTiming(0, { duration: 150 });
       translateY.value = withTiming(100, { duration: 150 });
     }
-  }, [visible]);
+  }, [visible, opacity, translateY]);
 
   const backdropStyle = useAnimatedStyle(() => ({
     opacity: opacity.value * 0.5,
