@@ -16,7 +16,7 @@ interface TypingIndicatorProps {
 
 export const TypingIndicator: React.FC<TypingIndicatorProps> = ({ chatId, currentUserId }) => {
   const theme = useTheme();
-  const { typingIndicators } = useUIStore();
+  const { typingIndicators: _typingIndicators } = useUIStore();
   const [typingText, setTypingText] = useState("");
   const [isVisible, setIsVisible] = useState(false);
 
