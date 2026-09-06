@@ -43,7 +43,7 @@ export class LocalStorageDataSource {
   // Chat Operations
   async getChats(): Promise<ChatModel[]> {
     try {
-      const data = this.storage.getString(STORAGE_KEYS.CHATS);
+      const data = this.storage.getString(STORAGE_KEYS.CHATS) || "";
       const parsed = this.safeParse<ChatModel[]>(data);
       return parsed ?? [];
     } catch (error) {
@@ -99,7 +99,7 @@ export class LocalStorageDataSource {
   async getMessages(chatId: string): Promise<MessageModel[]> {
     try {
       const key = messageKey(chatId);
-      const data = this.storage.getString(key);
+      const data = this.storage.getString(key) || "";
       const parsed = this.safeParse<MessageModel[]>(data);
       return parsed ?? [];
     } catch (error) {
@@ -160,7 +160,7 @@ export class LocalStorageDataSource {
   // User Operations
   async getUsers(): Promise<UserModel[]> {
     try {
-      const data = this.storage.getString(STORAGE_KEYS.USERS);
+      const data = this.storage.getString(STORAGE_KEYS.USERS) || "";
       const parsed = this.safeParse<UserModel[]>(data);
       return parsed ?? [];
     } catch (error) {
@@ -205,7 +205,7 @@ export class LocalStorageDataSource {
   // Current User
   async getCurrentUser(): Promise<UserModel | null> {
     try {
-      const data = this.storage.getString(STORAGE_KEYS.CURRENT_USER);
+      const data = this.storage.getString(STORAGE_KEYS.CURRENT_USER) || "";
       return this.safeParse<UserModel>(data);
     } catch (error) {
       throw AppError.storage("Failed to get current user", error as Error);
@@ -227,7 +227,7 @@ export class LocalStorageDataSource {
   // Settings
   async getSettings<T>(): Promise<T | null> {
     try {
-      const data = this.storage.getString(STORAGE_KEYS.SETTINGS);
+      const data = this.storage.getString(STORAGE_KEYS.SETTINGS) || "";
       return this.safeParse<T>(data);
     } catch (error) {
       throw AppError.storage("Failed to get settings", error as Error);
@@ -245,7 +245,7 @@ export class LocalStorageDataSource {
   // Sync State
   async getSyncState<T>(): Promise<T | null> {
     try {
-      const data = this.storage.getString(STORAGE_KEYS.SYNC_STATE);
+      const data = this.storage.getString(STORAGE_KEYS.SYNC_STATE) || "";
       return this.safeParse<T>(data);
     } catch (error) {
       throw AppError.storage("Failed to get sync state", error as Error);
