@@ -41,7 +41,7 @@ export function MessageInput({ onSend, replyingTo }: MessageInputProps) {
       damping: 15,
       stiffness: 200,
     });
-  }, [hasText]);
+  }, [hasText, sendButtonScale]);
 
   const sendButtonStyle = useAnimatedStyle(() => ({
     transform: [
