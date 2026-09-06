@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { Image, View, StyleSheet, ActivityIndicator } from "react-native";
+import { View, StyleSheet, ActivityIndicator } from "react-native";
 import { Image as ExpoImage } from "expo-image";
 
 interface OptimizedImageProps {
