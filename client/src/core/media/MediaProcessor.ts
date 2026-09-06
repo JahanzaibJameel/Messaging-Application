@@ -162,7 +162,7 @@ export class MediaProcessor {
   /**
    * Generate thumbnail for image
    */
-  static async generateThumbnail(uri: string, maxSize: number = 300): Promise<string> {
+  static async generateThumbnail(uri: string, _maxSize: number = 300): Promise<string> {
     // TODO: Implement with expo-image-manipulator when installed
     return uri;
   }
@@ -239,7 +239,7 @@ export class MediaProcessor {
   /**
    * Get media duration (for audio/video)
    */
-  static async getMediaDuration(uri: string): Promise<number> {
+  static async getMediaDuration(_uri: string): Promise<number> {
     // This would require native modules for accurate duration
     // For now, return 0
     return 0;
