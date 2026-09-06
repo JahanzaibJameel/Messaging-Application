@@ -109,10 +109,10 @@ class Logger {
 
     switch (entry.level) {
       case "debug":
-        console.debug(fullMessage, entry.data ?? "");
+        console.warn(fullMessage, entry.data ?? "");
         break;
       case "info":
-        console.info(fullMessage, entry.data ?? "");
+        console.warn(fullMessage, entry.data ?? "");
         break;
       case "warn":
         console.warn(fullMessage, entry.data ?? "");
@@ -128,11 +128,13 @@ class Logger {
     if (Math.random() > this.config.sampleRate) return;
 
     try {
-      await fetch(this.config.remoteUrl!, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(entry),
-      });
+      if (this.config.remoteUrl) {
+        await fetch(this.config.remoteUrl!, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(entry),
+        });
+      }
     } catch {
       // Silent fail for remote logging
     }
