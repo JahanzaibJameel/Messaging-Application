@@ -203,7 +203,7 @@ export class ReadReceiptsManager {
 
       // Clear existing timer
       if (this.pendingReads.has(timerKey)) {
-        clearTimeout(this.pendingReads.get(timerKey)!);
+        clearTimeout(this.pendingReads.get(timerKey));
       }
 
       // Schedule new read
