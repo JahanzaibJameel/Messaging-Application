@@ -44,7 +44,9 @@ export class VoiceRecorder {
   private amplitudeData: number[] = [];
   private amplitudeTimer: ReturnType<typeof setInterval> | null = null;
 
-  private constructor() {}
+  private constructor() {
+    // Private constructor for singleton pattern
+  }
 
   static getInstance(): VoiceRecorder {
     if (!VoiceRecorder.instance) {
@@ -111,7 +113,7 @@ export class VoiceRecorder {
       storage.set(`recording_${this.recordingId}`, JSON.stringify(metadata));
 
       logger.info(`Recording started - ID: ${this.recordingId}`, "VoiceRecorder");
-      return this.recordingId!;
+      return this.recordingId;
     } catch (error) {
       this.cleanup();
       throw AppError.media("Failed to start recording", error as Error);
