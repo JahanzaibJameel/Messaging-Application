@@ -32,7 +32,7 @@ export const initializeSentry = () => {
     _experiments: {
       profilesSampleRate: SAMPLE_RATE,
     },
-    beforeSend: (event, hint) => {
+    beforeSend: (event, _hint) => {
       if (event.exception) {
         const exception = event.exception.values?.[0];
         if (
@@ -52,7 +52,7 @@ export const initializeSentry = () => {
 
       return event;
     },
-    beforeBreadcrumb: (breadcrumb, hint) => {
+    beforeBreadcrumb: (breadcrumb, _hint) => {
       if (
         breadcrumb.message?.includes("password") ||
         breadcrumb.message?.includes("token") ||
@@ -76,7 +76,7 @@ export const initializeSentry = () => {
   });
 };
 
-export const configureNavigationTracing = (navigationRef: any) => {
+export const configureNavigationTracing = (_navigationRef: any) => {
   // Navigation tracing is handled by reactNavigationIntegration
 };
 
