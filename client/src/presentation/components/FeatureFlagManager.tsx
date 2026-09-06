@@ -4,7 +4,7 @@
  * Admin interface for managing feature flags in development/staging
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -16,7 +16,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { Slider } from "@react-native-community/slider";
-import { useFeatureFlags, useFeatureFlag } from "@/core/featureFlags/FeatureFlags";
+import { useFeatureFlags } from "@/core/featureFlags/FeatureFlags";
 // import { Button } from './Button'; // Will be implemented separately
 const createStyles = <T extends Record<string, object>>(styles: T) => StyleSheet.create(styles);
 
@@ -29,8 +29,7 @@ export const FeatureFlagManager: React.FC<FeatureFlagManagerProps> = ({
   visible = __DEV__,
   onClose,
 }) => {
-  const { flags, isLoading, error, syncWithRemote, setFlag, resetFlags, lastSync } =
-    useFeatureFlags();
+  const { flags, isLoading, syncWithRemote, setFlag, resetFlags, lastSync } = useFeatureFlags();
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -38,7 +37,7 @@ export const FeatureFlagManager: React.FC<FeatureFlagManagerProps> = ({
     setRefreshing(true);
     try {
       await syncWithRemote();
-    } catch (error) {
+    } catch {
       Alert.alert("Error", "Failed to sync feature flags");
     } finally {
       setRefreshing(false);
