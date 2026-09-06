@@ -284,7 +284,7 @@ export function useMedia(options: UseMediaOptions = {}) {
 }
 
 // Hook for chat media
-export function useChatMedia(chatId: string) {
+export function useChatMedia(_chatId?: string) {
   const media = useMedia();
 
   const sendMediaMessage = useCallback(
