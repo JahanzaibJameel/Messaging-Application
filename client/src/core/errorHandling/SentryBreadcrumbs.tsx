@@ -1,14 +1,13 @@
 // @ts-nocheck — Sentry React Native v8 API surface differs from legacy typings in this module.
 import * as Sentry from "@sentry/react-native";
-import React, { useCallback, useRef } from "react";
+import React, { useCallback } from "react";
 import { Platform } from "react-native";
 import { useAuthStore } from "@/presentation/stores/authStore";
 import { useChatStore } from "@/presentation/stores/chatStore";
 import { useMessageStore } from "@/presentation/stores/messageStore";
-import { useUIStore } from "@/presentation/stores/uiStore";
 // Simple logger fallback
 const logger = {
-  info: (message: string) => console.log(`[INFO] ${message}`),
+  info: (message: string) => console.warn(`[WARN] ${message}`),
   warn: (message: string) => console.warn(`[WARN] ${message}`),
   error: (message: string, error?: Error) => console.error(`[ERROR] ${message}`, error),
 };
@@ -51,9 +50,8 @@ export enum SentryContext {
  */
 export const useSentryBreadcrumbs = () => {
   const { currentUser } = useAuthStore();
-  const { getAllChats, getChatById } = useChatStore();
+  const { getAllChats } = useChatStore();
   const { getMessagesByChatId } = useMessageStore();
-  const { showToast } = useUIStore();
 
   // Log navigation events
   const logNavigation = useCallback((to: string, from?: string) => {
@@ -161,7 +159,7 @@ export const useSentryBreadcrumbs = () => {
     } catch (error) {
       logger.error("Failed to set store context:", error);
     }
-  }, [currentUser, getAllChats, getChatById, getMessagesByChatId]);
+  }, [currentUser, getAllChats, getMessagesByChatId]);
 
   // Set feature flags context
   const setFeatureFlagsContext = useCallback(() => {
@@ -222,7 +220,7 @@ export const SentryErrorBoundary: React.FC<SentryErrorBoundaryProps> = ({
   fallback,
   onError,
 }) => {
-  const { logError, setStoreContext } = useSentryBreadcrumbs();
+  const { logError } = useSentryBreadcrumbs();
 
   const handleError = useCallback(
     (error: Error, errorInfo: any) => {
@@ -254,7 +252,7 @@ export const SentryErrorBoundary: React.FC<SentryErrorBoundaryProps> = ({
         },
       });
     },
-    [logError, onError]
+    [logError, onError, fallback]
   );
 
   return (
@@ -335,7 +333,7 @@ export const withSentryLogging = <P extends object>(WrappedComponent: React.Comp
  * Tracks app performance and reports to Sentry
  */
 export const usePerformanceMonitoring = () => {
-  const { logPerformance, logNetworkEvent } = useSentryBreadcrumbs();
+  const { logPerformance } = useSentryBreadcrumbs();
 
   // Track app startup time
   React.useEffect(() => {
@@ -351,7 +349,7 @@ export const usePerformanceMonitoring = () => {
     const timer = setTimeout(measureStartup, 2000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [logPerformance]);
 
   // Track memory usage
   const trackMemoryUsage = useCallback(() => {
@@ -364,7 +362,7 @@ export const usePerformanceMonitoring = () => {
     } catch (error) {
       logger.warn("Memory monitoring not available:", error);
     }
-  }, []);
+  }, [logPerformance]);
 
   // Track FPS
   const trackFPS = useCallback(() => {
@@ -395,7 +393,7 @@ export const usePerformanceMonitoring = () => {
 
     // This would typically be called from an animation loop
     return measureFrame;
-  }, []);
+  }, [logPerformance]);
 
   return {
     trackMemoryUsage,
@@ -407,7 +405,7 @@ export const usePerformanceMonitoring = () => {
  * Network Request Interceptor
  * Logs all network requests for debugging
  */
-export const setupNetworkMonitoring = () => {
+export const useSetupNetworkMonitoring = () => {
   const { logNetworkEvent, logError } = useSentryBreadcrumbs();
 
   // This would integrate with your HTTP client
@@ -447,5 +445,5 @@ export default {
   SentryErrorBoundary,
   withSentryLogging,
   usePerformanceMonitoring,
-  setupNetworkMonitoring,
+  useSetupNetworkMonitoring,
 };
