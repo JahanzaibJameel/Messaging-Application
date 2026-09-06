@@ -9,7 +9,9 @@ import { error as logError } from "@/utils/logger";
 export class SecureStorageService {
   private static instance: SecureStorageService;
 
-  private constructor() {}
+  private constructor() {
+    // Private constructor for singleton pattern - use getInstance() instead
+  }
 
   public static getInstance(): SecureStorageService {
     if (!SecureStorageService.instance) {
