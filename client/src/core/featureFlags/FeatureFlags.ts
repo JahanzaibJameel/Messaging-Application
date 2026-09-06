@@ -440,7 +440,7 @@ function evaluateVersionCondition(version: string, condition: FeatureFlagConditi
   }
 }
 
-function evaluateDateCondition(condition: FeatureFlagCondition): boolean {
+function evaluateDateCondition(_condition: FeatureFlagCondition): boolean {
   // Implement date range evaluation
   // This would check if current date is within the specified range
   return true; // Placeholder
@@ -448,16 +448,9 @@ function evaluateDateCondition(condition: FeatureFlagCondition): boolean {
 
 // Mock remote fetch function (replace with actual implementation)
 async function fetchFeatureFlagsFromRemote(): Promise<Record<string, FeatureFlag> | null> {
-  try {
-    // In production, this would fetch from your feature flag service
-    // Example: fetch('https://your-feature-flag-service.com/api/flags')
-
-    // For now, return null to use local defaults
-    return null;
-  } catch (error) {
-    logger.error("Error fetching remote feature flags:", error);
-    return null;
-  }
+  // Feature flags fetch is handled remotely when service is configured
+  // For now, return local defaults (null means use local state)
+  return null;
 }
 
 // Export convenience hooks
