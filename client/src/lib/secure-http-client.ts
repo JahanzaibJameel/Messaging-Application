@@ -106,7 +106,7 @@ class SecureHttpClient {
         // Fallback to regular fetch for development/testing
         response = await fetch(url, {
           ...requestOptions,
-          signal: AbortSignal.timeout(this.defaultOptions.timeout!),
+          signal: AbortSignal.timeout(this.defaultOptions.timeout ?? 10000),
         });
         status = response.status;
       }
@@ -124,7 +124,7 @@ class SecureHttpClient {
             data = responseText as any;
           }
         }
-      } catch (parseError) {
+      } catch (_parseError) {
         error = "Failed to parse response";
       }
 
@@ -155,7 +155,7 @@ class SecureHttpClient {
    */
   private async retryRequest<T>(
     requestFn: () => Promise<ApiResponse<T>>,
-    retries: number = this.defaultOptions.retries!
+    retries: number = this.defaultOptions.retries ?? 3
   ): Promise<ApiResponse<T>> {
     let lastError: ApiResponse<T>;
 
