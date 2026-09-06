@@ -1,7 +1,7 @@
 import React from "react";
 import { View, StyleSheet, Image } from "react-native";
 import { useTheme } from "@/hooks/useTheme";
-import { Spacing, BorderRadius } from "@/constants/theme";
+import { Spacing } from "@/constants/theme";
 
 interface AvatarProps {
   uri?: string;
