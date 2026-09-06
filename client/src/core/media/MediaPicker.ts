@@ -9,7 +9,7 @@
 // import * as DocumentPicker from 'expo-document-picker';
 import { AppError } from "../errors";
 import { logger } from "../logger";
-import { MediaProcessor, type MediaFile, type ProcessedMedia } from "./MediaProcessor";
+import { MediaProcessor, type ProcessedMedia } from "./MediaProcessor";
 
 export type PickerSource = "camera" | "library" | "document";
 
@@ -48,7 +48,7 @@ export class MediaPicker {
   /**
    * Pick image from camera
    */
-  static async takePhoto(options: PickerOptions = {}): Promise<ProcessedMedia | null> {
+  static async takePhoto(_options: PickerOptions = {}): Promise<ProcessedMedia | null> {
     const hasPermission = await this.requestPermissions("camera");
     if (!hasPermission) {
       throw AppError.permission("Camera permission not granted");
@@ -92,7 +92,7 @@ export class MediaPicker {
       };
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: mediaTypeMap[opts.mediaTypes!],
+        mediaTypes: mediaTypeMap[opts.mediaTypes ?? "all"],
         allowsMultipleSelection: opts.allowsMultipleSelection,
         selectionLimit: opts.maxSelection,
         allowsEditing: false,
