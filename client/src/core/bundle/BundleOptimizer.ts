@@ -196,7 +196,7 @@ class BundleOptimizerClass {
   };
 
   // Optimize imports
-  public optimizeImports = (filePath: string): string[] => {
+  public optimizeImports = (_filePath: string): string[] => {
     const recommendations: string[] = [];
 
     // This would analyze the file and suggest optimizations
