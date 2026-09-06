@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import Animated, {
-  useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withTiming,
@@ -33,13 +32,14 @@ export function TypingIndicator() {
     animate(dot1, 0);
     animate(dot2, 150);
     animate(dot3, 300);
-  }, []);
+  }, [dot1, dot2, dot3]);
 
-  const createDotStyle = (sv: SharedValue<number>) =>
-    useAnimatedStyle(() => ({
+  const createDotStyle = (sv: SharedValue<number>) => {
+    return {
       transform: [{ translateY: -sv.value * 4 }],
       opacity: 0.5 + sv.value * 0.5,
-    }));
+    };
+  };
 
   const dot1Style = createDotStyle(dot1);
   const dot2Style = createDotStyle(dot2);
