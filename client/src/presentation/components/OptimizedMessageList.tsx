@@ -3,13 +3,13 @@
  * Uses FlashList for high-performance rendering with 60fps target
  */
 
-import React, { useCallback, useMemo, useRef } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   FlashList,
   FlashListProps as FlashListPropsType,
   ListRenderItemInfo,
 } from "@shopify/flash-list";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { MessageEntity } from "../../domain/entities/Message";
 import { useFeatureFlag } from "@/core/featureFlags/FeatureFlags";
 import { useAccessibility } from "@/core/accessibility/AccessibilityManager";
@@ -26,26 +26,11 @@ interface OptimizedMessageListProps {
   ListFooterComponent?: React.ComponentType;
 }
 
-const { width: screenWidth } = Dimensions.get("window");
 const MESSAGE_HEIGHT = 80; // Fixed height for getItemLayout
-const MESSAGE_ESTIMATED_WIDTH = screenWidth - 80; // Account for padding/avatar
 
 /**
  * getItemLayout for FlashList optimization
  * Provides fixed dimensions for performance boost
- */
-const getItemLayout = useCallback(
-  (data: any, index: number) => ({
-    length: MESSAGE_HEIGHT,
-    offset: MESSAGE_HEIGHT * index,
-    index,
-  }),
-  []
-);
-
-/**
- * Optimized Message List Component
- * Enterprise-grade performance with FlashList
  */
 export const OptimizedMessageList: React.FC<OptimizedMessageListProps> = React.memo(
   ({
@@ -61,6 +46,13 @@ export const OptimizedMessageList: React.FC<OptimizedMessageListProps> = React.m
   }) => {
     const { isEnabled: flashListEnabled } = useFeatureFlag("flashlist-optimization");
     const { screenReader } = useAccessibility();
+
+    // getItemLayout for FlashList optimization
+    const _getItemLayout = (_data: any, _index: number) => ({
+      length: MESSAGE_HEIGHT,
+      offset: MESSAGE_HEIGHT * _index,
+      index: _index,
+    });
 
     // Memoize data for FlashList
     const flashListData = useMemo(
@@ -79,7 +71,7 @@ export const OptimizedMessageList: React.FC<OptimizedMessageListProps> = React.m
 
     // Render individual message with accessibility
     const renderItem = useCallback(
-      ({ item, index }: ListRenderItemInfo<any>) => {
+      ({ item, index: _index }: ListRenderItemInfo<any>) => {
         const message = item.message as MessageEntity;
 
         return (
@@ -173,16 +165,16 @@ export const OptimizedMessageList: React.FC<OptimizedMessageListProps> = React.m
       flashListData,
       renderItem,
       keyExtractor,
-      flashListEnabled,
       ListEmptyComponent,
       ListFooterComponent,
+      ListHeaderComponent,
       isLoading,
       onRefresh,
       refreshing,
     ]);
 
     // Handle message press
-    const handleMessagePress = useCallback(
+    const _handleMessagePress = useCallback(
       (message: MessageEntity) => {
         onMessagePress?.(message);
 
@@ -196,7 +188,7 @@ export const OptimizedMessageList: React.FC<OptimizedMessageListProps> = React.m
     );
 
     // Handle message long press
-    const handleMessageLongPress = useCallback(
+    const _handleMessageLongPress = useCallback(
       (message: MessageEntity) => {
         onMessageLongPress?.(message);
 
