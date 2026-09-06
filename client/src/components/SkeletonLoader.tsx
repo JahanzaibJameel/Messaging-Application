@@ -21,7 +21,7 @@ function SkeletonItem() {
 
   useEffect(() => {
     shimmer.value = withRepeat(withTiming(1, { duration: 1000 }), -1, false);
-  }, []);
+  }, [shimmer]);
 
   const shimmerStyle = useAnimatedStyle(() => ({
     opacity: interpolate(shimmer.value, [0, 0.5, 1], [0.3, 0.6, 0.3]),
