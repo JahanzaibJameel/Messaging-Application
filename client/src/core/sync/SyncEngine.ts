@@ -6,7 +6,6 @@
 import { useSyncStore, useMessageStore, useChatStore, useUIStore } from "../../presentation/stores";
 import { chatRepository } from "../../data/repositories";
 import { NetworkMonitor } from "./NetworkMonitor";
-import { AppError } from "../errors";
 import { logger } from "../logger";
 import type { Message } from "../../domain/entities/Message";
 
