@@ -7,10 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useChatStore, useMessageStore, useUIStore, useAuthStore } from "../stores";
 import { chatRepository } from "../../data/repositories";
 import { logger } from "../../core/logger";
-import { ChatEntity } from "../../domain/entities/Chat";
-import { MessageEntity } from "../../domain/entities/Message";
-import type { Chat, GroupChat } from "../../domain/entities/Chat";
-import type { Message } from "../../domain/entities/Message";
+import { MessageEntity, GroupChat } from "../../domain/entities";
 
 interface UseChatOptions {
   chatId?: string;
@@ -35,7 +32,7 @@ export function useChat(options: UseChatOptions = {}) {
     unarchiveChat,
     updateLastMessage,
   } = useChatStore();
-  const { getMessagesByChatId, addMessage, updateMessage, deleteMessage } = useMessageStore();
+  const { getMessagesByChatId, addMessage, deleteMessage } = useMessageStore();
   const { showToast } = useUIStore();
 
   const chat = chatId ? getChatById(chatId) : null;

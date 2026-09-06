@@ -59,7 +59,9 @@ export class CancellationToken {
   onCancelled(callback: () => void): () => void {
     if (this._isCancelled) {
       callback();
-      return () => {};
+      return () => {
+        // No cleanup needed - token already cancelled
+      };
     }
 
     this.listeners.add(callback);

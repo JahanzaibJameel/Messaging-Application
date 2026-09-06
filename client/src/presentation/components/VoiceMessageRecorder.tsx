@@ -86,7 +86,7 @@ export const VoiceMessageRecorder: React.FC<VoiceMessageRecorderProps> = ({
 
   const handleStartRecording = async () => {
     try {
-      const recordingId = await voiceRecorder.startRecording({
+      const _recordingId = await voiceRecorder.startRecording({
         maxDuration: 60, // 1 minute
         quality: "medium",
         format: "m4a",
@@ -102,7 +102,7 @@ export const VoiceMessageRecorder: React.FC<VoiceMessageRecorderProps> = ({
         type: "info",
         message: "Recording started",
       });
-    } catch (error) {
+    } catch (_error) {
       showToast({
         type: "error",
         message: "Failed to start recording",
@@ -116,7 +116,7 @@ export const VoiceMessageRecorder: React.FC<VoiceMessageRecorderProps> = ({
         await voiceRecorder.resumeRecording();
         setIsPaused(false);
         setStatusText("Recording... Tap to pause");
-      } catch (error) {
+      } catch (_error) {
         showToast({
           type: "error",
           message: "Failed to resume recording",
@@ -127,7 +127,7 @@ export const VoiceMessageRecorder: React.FC<VoiceMessageRecorderProps> = ({
         await voiceRecorder.pauseRecording();
         setIsPaused(true);
         setStatusText("Paused - Tap to resume");
-      } catch (error) {
+      } catch (_error) {
         showToast({
           type: "error",
           message: "Failed to pause recording",
@@ -151,7 +151,7 @@ export const VoiceMessageRecorder: React.FC<VoiceMessageRecorderProps> = ({
         type: "success",
         message: `Voice message recorded (${VoiceRecorder.formatDuration(recording.duration)})`,
       });
-    } catch (error) {
+    } catch (_error) {
       showToast({
         type: "error",
         message: "Failed to stop recording",
@@ -172,7 +172,7 @@ export const VoiceMessageRecorder: React.FC<VoiceMessageRecorderProps> = ({
         type: "info",
         message: "Recording cancelled",
       });
-    } catch (error) {
+    } catch (_error) {
       showToast({
         type: "error",
         message: "Failed to cancel recording",

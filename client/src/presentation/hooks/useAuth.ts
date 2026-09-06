@@ -7,7 +7,6 @@ import { useCallback, useState } from "react";
 import { useAuthStore, useUIStore } from "../stores";
 import { userRepository } from "../../data/repositories";
 import { logger } from "../../core/logger";
-import { UserEntity } from "../../domain/entities/User";
 
 interface LoginState {
   isLoading: boolean;

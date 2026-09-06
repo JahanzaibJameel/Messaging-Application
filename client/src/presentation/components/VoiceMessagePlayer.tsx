@@ -28,7 +28,7 @@ export const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = ({
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentPosition, setCurrentPosition] = useState(0);
-  const [duration, setDuration] = useState(recording.duration);
+  const [duration, _setDuration] = useState(recording.duration);
 
   const progressAnimation = useRef(new Animated.Value(0)).current;
   const playbackTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -85,7 +85,7 @@ export const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = ({
           setCurrentPosition(0);
         }
       }
-    } catch (error) {
+    } catch (_error) {
       showToast({
         type: "error",
         message: "Failed to play voice message",
