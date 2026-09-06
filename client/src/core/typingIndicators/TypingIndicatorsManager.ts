@@ -4,7 +4,6 @@
  */
 
 import { useUIStore } from "../../presentation/stores";
-import { AppError } from "../errors";
 import { logger } from "../logger";
 
 export interface TypingEvent {
