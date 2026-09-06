@@ -4,18 +4,16 @@
  */
 
 import React, { useCallback, useEffect, useRef } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   withSpring,
-  interpolate,
-  runOnUI,
-  cancelAnimation,
   withRepeat,
   withSequence,
   Easing,
+  runOnUI,
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useFeatureFlag } from "@/core/featureFlags/FeatureFlags";
@@ -175,9 +173,9 @@ export const OptimizedMessageBubble: React.FC<{
     }, 150);
 
     onPress?.();
-  }, [animationsEnabled, reduceMotion, onPress]);
+  }, [animationsEnabled, reduceMotion, onPress, scale]);
 
-  const handleLongPress = useCallback(() => {
+  const _handleLongPress = useCallback(() => {
     "worklet";
     if (!animationsEnabled || reduceMotion) {
       onLongPress?.();
@@ -203,7 +201,7 @@ export const OptimizedMessageBubble: React.FC<{
     }, 350);
 
     onLongPress?.();
-  }, [animationsEnabled, reduceMotion, onLongPress]);
+  }, [animationsEnabled, reduceMotion, onLongPress, scale]);
 
   const animatedStyle = useAnimatedStyle(() => {
     "worklet";
