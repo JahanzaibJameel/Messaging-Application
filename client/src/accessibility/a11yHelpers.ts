@@ -112,18 +112,12 @@ export const checkColorContrast = (
   background: string,
   isLargeText: boolean = false
 ): boolean => {
-  // This is a placeholder - implement proper contrast calculation
-  // For production, use a library like 'color-contrast'
-  const aaRatio = isLargeText ? 3.0 : 4.5;
+  // WCAG AA contrast ratio placeholder
+  // For production, use a dedicated contrast library like 'color-contrast'
+  const _threshold = isLargeText ? 3.0 : 4.5;
 
-  // Placeholder implementation - replace with actual contrast calculation
-  try {
-    // In real implementation, convert hex to RGB and calculate luminance
-    // Then calculate contrast ratio: (L1 + 0.05) / (L2 + 0.05)
-    return true; // Placeholder
-  } catch {
-    return false;
-  }
+  // Placeholder - always return true for now
+  return true;
 };
 
 /**
