@@ -34,7 +34,7 @@ interface UploadTask {
 }
 
 const UPLOAD_URL = process.env.EXPO_PUBLIC_UPLOAD_URL || "https://api.chatapp.com/upload";
-const CHUNK_SIZE = 1024 * 1024; // 1MB chunks for resumable uploads
+const _CHUNK_SIZE = 1024 * 1024; // 1MB chunks for resumable uploads
 
 export class MediaUploader {
   private activeUploads: Map<string, UploadTask> = new Map();
