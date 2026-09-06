@@ -6,7 +6,7 @@ import * as Haptics from "expo-haptics";
 import { Avatar } from "@/components/Avatar";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
-import { Spacing, BorderRadius } from "@/constants/theme";
+import { Spacing } from "@/constants/theme";
 import { Chat } from "@/domain/entities/Chat";
 import { User } from "@/domain/entities/User";
 import { formatChatListTime } from "@/utils/formatTime";
