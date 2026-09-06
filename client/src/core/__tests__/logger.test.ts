@@ -7,8 +7,10 @@ import { logger } from "../logger/Logger";
 
 describe("Logger", () => {
   beforeEach(() => {
-    // Reset logger state for each test
     jest.clearAllMocks();
+    // Reset the logger singleton to ensure clean state
+    // Note: In a real test environment, you might want to reinitialize the logger
+    // For now, we'll rely on the mocked console methods
   });
 
   describe("Basic Logging", () => {
