@@ -25,7 +25,8 @@
             "backgroundColor": "#0B141A"
           }
         }
-      ]
+      ],
+      "@sentry/react-native"
     ],
     "experiments": {
       "reactCompiler": true,
