@@ -1,5 +1,8 @@
-import { registerRootComponent } from "expo";
+import React from "react";
+import { IndexScreen } from "./src/Screens/IndexScreen";
 
-import App from "./src/App";
+function App() {
+  return <IndexScreen />;
+}
 
-registerRootComponent(App);
+export default App;
