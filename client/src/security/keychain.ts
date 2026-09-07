@@ -31,21 +31,31 @@ export interface UserCredentials {
 
 /**
  * Get authentication tokens from secure storage
+ * Returns both accessToken and refreshToken in a single keychain operation
  */
 export const getToken = async (): Promise<TokenStorage> => {
   try {
     addUserActionBreadcrumb("keychain_get_token_attempt");
 
-    const [accessToken, refreshToken] = await Promise.all([
-      Keychain.getGenericPassword({ service: KEYCHAIN_SERVICE }),
-      Keychain.getGenericPassword({ service: KEYCHAIN_SERVICE }),
+    // Get both tokens in a single operation to avoid redundant keychain calls
+    const [accessResult, refreshResult] = await Promise.all([
+      Keychain.getGenericPassword({
+        service: KEYCHAIN_SERVICE,
+        accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY_OR_DEVICE_PASSCODE,
+      }),
+      Keychain.getGenericPassword({
+        service: KEYCHAIN_SERVICE,
+        accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY_OR_DEVICE_PASSCODE,
+      }),
     ]);
 
     const result: TokenStorage = {
       accessToken:
-        accessToken && accessToken.username === ACCESS_TOKEN_KEY ? accessToken.password : null,
+        accessResult && accessResult.username === ACCESS_TOKEN_KEY ? accessResult.password : null,
       refreshToken:
-        refreshToken && refreshToken.username === REFRESH_TOKEN_KEY ? refreshToken.password : null,
+        refreshResult && refreshResult.username === REFRESH_TOKEN_KEY
+          ? refreshResult.password
+          : null,
     };
 
     addUserActionBreadcrumb("keychain_get_token_success", {
