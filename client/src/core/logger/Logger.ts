@@ -109,10 +109,10 @@ class Logger {
 
     switch (entry.level) {
       case "debug":
-        console.warn(fullMessage, entry.data ?? "");
+        console.debug(fullMessage, entry.data ?? "");
         break;
       case "info":
-        console.warn(fullMessage, entry.data ?? "");
+        console.info(fullMessage, entry.data ?? "");
         break;
       case "warn":
         console.warn(fullMessage, entry.data ?? "");
