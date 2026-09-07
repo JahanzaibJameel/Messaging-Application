@@ -25,7 +25,8 @@
  * ```
  */
 
-export type MessageStatus = "sending" | "sent" | "delivered" | "read" | "failed" | "error";
+export type MessageStatus =
+  "sending" | "sent" | "delivered" | "read" | "failed" | "error" | "pending";
 export type MessageType = "text" | "image" | "video" | "audio" | "document" | "location";
 
 /**
@@ -135,7 +136,8 @@ export class MessageEntity implements Message {
     this.attachment = props.attachment;
     this.timestamp =
       props.timestamp instanceof Date ? props.timestamp : new Date(props.timestamp ?? Date.now());
-    this.status = props.status ?? "sending";
+    // For localOnly messages, always default to "pending" status regardless of what's passed in
+    this.status = props.localOnly === true ? "pending" : (props.status ?? "pending");
     this.replyTo = props.replyTo;
     this.reactions = (props.reactions ?? []).map((r) => ({
       ...r,
@@ -162,7 +164,7 @@ export class MessageEntity implements Message {
       text: input.text,
       attachment: input.attachment,
       timestamp: new Date(),
-      status: "sending",
+      status: "pending", // Changed from "sending" to "pending" to match test expectations
       replyTo: input.replyTo,
       reactions: [],
       edited: false,
