@@ -33,15 +33,17 @@ describe("RemoteApiDataSource", () => {
     it("should handle getUserById", async () => {
       // Mock the actual API call
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () =>
-          Promise.resolve({
-            id: "user_123",
-            name: "Test User",
-            phone: "+1234567890",
-            isOnline: true,
-            createdAt: "2024-01-01T00:00:00Z",
-            updatedAt: "2024-01-01T00:00:00Z",
-          }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              id: "user_123",
+              name: "Test User",
+              phone: "+1234567890",
+              isOnline: true,
+              createdAt: "2024-01-01T00:00:00Z",
+              updatedAt: "2024-01-01T00:00:00Z",
+            })
+          ),
         ok: true,
       } as Response);
 
@@ -56,7 +58,7 @@ describe("RemoteApiDataSource", () => {
 
     it("should handle getUserById not found", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () => Promise.resolve(null),
+        text: () => Promise.resolve(JSON.stringify(null)),
         ok: true,
       } as Response);
 
@@ -70,25 +72,27 @@ describe("RemoteApiDataSource", () => {
 
     it("should handle getUsersByIds", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () =>
-          Promise.resolve([
-            {
-              id: "user_1",
-              name: "User 1",
-              phone: "+1234567890",
-              isOnline: true,
-              createdAt: "2024-01-01T00:00:00Z",
-              updatedAt: "2024-01-01T00:00:00Z",
-            },
-            {
-              id: "user_2",
-              name: "User 2",
-              phone: "+0987654321",
-              isOnline: false,
-              createdAt: "2024-01-01T00:00:00Z",
-              updatedAt: "2024-01-01T00:00:00Z",
-            },
-          ]),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify([
+              {
+                id: "user_1",
+                name: "User 1",
+                phone: "+1234567890",
+                isOnline: true,
+                createdAt: "2024-01-01T00:00:00Z",
+                updatedAt: "2024-01-01T00:00:00Z",
+              },
+              {
+                id: "user_2",
+                name: "User 2",
+                phone: "+0987654321",
+                isOnline: false,
+                createdAt: "2024-01-01T00:00:00Z",
+                updatedAt: "2024-01-01T00:00:00Z",
+              },
+            ])
+          ),
         ok: true,
       } as Response);
 
@@ -104,15 +108,17 @@ describe("RemoteApiDataSource", () => {
 
     it("should handle getCurrentUser", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () =>
-          Promise.resolve({
-            id: "user_current",
-            name: "Current User",
-            phone: "+1234567890",
-            isOnline: true,
-            createdAt: "2024-01-01T00:00:00Z",
-            updatedAt: "2024-01-01T00:00:00Z",
-          }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              id: "user_current",
+              name: "Current User",
+              phone: "+1122334455",
+              isOnline: true,
+              createdAt: "2024-01-01T00:00:00Z",
+              updatedAt: "2024-01-01T00:00:00Z",
+            })
+          ),
         ok: true,
       } as Response);
 
@@ -127,15 +133,17 @@ describe("RemoteApiDataSource", () => {
 
     it("should handle updateUser", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () =>
-          Promise.resolve({
-            id: "user_123",
-            name: "Updated User",
-            phone: "+1234567890",
-            isOnline: false,
-            createdAt: "2024-01-01T00:00:00Z",
-            updatedAt: "2024-01-01T12:00:00Z",
-          }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              id: "user_123",
+              name: "Updated User",
+              phone: "+1234567890",
+              isOnline: false,
+              createdAt: "2024-01-01T00:00:00Z",
+              updatedAt: "2024-01-01T12:00:00Z",
+            })
+          ),
         ok: true,
       } as Response);
 
@@ -155,15 +163,17 @@ describe("RemoteApiDataSource", () => {
 
     it("should handle updateProfile", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () =>
-          Promise.resolve({
-            id: "user_123",
-            name: "Updated Profile",
-            phone: "+1234567890",
-            isOnline: true,
-            createdAt: "2024-01-01T00:00:00Z",
-            updatedAt: "2024-01-01T00:00:00Z",
-          }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              id: "user_123",
+              name: "Updated Profile",
+              phone: "+1234567890",
+              isOnline: true,
+              createdAt: "2024-01-01T00:00:00Z",
+              updatedAt: "2024-01-01T00:00:00Z",
+            })
+          ),
         ok: true,
       } as Response);
 
@@ -184,20 +194,22 @@ describe("RemoteApiDataSource", () => {
   describe("Chat Operations", () => {
     it("should handle getChats", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () =>
-          Promise.resolve([
-            {
-              id: "chat_1",
-              type: "private",
-              participantIds: ["user_1", "user_2"],
-              createdAt: "2024-01-01T00:00:00Z",
-              updatedAt: "2024-01-01T00:00:00Z",
-              unreadCount: 0,
-              isPinned: false,
-              isMuted: false,
-              isArchived: false,
-            },
-          ]),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify([
+              {
+                id: "chat_1",
+                type: "private",
+                participantIds: ["user_1", "user_2"],
+                createdAt: "2024-01-01T00:00:00Z",
+                updatedAt: "2024-01-01T00:00:00Z",
+                unreadCount: 0,
+                isPinned: false,
+                isMuted: false,
+                isArchived: false,
+              },
+            ])
+          ),
         ok: true,
       } as Response);
 
@@ -212,18 +224,20 @@ describe("RemoteApiDataSource", () => {
 
     it("should handle getChatById", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () =>
-          Promise.resolve({
-            id: "chat_123",
-            type: "private",
-            participantIds: ["user_1", "user_2"],
-            createdAt: "2024-01-01T00:00:00Z",
-            updatedAt: "2024-01-01T00:00:00Z",
-            unreadCount: 0,
-            isPinned: false,
-            isMuted: false,
-            isArchived: false,
-          }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              id: "chat_123",
+              type: "private",
+              participantIds: ["user_1", "user_2"],
+              createdAt: "2024-01-01T00:00:00Z",
+              updatedAt: "2024-01-01T00:00:00Z",
+              unreadCount: 0,
+              isPinned: false,
+              isMuted: false,
+              isArchived: false,
+            })
+          ),
         ok: true,
       } as Response);
 
@@ -238,18 +252,20 @@ describe("RemoteApiDataSource", () => {
 
     it("should handle createPrivateChat", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () =>
-          Promise.resolve({
-            id: "chat_private",
-            type: "private",
-            participantIds: ["user_1", "user_2"],
-            createdAt: "2024-01-01T00:00:00Z",
-            updatedAt: "2024-01-01T00:00:00Z",
-            unreadCount: 0,
-            isPinned: false,
-            isMuted: false,
-            isArchived: false,
-          }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              id: "chat_private",
+              type: "private",
+              participantIds: ["user_1", "user_2"],
+              createdAt: "2024-01-01T00:00:00Z",
+              updatedAt: "2024-01-01T00:00:00Z",
+              unreadCount: 0,
+              isPinned: false,
+              isMuted: false,
+              isArchived: false,
+            })
+          ),
         ok: true,
       } as Response);
 
@@ -265,19 +281,21 @@ describe("RemoteApiDataSource", () => {
 
     it("should handle createGroup", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () =>
-          Promise.resolve({
-            id: "chat_group",
-            type: "group",
-            participantIds: ["user_1", "user_2", "user_3"],
-            name: "Test Group",
-            createdAt: "2024-01-01T00:00:00Z",
-            updatedAt: "2024-01-01T00:00:00Z",
-            unreadCount: 0,
-            isPinned: false,
-            isMuted: false,
-            isArchived: false,
-          }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              id: "chat_group",
+              type: "group",
+              participantIds: ["user_1", "user_2", "user_3"],
+              name: "Test Group",
+              createdAt: "2024-01-01T00:00:00Z",
+              updatedAt: "2024-01-01T00:00:00Z",
+              unreadCount: 0,
+              isPinned: false,
+              isMuted: false,
+              isArchived: false,
+            })
+          ),
         ok: true,
       } as Response);
 
@@ -308,21 +326,23 @@ describe("RemoteApiDataSource", () => {
   describe("Message Operations", () => {
     it("should handle getMessages", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () =>
-          Promise.resolve([
-            {
-              id: "msg_1",
-              chatId: "chat_123",
-              senderId: "user_1",
-              type: "text",
-              text: "Hello",
-              timestamp: "2024-01-01T00:00:00Z",
-              status: "sent",
-              localOnly: false,
-              reactions: [],
-              edited: false,
-            },
-          ]),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify([
+              {
+                id: "msg_1",
+                chatId: "chat_123",
+                senderId: "user_1",
+                type: "text",
+                text: "Hello",
+                timestamp: "2024-01-01T00:00:00Z",
+                status: "sent",
+                localOnly: false,
+                reactions: [],
+                edited: false,
+              },
+            ])
+          ),
         ok: true,
       } as Response);
 
@@ -338,19 +358,21 @@ describe("RemoteApiDataSource", () => {
 
     it("should handle sendMessage", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () =>
-          Promise.resolve({
-            id: "msg_new",
-            chatId: "chat_123",
-            senderId: "user_1",
-            type: "text",
-            text: "New message",
-            timestamp: "2024-01-01T00:00:00Z",
-            status: "sent",
-            localOnly: false,
-            reactions: [],
-            edited: false,
-          }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              id: "msg_new",
+              chatId: "chat_123",
+              senderId: "user_1",
+              type: "text",
+              text: "New message",
+              timestamp: "2024-01-01T00:00:00Z",
+              status: "sent",
+              localOnly: false,
+              reactions: [],
+              edited: false,
+            })
+          ),
         ok: true,
       } as Response);
 
@@ -379,20 +401,22 @@ describe("RemoteApiDataSource", () => {
 
     it("should handle updateMessage", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () =>
-          Promise.resolve({
-            id: "msg_123",
-            chatId: "chat_123",
-            senderId: "user_1",
-            type: "text",
-            text: "Updated message",
-            timestamp: "2024-01-01T00:00:00Z",
-            status: "sent",
-            localOnly: false,
-            reactions: [],
-            edited: true,
-            editedAt: "2024-01-01T12:00:00Z",
-          }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              id: "msg_123",
+              chatId: "chat_123",
+              senderId: "user_1",
+              type: "text",
+              text: "Updated message",
+              timestamp: "2024-01-01T00:00:00Z",
+              status: "sent",
+              localOnly: false,
+              reactions: [],
+              edited: true,
+              editedAt: "2024-01-01T12:00:00Z",
+            })
+          ),
         ok: true,
       } as Response);
 
@@ -428,7 +452,12 @@ describe("RemoteApiDataSource", () => {
   describe("Authentication", () => {
     it("should handle login", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () => Promise.resolve({ success: true }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              success: true,
+            })
+          ),
         ok: true,
       } as Response);
 
@@ -440,18 +469,20 @@ describe("RemoteApiDataSource", () => {
 
     it("should handle verifyOtp", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () =>
-          Promise.resolve({
-            token: "test_token",
-            user: {
-              id: "user_123",
-              name: "Test User",
-              phone: "+1234567890",
-              isOnline: true,
-              createdAt: "2024-01-01T00:00:00Z",
-              updatedAt: "2024-01-01T00:00:00Z",
-            },
-          }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              token: "test_token",
+              user: {
+                id: "user_123",
+                name: "Test User",
+                phone: "+1234567890",
+                isOnline: true,
+                createdAt: "2024-01-01T00:00:00Z",
+                updatedAt: "2024-01-01T00:00:00Z",
+              },
+            })
+          ),
         ok: true,
       } as Response);
 
@@ -467,7 +498,12 @@ describe("RemoteApiDataSource", () => {
 
     it("should handle logout", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () => Promise.resolve({ success: true }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              success: true,
+            })
+          ),
         ok: true,
       } as Response);
 
@@ -479,7 +515,12 @@ describe("RemoteApiDataSource", () => {
 
     it("should handle refreshToken", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () => Promise.resolve({ token: "new_token" }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              token: "new_token",
+            })
+          ),
         ok: true,
       } as Response);
 
@@ -496,7 +537,12 @@ describe("RemoteApiDataSource", () => {
   describe("Profile Operations", () => {
     it("should handle updateProfile", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () => Promise.resolve({ success: true }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              success: true,
+            })
+          ),
         ok: true,
       } as Response);
 
@@ -513,15 +559,17 @@ describe("RemoteApiDataSource", () => {
 
     it("should handle updateProfile", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () =>
-          Promise.resolve({
-            id: "user_123",
-            name: "Updated Profile",
-            phone: "+1234567890",
-            isOnline: true,
-            createdAt: "2024-01-01T00:00:00Z",
-            updatedAt: "2024-01-01T00:00:00Z",
-          }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              id: "user_123",
+              name: "Updated Profile",
+              phone: "+1234567890",
+              isOnline: true,
+              createdAt: "2024-01-01T00:00:00Z",
+              updatedAt: "2024-01-01T00:00:00Z",
+            })
+          ),
         ok: true,
       } as Response);
 
@@ -552,7 +600,7 @@ describe("RemoteApiDataSource", () => {
 
     it("should handle HTTP errors", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () => Promise.resolve({ error: "Not found" }),
+        text: () => Promise.resolve(JSON.stringify({ error: "Not found" })),
         ok: false,
         status: 404,
       } as Response);
@@ -565,11 +613,11 @@ describe("RemoteApiDataSource", () => {
 
     it("should handle JSON parsing errors", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () => Promise.reject(new Error("Invalid JSON")),
+        text: () => Promise.resolve("invalid json"),
         ok: true,
       } as Response);
 
-      await expect(dataSource.getUserById("user_123")).rejects.toThrow("Invalid JSON");
+      await expect(dataSource.getUserById("user_123")).rejects.toThrow();
       expect(mockFetch).toHaveBeenCalled();
 
       mockFetch.mockRestore();
@@ -579,7 +627,7 @@ describe("RemoteApiDataSource", () => {
   describe("Edge Cases", () => {
     it("should handle empty responses", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () => Promise.resolve(null),
+        text: () => Promise.resolve(JSON.stringify(null)),
         ok: true,
       } as Response);
 
@@ -592,7 +640,7 @@ describe("RemoteApiDataSource", () => {
 
     it("should handle malformed data", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () => Promise.resolve({ invalid: "data" }),
+        text: () => Promise.resolve(JSON.stringify({ invalid: "data" })),
         ok: true,
       } as Response);
 
@@ -614,7 +662,7 @@ describe("RemoteApiDataSource", () => {
       }));
 
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () => Promise.resolve(largeData),
+        text: () => Promise.resolve(JSON.stringify(largeData)),
         ok: true,
       } as Response);
 
@@ -630,15 +678,17 @@ describe("RemoteApiDataSource", () => {
   describe("Performance", () => {
     it("should handle concurrent requests", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () =>
-          Promise.resolve({
-            id: "user_123",
-            name: "Test User",
-            phone: "+1234567890",
-            isOnline: true,
-            createdAt: "2024-01-01T00:00:00Z",
-            updatedAt: "2024-01-01T00:00:00Z",
-          }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              id: "user_123",
+              name: "Test User",
+              phone: "+1234567890",
+              isOnline: true,
+              createdAt: "2024-01-01T00:00:00Z",
+              updatedAt: "2024-01-01T00:00:00Z",
+            })
+          ),
         ok: true,
       } as Response);
 
@@ -662,15 +712,17 @@ describe("RemoteApiDataSource", () => {
             setTimeout(
               () =>
                 resolve({
-                  json: () =>
-                    Promise.resolve({
-                      id: "user_123",
-                      name: "Test User",
-                      phone: "+1234567890",
-                      isOnline: true,
-                      createdAt: "2024-01-01T00:00:00Z",
-                      updatedAt: "2024-01-01T00:00:00Z",
-                    }),
+                  text: () =>
+                    Promise.resolve(
+                      JSON.stringify({
+                        id: "user_123",
+                        name: "Test User",
+                        phone: "+1234567890",
+                        isOnline: true,
+                        createdAt: "2024-01-01T00:00:00Z",
+                        updatedAt: "2024-01-01T00:00:00Z",
+                      })
+                    ),
                   ok: true,
                 } as Response),
               100
@@ -693,7 +745,12 @@ describe("RemoteApiDataSource", () => {
   describe("Security", () => {
     it("should handle authentication tokens", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () => Promise.resolve({ success: true }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              success: true,
+            })
+          ),
         ok: true,
       } as Response);
 
@@ -707,7 +764,12 @@ describe("RemoteApiDataSource", () => {
 
     it("should handle malicious input safely", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () => Promise.resolve({ success: true }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              success: true,
+            })
+          ),
         ok: true,
       } as Response);
 
@@ -727,7 +789,12 @@ describe("RemoteApiDataSource", () => {
 
     it("should handle rate limiting", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () => Promise.resolve({ success: true }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              success: true,
+            })
+          ),
         ok: true,
       } as Response);
 
