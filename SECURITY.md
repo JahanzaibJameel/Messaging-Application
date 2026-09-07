@@ -69,6 +69,16 @@
 4. 📋 **Documented**: All accepted risks documented with mitigation plans
 5. 🔄 **Monitor**: Regular security scanning recommended
 
+## Risk Acceptance Register
+
+| ID     | Vulnerability                                                                                               | Package              | Severity | Accepted Date | Owner   | Review Date | Rationale                                                           | Mitigation                                                  |
+| ------ | ----------------------------------------------------------------------------------------------------------- | -------------------- | -------- | ------------- | ------- | ----------- | ------------------------------------------------------------------- | ----------------------------------------------------------- |
+| RA-001 | DoS via Exponential Decoding (GHSA-vcc3-ghjq-m6fr)                                                          | decode-uri-component | Medium   | 2026-09-07    | [Owner] | 2026-12-07  | Breaking change risk with @react-navigation transitive dependencies | Monitor for patch in transitive dependency chain            |
+| RA-002 | XSS and Path Traversal (GHSA-qx2v-qp2m-jg93, GHSA-6g55-p6wh-862q, GHSA-fxqj-rqcc-2cmp, GHSA-r28c-9q8g-f849) | postcss              | High     | 2026-09-07    | [Owner] | 2026-12-07  | Requires expo@57.0.20 upgrade (breaking change)                     | Plan major React Native/Expo upgrade for next release cycle |
+| RA-003 | Infinite Loop DoS (GHSA-w3rx-r6r6-pgpr, GHSA-5p2g-fcmc-qvqq)                                                | image-size           | High     | 2026-09-07    | [Owner] | 2026-12-07  | Requires expo@57.0.20 upgrade (breaking change)                     | Plan major React Native/Expo upgrade for next release cycle |
+
+> **Note**: All accepted risks are time-boxed for quarterly review. Replace `[Owner]` with the security team or project maintainer responsible for each risk item.
+
 ## Recommendations
 
 1. Continue monitoring for new vulnerabilities
