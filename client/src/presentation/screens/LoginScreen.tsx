@@ -1,8 +1,3 @@
-/**
- * Login Screen
- * Phone number entry. Calls useAuthStore.login() then navigates to OTP.
- */
-
 import React, { useState } from "react";
 import { View, StyleSheet, TextInput, Image, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -71,7 +66,7 @@ export default function LoginScreen({ navigation }: Props) {
     >
       <Animated.View entering={FadeIn.duration(500)} style={styles.header}>
         <Image
-          source={require("../../../../assets/images/icon.png")}
+          source={require("../../../../../assets/images/icon.png")}
           style={styles.logo}
           resizeMode="contain"
         />
