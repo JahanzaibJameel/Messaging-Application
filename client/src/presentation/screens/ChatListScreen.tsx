@@ -1,8 +1,3 @@
-/**
- * Chat List Screen
- * Displays sorted chats from useChatStore. Navigates to Chat screen on press.
- */
-
 import React, { useCallback, useState } from "react";
 import { View, StyleSheet, FlatList, TextInput, Pressable, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -69,7 +64,6 @@ export default function ChatListScreen({ navigation }: Props) {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    // A real implementation would trigger useChatStore.sync() here
     setTimeout(() => setRefreshing(false), 1000);
   }, []);
 
@@ -210,7 +204,7 @@ export default function ChatListScreen({ navigation }: Props) {
         scrollIndicatorInsets={{ bottom: insets.bottom }}
         ListEmptyComponent={
           <EmptyState
-            image={require("../../../../assets/images/empty-chats.png")}
+            image={require("../../../../../assets/images/empty-chats.png")}
             title="No chats yet"
             message="Start a conversation with your friends and family"
           />
