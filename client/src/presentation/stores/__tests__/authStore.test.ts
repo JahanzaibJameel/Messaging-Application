@@ -11,14 +11,31 @@ jest.mock("../../../monitoring/sentry", () => ({
   addUserActionBreadcrumb: jest.fn(),
 }));
 
-// Mock RemoteApiDataSource
-jest.mock("../../../data/datasources/RemoteApiDataSource", () => ({
-  RemoteApiDataSource: jest.fn().mockImplementation(() => ({
-    login: jest.fn(),
-    verifyOtp: jest.fn(),
-    logout: jest.fn(),
-    refreshToken: jest.fn(),
-  })),
+jest.mock("../../../data/datasources/RemoteApiDataSource", () => {
+  const login = jest.fn();
+  const verifyOtp = jest.fn();
+  const logout = jest.fn();
+  const refreshToken = jest.fn();
+
+  return {
+    RemoteApiDataSource: jest.fn().mockImplementation(() => ({
+      login,
+      verifyOtp,
+      logout,
+      refreshToken,
+    })),
+    remoteApiDataSource: {
+      login,
+      verifyOtp,
+      logout,
+      refreshToken,
+    },
+  };
+});
+
+jest.mock("../../../security/keychain", () => ({
+  setToken: jest.fn(),
+  resetToken: jest.fn(),
 }));
 
 function makeUser(overrides = {}) {
@@ -40,6 +57,7 @@ describe("authStore", () => {
       isAuthenticated: false,
       isLoading: true,
       error: null,
+      pendingPhone: undefined,
     });
   });
 
@@ -56,10 +74,8 @@ describe("authStore", () => {
 
   describe("Login", () => {
     it("clears error and resets loading when login completes", async () => {
-      // Mock the remoteApiDataSource singleton instance methods
-      const remoteApiDataSource =
-        require("../../../data/datasources/RemoteApiDataSource").remoteApiDataSource;
-      jest.spyOn(remoteApiDataSource, "login").mockResolvedValue({ success: true });
+      const { remoteApiDataSource } = require("../../../data/datasources/RemoteApiDataSource");
+      remoteApiDataSource.login.mockResolvedValue({ success: true });
 
       await useAuthStore.getState().login("+1234567890");
 
@@ -68,31 +84,34 @@ describe("authStore", () => {
       expect(error).toBeNull();
     });
 
-    it("does not authenticate on login alone", async () => {
-      // Mock the RemoteApiDataSource login method to return success
-      const remoteApiDataSource =
-        require("../../../data/datasources/RemoteApiDataSource").RemoteApiDataSource;
-      const instance = new remoteApiDataSource();
-      instance.login.mockResolvedValue({ success: true });
+    it("sets error on failed login", async () => {
+      const { remoteApiDataSource } = require("../../../data/datasources/RemoteApiDataSource");
+      remoteApiDataSource.login.mockRejectedValue(new Error("Network error"));
 
       await useAuthStore.getState().login("+1234567890");
 
-      const { isAuthenticated, currentUser } = useAuthStore.getState();
-      expect(isAuthenticated).toBe(false);
-      expect(currentUser).toBeNull();
+      const { isLoading, error } = useAuthStore.getState();
+      expect(isLoading).toBe(false);
+      expect(error).toBe("Network error");
+    });
+
+    it("stores pending phone on success", async () => {
+      const { remoteApiDataSource } = require("../../../data/datasources/RemoteApiDataSource");
+      remoteApiDataSource.login.mockResolvedValue({ success: true });
+
+      await useAuthStore.getState().login("+1234567890");
+
+      expect(useAuthStore.getState().pendingPhone).toBe("+1234567890");
     });
   });
 
   describe("Verify OTP", () => {
     it("returns true and authenticates on a valid 6-digit OTP", async () => {
-      // Set up pending phone number first by mocking login
-      const remoteApiDataSource =
-        require("../../../data/datasources/RemoteApiDataSource").remoteApiDataSource;
-      jest.spyOn(remoteApiDataSource, "login").mockResolvedValue({ success: true });
+      const { remoteApiDataSource } = require("../../../data/datasources/RemoteApiDataSource");
+      remoteApiDataSource.login.mockResolvedValue({ success: true });
       await useAuthStore.getState().login("+1234567890");
 
-      // Mock the verifyOtp method
-      jest.spyOn(remoteApiDataSource, "verifyOtp").mockResolvedValue({
+      remoteApiDataSource.verifyOtp.mockResolvedValue({
         token: "test-token",
         user: {
           id: "user-123",
@@ -125,14 +144,11 @@ describe("authStore", () => {
     });
 
     it("clears error before verifying", async () => {
-      // Set up pending phone number first by mocking login
-      const remoteApiDataSource =
-        require("../../../data/datasources/RemoteApiDataSource").remoteApiDataSource;
-      jest.spyOn(remoteApiDataSource, "login").mockResolvedValue({ success: true });
+      const { remoteApiDataSource } = require("../../../data/datasources/RemoteApiDataSource");
+      remoteApiDataSource.login.mockResolvedValue({ success: true });
       await useAuthStore.getState().login("+1234567890");
 
-      // Mock the verifyOtp method
-      jest.spyOn(remoteApiDataSource, "verifyOtp").mockResolvedValue({
+      remoteApiDataSource.verifyOtp.mockResolvedValue({
         token: "test-token",
         user: {
           id: "user-123",
@@ -148,17 +164,24 @@ describe("authStore", () => {
       await useAuthStore.getState().verifyOtp("123456");
       expect(useAuthStore.getState().error).toBeNull();
     });
+
+    it("returns false when no pending phone exists", async () => {
+      useAuthStore.setState({ pendingPhone: undefined });
+      const result = await useAuthStore.getState().verifyOtp("123456");
+      expect(result).toBe(false);
+      expect(useAuthStore.getState().error).toBe(
+        "No pending phone number found. Please request OTP again."
+      );
+    });
   });
 
   describe("Logout", () => {
     it("resets all auth state", async () => {
-      // First set up an authenticated user by mocking login and verifyOtp
-      const remoteApiDataSource =
-        require("../../../data/datasources/RemoteApiDataSource").remoteApiDataSource;
-      jest.spyOn(remoteApiDataSource, "login").mockResolvedValue({ success: true });
+      const { remoteApiDataSource } = require("../../../data/datasources/RemoteApiDataSource");
+      remoteApiDataSource.login.mockResolvedValue({ success: true });
       await useAuthStore.getState().login("+1234567890");
 
-      jest.spyOn(remoteApiDataSource, "verifyOtp").mockResolvedValue({
+      remoteApiDataSource.verifyOtp.mockResolvedValue({
         token: "test-token",
         user: {
           id: "user-123",
@@ -171,8 +194,7 @@ describe("authStore", () => {
       });
       await useAuthStore.getState().verifyOtp("123456");
 
-      // Mock the logout method
-      jest.spyOn(remoteApiDataSource, "logout").mockResolvedValue(undefined);
+      remoteApiDataSource.logout.mockResolvedValue(undefined);
 
       await useAuthStore.getState().logout();
 
@@ -180,6 +202,32 @@ describe("authStore", () => {
       expect(currentUser).toBeNull();
       expect(isAuthenticated).toBe(false);
       expect(error).toBeNull();
+    });
+
+    it("sets error on logout failure", async () => {
+      const { remoteApiDataSource } = require("../../../data/datasources/RemoteApiDataSource");
+      remoteApiDataSource.login.mockResolvedValue({ success: true });
+      await useAuthStore.getState().login("+1234567890");
+
+      remoteApiDataSource.verifyOtp.mockResolvedValue({
+        token: "test-token",
+        user: {
+          id: "user-123",
+          name: "Test User",
+          phone: "+1234567890",
+          isOnline: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      });
+      await useAuthStore.getState().verifyOtp("123456");
+
+      remoteApiDataSource.logout.mockRejectedValue(new Error("Logout failed"));
+
+      await useAuthStore.getState().logout();
+
+      const { error } = useAuthStore.getState();
+      expect(error).toBe("Logout failed");
     });
   });
 
