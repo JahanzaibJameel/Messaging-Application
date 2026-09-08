@@ -1,9 +1,3 @@
-/**
- * Status Screen
- * Placeholder – real status updates will come from the server.
- * No dependency on the old store.
- */
-
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -32,7 +26,7 @@ export default function StatusScreen() {
       ]}
     >
       <EmptyState
-        image={require("../../../../assets/images/empty-status.png")}
+        image={require("../../../../../assets/images/empty-status.png")}
         title="No status updates"
         message="Status updates from your contacts will appear here"
       />
