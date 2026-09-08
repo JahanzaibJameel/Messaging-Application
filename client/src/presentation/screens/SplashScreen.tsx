@@ -1,9 +1,3 @@
-/**
- * Splash Screen
- * Animated launch screen that reads persisted auth state from useAuthStore
- * and redirects to Main or Login accordingly.
- */
-
 import React, { useEffect } from "react";
 import { View, StyleSheet, Image } from "react-native";
 import Animated, {
@@ -63,7 +57,7 @@ export default function SplashScreen({ navigation }: Props) {
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
       <Animated.View style={[styles.logoContainer, logoStyle]}>
         <Image
-          source={require("../../../../assets/images/icon.png")}
+          source={require("../../../../../assets/images/icon.png")}
           style={styles.logo}
           resizeMode="contain"
         />
