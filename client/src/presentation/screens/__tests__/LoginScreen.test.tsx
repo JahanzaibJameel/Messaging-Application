@@ -69,21 +69,30 @@ jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 
-jest.mock("@/components/ThemedText", () => ({
-  ThemedText: ({ children, style }: any) => <>{children}</>,
+jest.mock("../../../components/ThemedText", () => ({
+  ThemedText: ({ children, style }: any) => {
+    const RN = require("react-native");
+    return <RN.Text>{children}</RN.Text>;
+  },
 }));
 
-jest.mock("@/components/Button", () => ({
-  Button: mockPressable,
-}));
+jest.mock("@/components/Button", () => {
+  const RN = require("react-native");
+  return {
+    Button: ({ children, onPress, disabled, style }: any) => (
+      <RN.View onPress={onPress} disabled={disabled} testID="button-continue">
+        {children}
+      </RN.View>
+    ),
+  };
+});
 
-jest.mock("@/components/KeyboardAwareScrollViewCompat", () => ({
+jest.mock("../../../components/KeyboardAwareScrollViewCompat", () => ({
   KeyboardAwareScrollViewCompat: ({ children }: any) => <>{children}</>,
 }));
 
 jest.mock("react-native-reanimated", () => {
-  const React = require("react");
-  const { View } = require("react-native");
+  const RN = require("react-native");
 
   const createChainable = () => {
     const chain = {
@@ -94,14 +103,32 @@ jest.mock("react-native-reanimated", () => {
   };
 
   return {
+    __esModule: true,
+    default: {
+      useAnimatedStyle: () => ({}),
+      useSharedValue: (v: any) => ({ value: v }),
+      withSpring: (v: any) => v,
+      withSequence: (...args: any[]) => args,
+      FadeIn: createChainable(),
+      View: RN.View,
+    },
     useAnimatedStyle: () => ({}),
     useSharedValue: (v: any) => ({ value: v }),
     withSpring: (v: any) => v,
     withSequence: (...args: any[]) => args,
     FadeIn: createChainable(),
-    default: View,
+    View: RN.View,
   };
 });
+
+jest.mock("expo-haptics", () => ({
+  impactAsync: jest.fn(),
+  notificationAsync: jest.fn(),
+  ImpactFeedbackStyle: { Light: "light", Medium: "medium", Heavy: "heavy" },
+  NotificationFeedbackType: { Success: "success", Warning: "warning", Error: "error" },
+}));
+
+jest.mock("../../../assets/images/empty-chats.png", () => "empty-chats.png");
 
 describe("LoginScreen", () => {
   const mockNavigation = {
