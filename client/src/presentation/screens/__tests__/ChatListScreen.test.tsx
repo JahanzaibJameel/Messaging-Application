@@ -12,17 +12,6 @@ import { useChatStore } from "../../stores/chatStore";
 import { useUIStore } from "../../stores/uiStore";
 import type { Chat } from "@/domain/entities/Chat";
 
-// ── Mocks ─────────────────────────────────────────────────────────────────────
-
-jest.mock("react-native-mmkv", () => ({
-  MMKV: jest.fn().mockImplementation(() => ({
-    getString: jest.fn().mockReturnValue(null),
-    set: jest.fn(),
-    delete: jest.fn(),
-    clearAll: jest.fn(),
-  })),
-}));
-
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
   SafeAreaProvider: ({ children }: { children: React.ReactNode }) => children,
@@ -35,6 +24,8 @@ jest.mock("@react-navigation/elements", () => ({
 jest.mock("@react-navigation/bottom-tabs", () => ({
   useBottomTabBarHeight: () => 49,
 }));
+
+jest.mock("../../../assets/images/empty-chats.png", () => "empty-chats.png");
 
 const mockNavigate = jest.fn();
 const mockNavigation = {
@@ -52,8 +43,6 @@ const mockNavigation = {
   getState: jest.fn(),
   setOptions: jest.fn(),
 };
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function makeChat(overrides: Partial<Chat> = {}): Chat {
   return {
@@ -95,12 +84,9 @@ function renderScreen() {
   return render(<ChatListScreen navigation={mockNavigation as any} />);
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
-
 describe("ChatListScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Reset stores to clean state
     useChatStore.setState({
       chats: { ids: [], entities: {} },
       activeChatId: null,
@@ -121,7 +107,6 @@ describe("ChatListScreen", () => {
       const chat = makeChat({ id: "c1" });
       seedChats([chat]);
       renderScreen();
-      // Private chats render as "Private Chat"
       expect(screen.getByText("Private Chat")).toBeTruthy();
     });
 
