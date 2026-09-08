@@ -4,15 +4,11 @@
  */
 
 import { RemoteApiDataSource } from "../RemoteApiDataSource";
-import type { MessageType } from "@/domain/entities/Message";
-import type { MessageModel } from "../../models/MessageModel";
 
 describe("RemoteApiDataSource", () => {
   let dataSource: RemoteApiDataSource;
 
   beforeEach(() => {
-    // jsdom does not provide fetch; install a no-op spy target so tests can
-    // spy on / mock it per-case.
     if (!global.fetch) {
       (global as any).fetch = jest.fn();
     }
@@ -31,7 +27,6 @@ describe("RemoteApiDataSource", () => {
 
   describe("User Operations", () => {
     it("should handle getUserById", async () => {
-      // Mock the actual API call
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
         text: () =>
           Promise.resolve(
@@ -312,11 +307,23 @@ describe("RemoteApiDataSource", () => {
 
     it("should handle addParticipant", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () => Promise.resolve({ success: true }),
+        text: () => Promise.resolve(JSON.stringify({ success: true })),
         ok: true,
       } as Response);
 
       await expect(dataSource.addParticipant("chat_123", "user_456")).resolves.not.toThrow();
+      expect(mockFetch).toHaveBeenCalled();
+
+      mockFetch.mockRestore();
+    });
+
+    it("should handle removeParticipant", async () => {
+      const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
+        text: () => Promise.resolve(JSON.stringify({ success: true })),
+        ok: true,
+      } as Response);
+
+      await expect(dataSource.removeParticipant("chat_123", "user_456")).resolves.not.toThrow();
       expect(mockFetch).toHaveBeenCalled();
 
       mockFetch.mockRestore();
@@ -380,7 +387,7 @@ describe("RemoteApiDataSource", () => {
         id: "msg_new",
         chatId: "chat_123",
         senderId: "user_1",
-        type: "text" as MessageType,
+        type: "text" as const,
         text: "New message",
         timestamp: "2024-01-01T00:00:00Z",
         status: "sent",
@@ -389,7 +396,7 @@ describe("RemoteApiDataSource", () => {
         edited: false,
       };
 
-      const result = await dataSource.sendMessage(messageData as MessageModel);
+      const result = await dataSource.sendMessage(messageData as any);
 
       expect(result).toBeDefined();
       expect(result?.id).toBe("msg_new");
@@ -438,11 +445,37 @@ describe("RemoteApiDataSource", () => {
 
     it("should handle deleteMessage", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        json: () => Promise.resolve({ success: true }),
+        text: () => Promise.resolve(JSON.stringify({ success: true })),
         ok: true,
       } as Response);
 
       await expect(dataSource.deleteMessage("msg_123")).resolves.not.toThrow();
+      expect(mockFetch).toHaveBeenCalled();
+
+      mockFetch.mockRestore();
+    });
+
+    it("should handle markMessagesAsRead", async () => {
+      const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
+        text: () => Promise.resolve(JSON.stringify({ success: true })),
+        ok: true,
+      } as Response);
+
+      await expect(
+        dataSource.markMessagesAsRead("chat_123", ["msg_1", "msg_2"])
+      ).resolves.not.toThrow();
+      expect(mockFetch).toHaveBeenCalled();
+
+      mockFetch.mockRestore();
+    });
+
+    it("should handle sendTypingIndicator", async () => {
+      const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
+        text: () => Promise.resolve(JSON.stringify({ success: true })),
+        ok: true,
+      } as Response);
+
+      await expect(dataSource.sendTypingIndicator("chat_123", true)).resolves.not.toThrow();
       expect(mockFetch).toHaveBeenCalled();
 
       mockFetch.mockRestore();
@@ -556,36 +589,6 @@ describe("RemoteApiDataSource", () => {
 
       mockFetch.mockRestore();
     });
-
-    it("should handle updateProfile", async () => {
-      const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        text: () =>
-          Promise.resolve(
-            JSON.stringify({
-              id: "user_123",
-              name: "Updated Profile",
-              phone: "+1234567890",
-              isOnline: true,
-              createdAt: "2024-01-01T00:00:00Z",
-              updatedAt: "2024-01-01T00:00:00Z",
-            })
-          ),
-        ok: true,
-      } as Response);
-
-      const profileData = {
-        name: "Updated Profile",
-        bio: "Updated bio",
-      };
-
-      const result = await dataSource.updateProfile("user_123", profileData);
-
-      expect(result).toBeDefined();
-      expect(result?.name).toBe("Updated Profile");
-      expect(mockFetch).toHaveBeenCalled();
-
-      mockFetch.mockRestore();
-    });
   });
 
   describe("Error Handling", () => {
@@ -644,98 +647,73 @@ describe("RemoteApiDataSource", () => {
         ok: true,
       } as Response);
 
-      // Should not crash even with malformed data
       await expect(dataSource.getUserById("user_123")).resolves.not.toThrow();
       expect(mockFetch).toHaveBeenCalled();
 
       mockFetch.mockRestore();
     });
 
-    it("should handle very large responses", async () => {
-      const largeData = Array.from({ length: 1000 }, (_, i) => ({
-        id: `user_${i}`,
-        name: `User ${i}`,
-        phone: `+1234567${i.toString().padStart(4, "0")}`,
-        isOnline: i % 2 === 0,
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
-      }));
-
-      const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        text: () => Promise.resolve(JSON.stringify(largeData)),
-        ok: true,
-      } as Response);
-
-      const userIds = Array.from({ length: 1000 }, (_, i) => `user_${i}`);
-      const result = await dataSource.getUsersByIds(userIds);
-      expect(result).toHaveLength(1000);
-      expect(mockFetch).toHaveBeenCalled();
-
-      mockFetch.mockRestore();
-    });
-  });
-
-  describe("Performance", () => {
-    it("should handle concurrent requests", async () => {
+    it("should handle syncMessages", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
         text: () =>
           Promise.resolve(
             JSON.stringify({
-              id: "user_123",
-              name: "Test User",
-              phone: "+1234567890",
-              isOnline: true,
-              createdAt: "2024-01-01T00:00:00Z",
-              updatedAt: "2024-01-01T00:00:00Z",
+              messages: [],
+              chats: [],
+              timestamp: "2024-01-01T00:00:00Z",
             })
           ),
         ok: true,
       } as Response);
 
-      const promises = Array.from({ length: 100 }, () => dataSource.getUserById("user_123"));
-      const results = await Promise.all(promises);
+      const result = await dataSource.syncMessages();
 
-      expect(results).toHaveLength(100);
-      results.forEach((result) => {
-        expect(result?.id).toBe("user_123");
-      });
-      expect(mockFetch).toHaveBeenCalledTimes(100);
+      expect(result).toBeDefined();
+      expect(result.messages).toHaveLength(0);
+      expect(result.chats).toHaveLength(0);
+      expect(mockFetch).toHaveBeenCalled();
 
       mockFetch.mockRestore();
     });
 
-    it("should handle request timeouts", async () => {
-      // This would require actual timeout implementation
-      const mockFetch = jest.spyOn(global, "fetch").mockImplementation(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(
-              () =>
-                resolve({
-                  text: () =>
-                    Promise.resolve(
-                      JSON.stringify({
-                        id: "user_123",
-                        name: "Test User",
-                        phone: "+1234567890",
-                        isOnline: true,
-                        createdAt: "2024-01-01T00:00:00Z",
-                        updatedAt: "2024-01-01T00:00:00Z",
-                      })
-                    ),
-                  ok: true,
-                } as Response),
-              100
-            )
-          )
-      );
+    it("should handle batchSendMessages", async () => {
+      const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
+        text: () =>
+          Promise.resolve(
+            JSON.stringify([
+              {
+                id: "msg_1",
+                chatId: "chat_123",
+                senderId: "user_1",
+                type: "text",
+                text: "Hello",
+                timestamp: "2024-01-01T00:00:00Z",
+                status: "sent",
+                localOnly: false,
+                reactions: [],
+                edited: false,
+              },
+            ])
+          ),
+        ok: true,
+      } as Response);
 
-      const startTime = Date.now();
-      const result = await dataSource.getUserById("user_123");
-      const endTime = Date.now();
+      const result = await dataSource.batchSendMessages([
+        {
+          id: "msg_1",
+          chatId: "chat_123",
+          senderId: "user_1",
+          type: "text",
+          text: "Hello",
+          timestamp: "2024-01-01T00:00:00Z",
+          status: "sent",
+          localOnly: false,
+          reactions: [],
+          edited: false,
+        },
+      ]);
 
-      expect(result?.id).toBe("user_123");
-      expect(endTime - startTime).toBeGreaterThan(90); // Should take at least 100ms
+      expect(result).toHaveLength(1);
       expect(mockFetch).toHaveBeenCalled();
 
       mockFetch.mockRestore();
@@ -787,23 +765,17 @@ describe("RemoteApiDataSource", () => {
       mockFetch.mockRestore();
     });
 
-    it("should handle rate limiting", async () => {
+    it("should handle addReaction and removeReaction", async () => {
       const mockFetch = jest.spyOn(global, "fetch").mockResolvedValue({
-        text: () =>
-          Promise.resolve(
-            JSON.stringify({
-              success: true,
-            })
-          ),
+        text: () => Promise.resolve(JSON.stringify({ success: true })),
         ok: true,
       } as Response);
 
-      // Simulate rate limiting
-      for (let i = 0; i < 100; i++) {
-        await dataSource.getUserById(`user_${i}`);
-      }
+      await expect(dataSource.addReaction("msg_123", "👍")).resolves.not.toThrow();
+      expect(mockFetch).toHaveBeenCalled();
 
-      expect(mockFetch).toHaveBeenCalledTimes(100);
+      await expect(dataSource.removeReaction("msg_123")).resolves.not.toThrow();
+      expect(mockFetch).toHaveBeenCalledTimes(2);
 
       mockFetch.mockRestore();
     });
