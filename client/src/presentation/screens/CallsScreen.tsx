@@ -1,9 +1,3 @@
-/**
- * Calls Screen
- * Placeholder – real call history will come from the server.
- * No dependency on the old store.
- */
-
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -32,7 +26,7 @@ export default function CallsScreen() {
       ]}
     >
       <EmptyState
-        image={require("../../../../assets/images/empty-calls.png")}
+        image={require("../../../../../assets/images/empty-calls.png")}
         title="No recent calls"
         message="Your call history will appear here"
       />
