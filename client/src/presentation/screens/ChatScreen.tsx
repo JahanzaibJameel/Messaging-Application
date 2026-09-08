@@ -176,6 +176,7 @@ export default function ChatScreen({ navigation, route }: Props) {
 
   return (
     <KeyboardAvoidingView
+      testID="chat-screen"
       style={[styles.container, { backgroundColor: theme.backgroundRoot }]}
       behavior="padding"
       keyboardVerticalOffset={0}
