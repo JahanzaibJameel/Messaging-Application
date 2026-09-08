@@ -3,7 +3,7 @@
  * Tests OTP verification, token storage, WebSocket connection, and message flow.
  */
 
-import "../../../test-utils/i18nMock";
+import "../../test-utils/i18nMock";
 
 import React from "react";
 import { act } from "@testing-library/react-native";
