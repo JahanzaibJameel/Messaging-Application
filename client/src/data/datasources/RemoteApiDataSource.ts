@@ -55,8 +55,8 @@ export class RemoteApiDataSource {
       if (responseText) {
         parsed = JSON.parse(responseText);
       }
-    } catch {
-      // If not JSON, leave parsed as null
+    } catch (e) {
+      throw new Error("Invalid JSON response");
     }
 
     if (!response.ok) {
