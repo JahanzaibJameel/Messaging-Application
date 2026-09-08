@@ -84,9 +84,25 @@ jest.mock("react-native-keyboard-controller", () => ({
   KeyboardAwareScrollViewProps: {},
 }));
 
-// Mock expo-status-bar
-jest.mock("expo-status-bar", () => ({
-  StatusBar: "StatusBar",
+// Mock react-native-mmkv
+const createMMKVInstance = () => ({
+  getString: jest.fn(() => null),
+  set: jest.fn(),
+  delete: jest.fn(),
+  clearAll: jest.fn(),
+  getAllKeys: jest.fn(() => []),
+  getNumber: jest.fn(),
+  getBoolean: jest.fn(),
+  contains: jest.fn(),
+  setString: jest.fn(),
+  setNumber: jest.fn(),
+  setBoolean: jest.fn(),
+});
+
+const mockMMKV = jest.fn().mockImplementation((options) => createMMKVInstance());
+
+jest.mock("react-native-mmkv", () => ({
+  MMKV: mockMMKV,
 }));
 
 // Mock SafeAreaProvider
@@ -106,26 +122,7 @@ jest.mock("@react-navigation/native", () => ({
   }),
 }));
 
-// Mock MMKV
-const mockMMKV = function(options: any) {
-  return {
-    set: jest.fn(),
-    getString: jest.fn(() => null),
-    getNumber: jest.fn(),
-    getBoolean: jest.fn(),
-    contains: jest.fn(),
-    delete: jest.fn(),
-    clearAll: jest.fn(),
-  };
-};
-
-jest.mock("react-native-mmkv", () => ({
-  MMKV: mockMMKV,
-}));
-
-// Use real immer for Zustand immer middleware (mock breaks store updates)
-
-// Mock Sentry
+// Mock react-native-device-info
 jest.mock("@sentry/react-native", () => {
   const mockScope = {
     setTag: jest.fn(),
