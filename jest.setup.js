@@ -80,6 +80,8 @@ jest.mock("react-native-keyboard-controller", () => ({
     removeListener: jest.fn(),
     dismiss: jest.fn(),
   },
+  KeyboardAwareScrollView: ({ children }) => children,
+  KeyboardAwareScrollViewProps: {},
 }));
 
 // Mock expo-status-bar
@@ -105,16 +107,20 @@ jest.mock("@react-navigation/native", () => ({
 }));
 
 // Mock MMKV
-jest.mock("react-native-mmkv", () => ({
-  MMKV: jest.fn().mockImplementation(() => ({
+const mockMMKV = function(options: any) {
+  return {
     set: jest.fn(),
-    getString: jest.fn(),
+    getString: jest.fn(() => null),
     getNumber: jest.fn(),
     getBoolean: jest.fn(),
     contains: jest.fn(),
     delete: jest.fn(),
     clearAll: jest.fn(),
-  })),
+  };
+};
+
+jest.mock("react-native-mmkv", () => ({
+  MMKV: mockMMKV,
 }));
 
 // Use real immer for Zustand immer middleware (mock breaks store updates)
