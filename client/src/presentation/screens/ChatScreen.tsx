@@ -1,9 +1,3 @@
-/**
- * Chat Screen
- * Real-time messaging screen using useChatStore, useMessageStore,
- * useAuthStore, and the ChatService.
- */
-
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { View, StyleSheet, FlatList, Pressable } from "react-native";
 import Clipboard from "@react-native-clipboard/clipboard";
@@ -54,14 +48,12 @@ export default function ChatScreen({ navigation, route }: Props) {
   const chat = getChatById(chatId);
   const group = isGroup && chat?.type === "group" ? (chat as GroupChat) : null;
 
-  // Newest-first for inverted FlatList
   const reversedMessages = useMemo(() => [...messages].reverse(), [messages]);
 
   useEffect(() => {
     markChatAsRead(chatId);
   }, [chatId, markChatAsRead]);
 
-  // Set dynamic header
   useEffect(() => {
     if (isGroup && group) {
       navigation.setOptions({
@@ -201,7 +193,7 @@ export default function ChatScreen({ navigation, route }: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <EmptyState
-              image={require("../../../../assets/images/empty-chats.png")}
+              image={require("../../../../../assets/images/empty-chats.png")}
               title="No messages yet"
               message="Start the conversation by sending a message"
             />
