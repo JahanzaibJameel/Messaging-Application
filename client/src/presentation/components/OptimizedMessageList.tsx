@@ -119,7 +119,7 @@ export const OptimizedMessageList: React.FC<OptimizedMessageListProps> = React.m
         data: flashListData,
         renderItem,
         keyExtractor,
-        estimatedItemSize: MESSAGE_HEIGHT,
+        // estimatedItemSize: MESSAGE_HEIGHT,
         // getItemLayout: flashListEnabled ? getItemLayout : undefined,
 
         // Performance optimizations
