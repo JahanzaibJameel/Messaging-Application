@@ -25,9 +25,9 @@ module.exports = {
   },
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/client/src/$1",
-    "^react-native-mmkv$": "<rootDir>/client/src/test-utils/mocks/mmkvMock.ts",
     "^react-native-keychain$": "<rootDir>/client/src/test-utils/mocks/keychainMock.ts",
     "^react-native-device-info$": "<rootDir>/client/src/test-utils/mocks/deviceInfoMock.ts",
+    "\\.(png|jpg|jpeg|gif|webp)$": "<rootDir>/client/src/test-utils/mocks/mmkvMock.js",
   },
   transformIgnorePatterns: [
     "node_modules/(?!(jest-)?react-native|react-clone|@react-native|expo|@expo|@react-navigation|zustand|immer)",
