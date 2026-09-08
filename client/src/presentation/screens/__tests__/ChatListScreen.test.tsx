@@ -12,6 +12,20 @@ import { useChatStore } from "../../stores/chatStore";
 import { useUIStore } from "../../stores/uiStore";
 import type { Chat } from "@/domain/entities/Chat";
 
+jest.mock("react-native-mmkv", () => {
+  class MMKV {
+    constructor(options: any) {
+      return {
+        getString: jest.fn(() => null),
+        set: jest.fn(),
+        delete: jest.fn(),
+        clearAll: jest.fn(),
+      };
+    }
+  }
+  return { MMKV };
+});
+
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
   SafeAreaProvider: ({ children }: { children: React.ReactNode }) => children,
