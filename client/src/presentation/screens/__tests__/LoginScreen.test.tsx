@@ -6,14 +6,15 @@
 import "../../../test-utils/i18nMock";
 
 import React from "react";
+import { View } from "react-native";
 import { render, fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 import LoginScreen from "../LoginScreen";
 
 const mockPressable = ({ children, onPress, disabled, style }: any) => (
-  <React.View onPress={onPress} disabled={disabled} testID="button-continue">
+  <View onPress={onPress} disabled={disabled} testID="button-continue">
     {children}
-  </React.View>
+  </View>
 );
 
 const mockLogin = jest.fn();
