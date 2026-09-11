@@ -26,7 +26,7 @@ export default function CallsScreen() {
       ]}
     >
       <EmptyState
-        image={require("../../../../../assets/images/empty-calls.png")}
+        image={require("../../../../assets/images/empty-calls.png")}
         title="No recent calls"
         message="Your call history will appear here"
       />
