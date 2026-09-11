@@ -5,12 +5,12 @@ function loadModule(development: boolean, certificateHashes?: string) {
   jest.resetModules();
   (global as any).__DEV__ = development;
   process.env = { ...originalEnv };
-  process.env.EXOCORE_BACKEND_DOMAIN = "api.chatapp.com";
-  process.env.EXOCORE_BACKEND_WS_DOMAIN = "ws.chatapp.com";
+  process.env.EXPO_PUBLIC_BACKEND_DOMAIN = "api.chatapp.com";
+  process.env.EXPO_PUBLIC_BACKEND_WS_DOMAIN = "ws.chatapp.com";
   if (certificateHashes === undefined) {
-    delete process.env.EXOCORE_CERT_HASHES;
+    delete process.env.EXPO_PUBLIC_CERT_HASHES;
   } else {
-    process.env.EXOCORE_CERT_HASHES = certificateHashes;
+    process.env.EXPO_PUBLIC_CERT_HASHES = certificateHashes;
   }
 
   return require("../sslPinningConfig");
@@ -46,10 +46,10 @@ describe("SSLPinningConfig", () => {
     it("throws when certificate hashes are missing", () => {
       const mod = loadModule(false);
       expect(() => mod.getSSLPinningConfig()).toThrow(
-        "SSL certificate pinning hashes not configured. Set EXOCORE_CERT_HASHES environment variable in production."
+        "SSL certificate pinning hashes not configured. Set EXPO_PUBLIC_CERT_HASHES environment variable in production."
       );
       expect(() => mod.validateSSLPinningConfig()).toThrow(
-        "SSL certificate pinning hashes not configured. Set EXOCORE_CERT_HASHES environment variable in production."
+        "SSL certificate pinning hashes not configured. Set EXPO_PUBLIC_CERT_HASHES environment variable in production."
       );
     });
 
