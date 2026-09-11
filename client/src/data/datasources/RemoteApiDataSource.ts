@@ -4,8 +4,16 @@
  */
 
 import type { ChatModel, MessageModel, UserModel } from "../models/MessageModel";
+import { MockAuthDataSource } from "./MockAuthDataSource";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "https://api.chatapp.com";
+
+const isMockAuthEnabled =
+  typeof __DEV__ !== "undefined" &&
+  __DEV__ === true &&
+  process.env.EXPO_PUBLIC_USE_MOCK_AUTH === "true";
+
+const mockAuthDataSource = isMockAuthEnabled ? new MockAuthDataSource() : null;
 
 interface ApiResponse<T> {
   data: T;
@@ -75,6 +83,10 @@ export class RemoteApiDataSource {
 
   // Auth Operations
   async login(phone: string): Promise<{ success: boolean }> {
+    if (mockAuthDataSource) {
+      return mockAuthDataSource.login(phone);
+    }
+
     const response = await this.request<{ success: boolean }>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ phone }),
@@ -83,6 +95,10 @@ export class RemoteApiDataSource {
   }
 
   async verifyOtp(phone: string, otp: string): Promise<{ token: string; user: UserModel }> {
+    if (mockAuthDataSource) {
+      return mockAuthDataSource.verifyOtp(phone, otp);
+    }
+
     return this.request<{ token: string; user: UserModel }>("/auth/verify", {
       method: "POST",
       body: JSON.stringify({ phone, otp }),
