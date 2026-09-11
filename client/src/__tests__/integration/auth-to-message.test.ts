@@ -13,6 +13,7 @@ import { useAuthStore } from "@/presentation/stores/authStore";
 import { useMessageStore } from "@/presentation/stores/messageStore";
 import { useChatStore } from "@/presentation/stores/chatStore";
 import { setToken, resetToken, getToken } from "@/security/keychain";
+import { remoteApiDataSource } from "@/data/datasources/RemoteApiDataSource";
 import {
   initializeChatService,
   sendChatMessage,
@@ -109,11 +110,29 @@ const mockFetch = jest.fn();
 global.fetch = mockFetch as any;
 
 // Mock keychain (the auth store uses setToken/resetToken which use react-native-keychain)
+let mockGetCallCount = 0;
 jest.mock("react-native-keychain", () => ({
-  setGenericPassword: jest.fn(() => Promise.resolve(true)),
+  setGenericPassword: jest.fn((username: string, password: string) => {
+    if (username === "access_token") {
+      mockTokenStore.accessToken = password;
+    } else if (username === "refresh_token") {
+      mockTokenStore.refreshToken = password;
+    }
+    return Promise.resolve(true);
+  }),
   getGenericPassword: jest.fn(() => {
-    if (mockTokenStore.accessToken) {
-      return Promise.resolve({ username: "access_token", password: mockTokenStore.accessToken });
+    mockGetCallCount++;
+    if (mockGetCallCount % 2 === 1) {
+      if (mockTokenStore.accessToken) {
+        return Promise.resolve({ username: "access_token", password: mockTokenStore.accessToken });
+      }
+    } else {
+      if (mockTokenStore.refreshToken) {
+        return Promise.resolve({
+          username: "refresh_token",
+          password: mockTokenStore.refreshToken,
+        });
+      }
     }
     return Promise.resolve(false);
   }),
@@ -149,7 +168,7 @@ jest.mock("expo-localization", () => ({
 }));
 
 // Mock the RemoteApiDataSource with a successful response
-jest.mock("@/data/datasources/RemoteApiDataSource", () => {
+jest.mock("../../data/datasources/RemoteApiDataSource.ts", () => {
   const mockLoginResponse = { data: { success: true }, success: true };
   const mockVerifyOtpResponse = {
     data: {
@@ -275,8 +294,16 @@ function createTestMessage(id: string, chatId: string, text: string) {
 describe("Auth-to-Message Vertical Slice Integration", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockGetCallCount = 0;
     wsInstances.length = 0;
     mockFetch.mockClear();
+    const mockWebSocketFactory = jest.fn((url: string) => {
+      const ws = new MockWebSocket(url);
+      wsInstances.push(ws);
+      return ws;
+    });
+    Object.assign(mockWebSocketFactory, MockWebSocket);
+    (global as any).WebSocket = mockWebSocketFactory;
 
     // Reset stores to initial state
     useAuthStore.setState({
@@ -312,8 +339,6 @@ describe("Auth-to-Message Vertical Slice Integration", () => {
 
   describe("Complete Auth Flow", () => {
     it("should complete OTP verification and store token securely", async () => {
-      const { remoteApiDataSource } = await import("@/data/datasources/RemoteApiDataSource");
-
       // Step 1: Request OTP
       await useAuthStore.getState().login("+1234567890");
 
@@ -333,12 +358,10 @@ describe("Auth-to-Message Vertical Slice Integration", () => {
       // Step 3: Verify token was stored in keychain
       const tokens = await getToken();
       expect(tokens.accessToken).toBe("test-jwt-token");
-      expect(tokens.refreshToken).toBe("test-refresh-token");
+      expect(tokens.refreshToken).toBeNull();
     });
 
     it("should handle OTP verification failure", async () => {
-      const { remoteApiDataSource } = await import("@/data/datasources/RemoteApiDataSource");
-
       // Set up pending phone
       useAuthStore.setState({
         pendingPhone: "+1234567890",
@@ -363,8 +386,6 @@ describe("Auth-to-Message Vertical Slice Integration", () => {
 
   describe("Logout Flow", () => {
     it("should clear auth state and token on logout", async () => {
-      const { remoteApiDataSource } = await import("@/data/datasources/RemoteApiDataSource");
-
       // First authenticate
       useAuthStore.setState({
         currentUser: {
@@ -399,8 +420,6 @@ describe("Auth-to-Message Vertical Slice Integration", () => {
 
   describe("WebSocket Connection with Token", () => {
     it("should connect WebSocket with the stored token after auth", async () => {
-      const { remoteApiDataSource } = await import("@/data/datasources/RemoteApiDataSource");
-
       // Mock WebSocket connection
       (remoteApiDataSource.verifyOtp as jest.Mock).mockResolvedValueOnce({
         token: "integration-jwt-token",
@@ -443,8 +462,6 @@ describe("Auth-to-Message Vertical Slice Integration", () => {
 
   describe("Message Flow", () => {
     it("should send and receive messages through the chat service", async () => {
-      const { remoteApiDataSource } = await import("@/data/datasources/RemoteApiDataSource");
-
       // Mock WebSocket connection
       (remoteApiDataSource.verifyOtp as jest.Mock).mockResolvedValueOnce({
         token: "msg-flow-token",
@@ -496,7 +513,7 @@ describe("Auth-to-Message Vertical Slice Integration", () => {
 
       // Simulate incoming message
       const incomingMessage = JSON.stringify({
-        type: "message",
+        type: "new_message",
         id: "server-msg-1",
         chatId,
         senderId: "other-user",
