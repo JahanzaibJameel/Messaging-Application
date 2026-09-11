@@ -121,16 +121,29 @@ npm run web
 
 ## Environment variables
 
-Create a .env file in the repository root with values similar to:
+Create a `.env` file in the repository root with values similar to:
 
 ```env
-EXPO_PUBLIC_DOMAIN=localhost:5000
+EXPO_PUBLIC_API_URL=https://api.chatapp.com
+EXPO_PUBLIC_USE_MOCK_AUTH=true
+EXPO_PUBLIC_BACKEND_DOMAIN=api.chatapp.com
+EXPO_PUBLIC_BACKEND_WS_DOMAIN=ws.chatapp.com
 EXPO_PUBLIC_SENTRY_DSN=your-sentry-dsn
 EXPO_PUBLIC_VERSION=1.0.0
 EXPO_PUBLIC_BUILD_NUMBER=1
 EXPO_PUBLIC_APP_NAME=MessagingApp
 JWT_SECRET=replace-with-a-strong-secret
 ```
+
+### Mock auth for frontend-only development
+
+When `EXPO_PUBLIC_USE_MOCK_AUTH=true` is set and the app runs in development mode (`__DEV__`), the client uses an in-memory mock auth layer instead of calling the real backend. This lets you run the full login, OTP, and chat-list flow on web or native without a server.
+
+- `login(phone)` returns `{ success: true }` after a short delay.
+- `verifyOtp(phone, otp)` accepts any 6-digit code and returns a dev token + user.
+- Invalid OTPs throw `"Invalid OTP"`.
+
+To use a real backend, set `EXPO_PUBLIC_USE_MOCK_AUTH=false` or remove the variable.
 
 ## Available scripts
 
