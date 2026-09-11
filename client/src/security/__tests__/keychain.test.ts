@@ -103,12 +103,12 @@ describe("Keychain Security", () => {
       // Assert
       expect(result).toBe(true);
       expect(mockedKeychain.setGenericPassword).toHaveBeenCalledWith("access_token", accessToken, {
-        service: "com.chatapp.auth",
+        service: "access_token",
       });
       expect(mockedKeychain.setGenericPassword).toHaveBeenCalledWith(
         "refresh_token",
         refreshToken,
-        { service: "com.chatapp.auth" }
+        { service: "refresh_token" }
       );
     });
 
@@ -124,7 +124,7 @@ describe("Keychain Security", () => {
       expect(result).toBe(true);
       expect(mockedKeychain.setGenericPassword).toHaveBeenCalledTimes(1);
       expect(mockedKeychain.setGenericPassword).toHaveBeenCalledWith("access_token", accessToken, {
-        service: "com.chatapp.auth",
+        service: "access_token",
       });
     });
 
@@ -138,6 +138,12 @@ describe("Keychain Security", () => {
       // Assert
       expect(result).toBe(true);
       expect(mockedKeychain.resetGenericPassword).toHaveBeenCalledTimes(2);
+      expect(mockedKeychain.resetGenericPassword).toHaveBeenCalledWith({
+        service: "access_token",
+      });
+      expect(mockedKeychain.resetGenericPassword).toHaveBeenCalledWith({
+        service: "refresh_token",
+      });
     });
 
     it("should handle keychain errors gracefully", async () => {
@@ -248,7 +254,7 @@ describe("Keychain Security", () => {
       expect(mockedKeychain.setGenericPassword).toHaveBeenCalledWith(
         expect.any(String),
         expect.any(String),
-        expect.objectContaining({ service: "com.chatapp.auth" })
+        expect.objectContaining({ service: "access_token" })
       );
     });
 
