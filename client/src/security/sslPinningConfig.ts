@@ -8,14 +8,14 @@ const isDevelopment = __DEV__;
 const isProduction = !isDevelopment;
 
 // Backend domains from environment
-const BACKEND_DOMAIN = process.env.EXOCORE_BACKEND_DOMAIN || "api.chatapp.com";
-const BACKEND_WS_DOMAIN = process.env.EXOCORE_BACKEND_WS_DOMAIN || "ws.chatapp.com";
+const BACKEND_DOMAIN = process.env.EXPO_PUBLIC_BACKEND_DOMAIN || "api.chatapp.com";
+const BACKEND_WS_DOMAIN = process.env.EXPO_PUBLIC_BACKEND_WS_DOMAIN || "ws.chatapp.com";
 
 // SSL certificate pinning hashes
 // In production, these MUST be provided via environment variables or config file
 // If no hashes are provided in production, an error will be thrown during configuration validation
-const PROD_CERT_HASHES: string[] = process.env.EXOCORE_CERT_HASHES
-  ? process.env.EXOCORE_CERT_HASHES.split(",")
+const PROD_CERT_HASHES: string[] = process.env.EXPO_PUBLIC_CERT_HASHES
+  ? process.env.EXPO_PUBLIC_CERT_HASHES.split(",")
   : [];
 
 /**
@@ -47,7 +47,7 @@ export const getSSLPinningConfig = (): SSLPinningConfig => {
 
   if (isProduction && PROD_CERT_HASHES.length === 0) {
     throw new Error(
-      "SSL certificate pinning hashes not configured. Set EXOCORE_CERT_HASHES environment variable in production."
+      "SSL certificate pinning hashes not configured. Set EXPO_PUBLIC_CERT_HASHES environment variable in production."
     );
   }
 
