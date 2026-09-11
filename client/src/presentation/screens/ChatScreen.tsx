@@ -194,7 +194,7 @@ export default function ChatScreen({ navigation, route }: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <EmptyState
-              image={require("../../../../../assets/images/empty-chats.png")}
+              image={require("../../../../assets/images/empty-chats.png")}
               title="No messages yet"
               message="Start the conversation by sending a message"
             />
