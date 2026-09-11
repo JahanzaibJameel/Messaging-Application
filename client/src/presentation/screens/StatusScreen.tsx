@@ -26,7 +26,7 @@ export default function StatusScreen() {
       ]}
     >
       <EmptyState
-        image={require("../../../../../assets/images/empty-status.png")}
+        image={require("../../../../assets/images/empty-status.png")}
         title="No status updates"
         message="Status updates from your contacts will appear here"
       />
