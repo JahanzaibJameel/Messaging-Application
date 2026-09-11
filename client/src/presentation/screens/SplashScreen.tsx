@@ -57,7 +57,7 @@ export default function SplashScreen({ navigation }: Props) {
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
       <Animated.View style={[styles.logoContainer, logoStyle]}>
         <Image
-          source={require("../../../../../assets/images/icon.png")}
+          source={require("../../../../assets/images/icon.png")}
           style={styles.logo}
           resizeMode="contain"
         />
