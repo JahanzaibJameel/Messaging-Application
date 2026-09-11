@@ -31,18 +31,15 @@ export default function SplashScreen({ navigation }: Props) {
   }, []);
 
   useEffect(() => {
-    if (!isLoading) {
-      const timer = setTimeout(() => {
-        if (isAuthenticated) {
-          navigation.replace("Main");
-        } else {
-          navigation.replace("Login");
-        }
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-    return undefined;
-  }, [isLoading, isAuthenticated, navigation]);
+    const timer = setTimeout(() => {
+      if (isAuthenticated) {
+        navigation.replace("Main");
+      } else {
+        navigation.replace("Login");
+      }
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [isAuthenticated, navigation]);
 
   const logoStyle = useAnimatedStyle(() => ({
     transform: [{ scale: logoScale.value }],
