@@ -204,7 +204,7 @@ export default function ChatListScreen({ navigation }: Props) {
         scrollIndicatorInsets={{ bottom: insets.bottom }}
         ListEmptyComponent={
           <EmptyState
-            image={require("../../../../../assets/images/empty-chats.png")}
+            image={require("../../../../assets/images/empty-chats.png")}
             title="No chats yet"
             message="Start a conversation with your friends and family"
           />
