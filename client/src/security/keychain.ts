@@ -37,14 +37,13 @@ export const getToken = async (): Promise<TokenStorage> => {
   try {
     addUserActionBreadcrumb("keychain_get_token_attempt");
 
-    // Get both tokens in a single operation to avoid redundant keychain calls
     const [accessResult, refreshResult] = await Promise.all([
       Keychain.getGenericPassword({
-        service: KEYCHAIN_SERVICE,
+        service: ACCESS_TOKEN_KEY,
         accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY_OR_DEVICE_PASSCODE,
       }),
       Keychain.getGenericPassword({
-        service: KEYCHAIN_SERVICE,
+        service: REFRESH_TOKEN_KEY,
         accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY_OR_DEVICE_PASSCODE,
       }),
     ]);
@@ -75,7 +74,6 @@ export const getToken = async (): Promise<TokenStorage> => {
       additionalData: { service: KEYCHAIN_SERVICE },
     });
 
-    // Return empty tokens on error to prevent app crashes
     return { accessToken: null, refreshToken: null };
   }
 };
@@ -90,16 +88,14 @@ export const setToken = async (accessToken: string, refreshToken?: string): Prom
       hasRefreshToken: !!refreshToken,
     });
 
-    // Store access token
     const accessResult = await Keychain.setGenericPassword(ACCESS_TOKEN_KEY, accessToken, {
-      service: KEYCHAIN_SERVICE,
+      service: ACCESS_TOKEN_KEY,
     });
 
-    // Store refresh token if provided
     let refreshResult: any = true;
     if (refreshToken) {
       refreshResult = await Keychain.setGenericPassword(REFRESH_TOKEN_KEY, refreshToken, {
-        service: KEYCHAIN_SERVICE,
+        service: REFRESH_TOKEN_KEY,
       });
     }
 
@@ -138,8 +134,8 @@ export const resetToken = async (): Promise<boolean> => {
     addUserActionBreadcrumb("keychain_reset_token_attempt");
 
     const [accessResult, refreshResult] = await Promise.all([
-      Keychain.resetGenericPassword({ service: KEYCHAIN_SERVICE }),
-      Keychain.resetGenericPassword({ service: KEYCHAIN_SERVICE }),
+      Keychain.resetGenericPassword({ service: ACCESS_TOKEN_KEY }),
+      Keychain.resetGenericPassword({ service: REFRESH_TOKEN_KEY }),
     ]);
 
     const success = !!accessResult && !!refreshResult;
