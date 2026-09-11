@@ -1,8 +1,4 @@
 import React from "react";
-import { IndexScreen } from "./src/Screens/IndexScreen";
-
-function App() {
-  return <IndexScreen />;
-}
+import App from "./src/App";
 
 export default App;
