@@ -7,6 +7,7 @@ import React, { useEffect, useRef } from "react";
 import { View, StyleSheet, Pressable, Animated } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useReducedMotion } from "react-native-reanimated";
 
 import { useUIStore } from "@/presentation/stores";
 import type { Toast as ToastType } from "@/presentation/stores/types";
@@ -41,12 +42,18 @@ const toastConfig = {
 
 export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
   const insets = useSafeAreaInsets();
+  const reduceMotion = useReducedMotion();
   const translateY = useRef(new Animated.Value(-100)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const config = toastConfig[toast.type];
 
   useEffect(() => {
-    // Animate in
+    if (reduceMotion) {
+      translateY.setValue(-100);
+      opacity.setValue(1);
+      return;
+    }
+
     Animated.parallel([
       Animated.spring(translateY, {
         toValue: 0,
@@ -67,9 +74,16 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
     }, toast.duration ?? 3000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [reduceMotion]);
 
   const handleDismiss = () => {
+    if (reduceMotion) {
+      opacity.setValue(0);
+      translateY.setValue(-100);
+      onDismiss();
+      return;
+    }
+
     Animated.parallel([
       Animated.timing(translateY, {
         toValue: -100,
@@ -126,7 +140,7 @@ export const ToastContainer: React.FC = () => {
   if (toasts.length === 0) return null;
 
   return (
-    <View style={styles.containerWrapper} pointerEvents="box-none">
+    <View style={[styles.containerWrapper, { pointerEvents: "box-none" }]}>
       {toasts.map((toast) => (
         <Toast key={toast.id} toast={toast} onDismiss={() => hideToast(toast.id)} />
       ))}
