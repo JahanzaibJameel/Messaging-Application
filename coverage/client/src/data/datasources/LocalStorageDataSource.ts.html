@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">90% </span>
+                <span class="strong">90.62% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>18/20</span>
+                <span class='fraction'>29/32</span>
             </div>
         
             
@@ -352,17 +352,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">12x</span>
@@ -372,7 +372,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">46x</span>
+<span class="cline-any cline-yes">47x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -620,7 +620,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * Local Storage Data Source
  * Handles all local persistence using MMKV
@@ -666,7 +666,7 @@ export class LocalStorageDataSource {
   // Chat Operations
   async getChats(): Promise&lt;ChatModel[]&gt; {
     try {
-      const data = this.storage.getString(STORAGE_KEYS.CHATS);
+      const data = this.storage.getString(STORAGE_KEYS.CHATS) || "";
       const parsed = this.safeParse&lt;ChatModel[]&gt;(data);
       return parsed ?? [];
     } catch (error) {
@@ -722,7 +722,7 @@ export class LocalStorageDataSource {
   async getMessages(chatId: string): Promise&lt;MessageModel[]&gt; {
     try {
       const key = messageKey(chatId);
-      const data = this.storage.getString(key);
+      const data = this.storage.getString(key) || "";
       const parsed = this.safeParse&lt;MessageModel[]&gt;(data);
       return parsed ?? [];
     } catch (error) {
@@ -783,7 +783,7 @@ export class LocalStorageDataSource {
   // User Operations
   async getUsers(): Promise&lt;UserModel[]&gt; {
     try {
-      const data = this.storage.getString(STORAGE_KEYS.USERS);
+      const data = this.storage.getString(STORAGE_KEYS.USERS) || <span class="branch-1 cbranch-no" title="branch not covered" >"";</span>
       const parsed = this.safeParse&lt;UserModel[]&gt;(data);
       return parsed ?? <span class="branch-1 cbranch-no" title="branch not covered" >[];</span>
     } catch (error) {
@@ -828,7 +828,7 @@ export class LocalStorageDataSource {
   // Current User
   async getCurrentUser(): Promise&lt;UserModel | null&gt; {
     try {
-      const data = this.storage.getString(STORAGE_KEYS.CURRENT_USER);
+      const data = this.storage.getString(STORAGE_KEYS.CURRENT_USER) || "";
       return this.safeParse&lt;UserModel&gt;(data);
     } catch (error) {
 <span class="cstat-no" title="statement not covered" >      throw AppError.storage("Failed to get current user", error as Error);</span>
@@ -850,7 +850,7 @@ export class LocalStorageDataSource {
   // Settings
   async getSettings&lt;T&gt;(): Promise&lt;T | null&gt; {
     try {
-      const data = this.storage.getString(STORAGE_KEYS.SETTINGS);
+      const data = this.storage.getString(STORAGE_KEYS.SETTINGS) || "";
       return this.safeParse&lt;T&gt;(data);
     } catch (error) {
 <span class="cstat-no" title="statement not covered" >      throw AppError.storage("Failed to get settings", error as Error);</span>
@@ -868,7 +868,7 @@ export class LocalStorageDataSource {
   // Sync State
   async getSyncState&lt;T&gt;(): Promise&lt;T | null&gt; {
     try {
-      const data = this.storage.getString(STORAGE_KEYS.SYNC_STATE);
+      const data = this.storage.getString(STORAGE_KEYS.SYNC_STATE) || "";
       return this.safeParse&lt;T&gt;(data);
     } catch (error) {
 <span class="cstat-no" title="statement not covered" >      throw AppError.storage("Failed to get sync state", error as Error);</span>
@@ -907,7 +907,7 @@ export const localStorageDataSource = new LocalStorageDataSource();
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-09-04T17:33:58.686Z
+                at 2026-09-12T06:43:38.401Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

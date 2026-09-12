@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/33</span>
+                <span class='fraction'>0/31</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/31</span>
+                <span class='fraction'>0/28</span>
             </div>
         
             
@@ -363,15 +363,7 @@
 <a name='L298'></a><a href='#L298'>298</a>
 <a name='L299'></a><a href='#L299'>299</a>
 <a name='L300'></a><a href='#L300'>300</a>
-<a name='L301'></a><a href='#L301'>301</a>
-<a name='L302'></a><a href='#L302'>302</a>
-<a name='L303'></a><a href='#L303'>303</a>
-<a name='L304'></a><a href='#L304'>304</a>
-<a name='L305'></a><a href='#L305'>305</a>
-<a name='L306'></a><a href='#L306'>306</a>
-<a name='L307'></a><a href='#L307'>307</a>
-<a name='L308'></a><a href='#L308'>308</a>
-<a name='L309'></a><a href='#L309'>309</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L301'></a><a href='#L301'>301</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -400,21 +392,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -434,6 +411,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -684,13 +668,13 @@
  * Uses FlashList for high-performance rendering with 60fps target
  */
 &nbsp;
-import React, { useCallback, useMemo, useRef } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   FlashList,
   FlashListProps as FlashListPropsType,
   ListRenderItemInfo,
 } from "@shopify/flash-list";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { MessageEntity } from "../../domain/entities/Message";
 import { useFeatureFlag } from "@/core/featureFlags/FeatureFlags";
 import { useAccessibility } from "@/core/accessibility/AccessibilityManager";
@@ -707,26 +691,11 @@ interface OptimizedMessageListProps {
   ListFooterComponent?: React.ComponentType;
 }
 &nbsp;
-const { width: screenWidth } = <span class="cstat-no" title="statement not covered" >Dimensions.get("window");</span>
 const MESSAGE_HEIGHT = <span class="cstat-no" title="statement not covered" >80;</span> // Fixed height for getItemLayout
-const MESSAGE_ESTIMATED_WIDTH = <span class="cstat-no" title="statement not covered" >screenWidth - 80;</span> // Account for padding/avatar
 &nbsp;
 /**
  * getItemLayout for FlashList optimization
  * Provides fixed dimensions for performance boost
- */
-const getItemLayout = <span class="cstat-no" title="statement not covered" >useCallback(</span>
-<span class="fstat-no" title="function not covered" >  (d</span>ata: any, index: number) =&gt; (<span class="cstat-no" title="statement not covered" >{</span>
-    length: MESSAGE_HEIGHT,
-    offset: MESSAGE_HEIGHT * index,
-    index,
-  }),
-  []
-);
-&nbsp;
-/**
- * Optimized Message List Component
- * Enterprise-grade performance with FlashList
  */
 export const OptimizedMessageList: React.FC&lt;OptimizedMessageListProps&gt; = <span class="cstat-no" title="statement not covered" >React.memo(</span>
 <span class="fstat-no" title="function not covered" >  ({</span>
@@ -742,6 +711,13 @@ export const OptimizedMessageList: React.FC&lt;OptimizedMessageListProps&gt; = <
   }) =&gt; {
     const { isEnabled: flashListEnabled } = <span class="cstat-no" title="statement not covered" >useFeatureFlag("flashlist-optimization");</span>
     const { screenReader } = <span class="cstat-no" title="statement not covered" >useAccessibility();</span>
+&nbsp;
+    // getItemLayout for FlashList optimization
+    const _getItemLayout = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(_</span>data: any, _index: number) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+      length: MESSAGE_HEIGHT,
+      offset: MESSAGE_HEIGHT * _index,
+      index: _index,
+    });
 &nbsp;
     // Memoize data for FlashList
     const flashListData = <span class="cstat-no" title="statement not covered" >useMemo(</span>
@@ -760,7 +736,7 @@ export const OptimizedMessageList: React.FC&lt;OptimizedMessageListProps&gt; = <
 &nbsp;
     // Render individual message with accessibility
     const renderItem = <span class="cstat-no" title="statement not covered" >useCallback(</span>
-<span class="fstat-no" title="function not covered" >      ({</span> item, index }: ListRenderItemInfo&lt;any&gt;) =&gt; {
+<span class="fstat-no" title="function not covered" >      ({</span> item, index: _index }: ListRenderItemInfo&lt;any&gt;) =&gt; {
         const message = <span class="cstat-no" title="statement not covered" >item.message as MessageEntity;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        return (</span>
@@ -808,7 +784,7 @@ export const OptimizedMessageList: React.FC&lt;OptimizedMessageListProps&gt; = <
         data: flashListData,
         renderItem,
         keyExtractor,
-        estimatedItemSize: MESSAGE_HEIGHT,
+        // estimatedItemSize: MESSAGE_HEIGHT,
         // getItemLayout: flashListEnabled ? getItemLayout : undefined,
 &nbsp;
         // Performance optimizations
@@ -854,16 +830,16 @@ export const OptimizedMessageList: React.FC&lt;OptimizedMessageListProps&gt; = <
       flashListData,
       renderItem,
       keyExtractor,
-      flashListEnabled,
       ListEmptyComponent,
       ListFooterComponent,
+      ListHeaderComponent,
       isLoading,
       onRefresh,
       refreshing,
     ]);
 &nbsp;
     // Handle message press
-    const handleMessagePress = <span class="cstat-no" title="statement not covered" >useCallback(</span>
+    const _handleMessagePress = <span class="cstat-no" title="statement not covered" >useCallback(</span>
 <span class="fstat-no" title="function not covered" >      (m</span>essage: MessageEntity) =&gt; {
 <span class="cstat-no" title="statement not covered" >        onMessagePress?.(message);</span>
 &nbsp;
@@ -877,7 +853,7 @@ export const OptimizedMessageList: React.FC&lt;OptimizedMessageListProps&gt; = <
     );
 &nbsp;
     // Handle message long press
-    const handleMessageLongPress = <span class="cstat-no" title="statement not covered" >useCallback(</span>
+    const _handleMessageLongPress = <span class="cstat-no" title="statement not covered" >useCallback(</span>
 <span class="fstat-no" title="function not covered" >      (m</span>essage: MessageEntity) =&gt; {
 <span class="cstat-no" title="statement not covered" >        onMessageLongPress?.(message);</span>
 &nbsp;
@@ -994,7 +970,7 @@ export default OptimizedMessageList;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-09-04T17:33:57.298Z
+                at 2026-09-12T06:43:36.571Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

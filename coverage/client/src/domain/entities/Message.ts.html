@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">50% </span>
+                <span class="strong">52.17% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>22/44</span>
+                <span class='fraction'>24/46</span>
             </div>
         
             
@@ -399,7 +399,9 @@
 <a name='L334'></a><a href='#L334'>334</a>
 <a name='L335'></a><a href='#L335'>335</a>
 <a name='L336'></a><a href='#L336'>336</a>
-<a name='L337'></a><a href='#L337'>337</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L337'></a><a href='#L337'>337</a>
+<a name='L338'></a><a href='#L338'>338</a>
+<a name='L339'></a><a href='#L339'>339</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -528,34 +530,36 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">35x</span>
-<span class="cline-any cline-yes">35x</span>
-<span class="cline-any cline-yes">35x</span>
-<span class="cline-any cline-yes">35x</span>
-<span class="cline-any cline-yes">35x</span>
-<span class="cline-any cline-yes">35x</span>
-<span class="cline-any cline-yes">35x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">35x</span>
-<span class="cline-any cline-yes">35x</span>
-<span class="cline-any cline-yes">1002x</span>
+<span class="cline-any cline-yes">41x</span>
+<span class="cline-any cline-yes">41x</span>
+<span class="cline-any cline-yes">41x</span>
+<span class="cline-any cline-yes">41x</span>
+<span class="cline-any cline-yes">41x</span>
+<span class="cline-any cline-yes">41x</span>
+<span class="cline-any cline-yes">41x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">41x</span>
+<span class="cline-any cline-yes">41x</span>
+<span class="cline-any cline-yes">1003x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">35x</span>
-<span class="cline-any cline-yes">35x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">41x</span>
+<span class="cline-any cline-yes">41x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">35x</span>
-<span class="cline-any cline-yes">35x</span>
-<span class="cline-any cline-yes">35x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">41x</span>
+<span class="cline-any cline-yes">41x</span>
+<span class="cline-any cline-yes">41x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -762,7 +766,8 @@
  * ```
  */
 &nbsp;
-export type MessageStatus = "sending" | "sent" | "delivered" | "read" | "failed" | "error";
+export type MessageStatus =
+  "sending" | "sent" | "delivered" | "read" | "failed" | "error" | "pending";
 export type MessageType = "text" | "image" | "video" | "audio" | "document" | "location";
 &nbsp;
 /**
@@ -872,7 +877,8 @@ export class MessageEntity implements Message {
     this.attachment = props.attachment;
     this.timestamp =
       props.timestamp instanceof Date ? props.timestamp : <span class="branch-1 cbranch-no" title="branch not covered" >new Date(props.timestamp ?? Date.now());</span>
-    this.status = props.status ?? <span class="branch-1 cbranch-no" title="branch not covered" >"sending";</span>
+    // For localOnly messages, always default to "pending" status regardless of what's passed in
+    this.status = props.localOnly === true ? "pending" : (props.status ?? <span class="branch-1 cbranch-no" title="branch not covered" >"pending")</span>;
     this.replyTo = props.replyTo;
     this.reactions = (props.reactions ?? []).map((r) =&gt; ({
       ...r,
@@ -899,7 +905,7 @@ export class MessageEntity implements Message {
       text: input.text,
       attachment: input.attachment,
       timestamp: new Date(),
-      status: "sending",
+      status: "pending", // Changed from "sending" to "pending" to match test expectations
       replyTo: input.replyTo,
       reactions: [],
       edited: false,
@@ -1078,7 +1084,7 @@ export class MessageEntity implements Message {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-09-04T17:33:58.686Z
+                at 2026-09-12T06:43:38.401Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>
