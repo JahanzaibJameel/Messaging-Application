@@ -514,16 +514,18 @@ describe("Auth-to-Message Vertical Slice Integration", () => {
       // Simulate incoming message
       const incomingMessage = JSON.stringify({
         type: "new_message",
-        id: "server-msg-1",
-        chatId,
-        senderId: "other-user",
-        text: "Hello from server",
-        timestamp: new Date().toISOString(),
-        status: "sent",
-        reactions: [],
-        edited: false,
-        localOnly: false,
-        retryCount: 0,
+        payload: {
+          id: "server-msg-1",
+          chatId,
+          senderId: "other-user",
+          text: "Hello from server",
+          timestamp: new Date().toISOString(),
+          status: "sent",
+          reactions: [],
+          edited: false,
+          localOnly: false,
+          retryCount: 0,
+        },
       });
 
       act(() => {
