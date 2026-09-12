@@ -1,15 +1,17 @@
-const mockMMKV = jest.fn().mockImplementation((options) => ({
-  set: jest.fn(),
-  getString: jest.fn(),
-  delete: jest.fn(),
-  clearAll: jest.fn(),
-  getAllKeys: jest.fn(() => []),
-  getNumber: jest.fn(),
-  getBoolean: jest.fn(),
-  setString: jest.fn(),
-  setNumber: jest.fn(),
-  setBoolean: jest.fn(),
-}));
+/* global jest */
+
+const mockMMKV = {
+  set: () => {},
+  getString: () => null,
+  delete: () => {},
+  clearAll: () => {},
+  getAllKeys: () => [],
+  getNumber: () => null,
+  getBoolean: () => null,
+  setString: () => {},
+  setNumber: () => {},
+  setBoolean: () => {},
+};
 
 const MMKV = mockMMKV;
 
