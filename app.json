@@ -26,7 +26,13 @@
           }
         }
       ],
-      "@sentry/react-native"
+      [
+        "@sentry/react-native",
+        {
+          "organization": "your-sentry-org",
+          "project": "your-sentry-project"
+        }
+      ]
     ],
     "experiments": {
       "reactCompiler": true,
