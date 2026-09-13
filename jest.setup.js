@@ -26,12 +26,7 @@ jest.mock("@react-native-community/netinfo", () => ({
   addEventListener: jest.fn(),
 }));
 
-// Mock react-native-keychain
-jest.mock("react-native-keychain", () => ({
-  setInternetCredentials: jest.fn(() => Promise.resolve()),
-  getInternetCredentials: jest.fn(() => Promise.resolve({ username: "test", password: "test" })),
-  resetInternetCredentials: jest.fn(() => Promise.resolve()),
-}));
+// Mock react-native-keychain (handled via moduleNameMapper)
 
 // Mock react-native-ssl-pinning
 jest.mock("react-native-ssl-pinning", () => ({
