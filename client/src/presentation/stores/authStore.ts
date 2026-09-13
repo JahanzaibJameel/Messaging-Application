@@ -6,7 +6,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
-import { MMKV } from "react-native-mmkv";
 
 import type { User } from "../../domain/entities/User";
 import { UserEntity } from "../../domain/entities/User";
@@ -15,21 +14,11 @@ import type { AuthState, AuthActions } from "./types";
 import { logger } from "../../core/logger";
 import { remoteApiDataSource } from "../../data/datasources/RemoteApiDataSource";
 import { setToken, resetToken } from "../../security/keychain";
+import { createSecureStorageAdapterWithKeys } from "../../lib/secureStorageAdapter";
 
-const storage = new MMKV({ id: "auth-storage" });
+const STORAGE_KEYS = ["auth-storage_currentUser", "auth-storage_isAuthenticated"];
 
-const mmkvStorage = {
-  getItem: (name: string): string | null => {
-    const value = storage.getString(name);
-    return value ?? null;
-  },
-  setItem: (name: string, value: string): void => {
-    storage.set(name, value);
-  },
-  removeItem: (name: string): void => {
-    storage.delete(name);
-  },
-};
+const secureStorage = createSecureStorageAdapterWithKeys("auth-storage", STORAGE_KEYS);
 
 type AuthStore = AuthState & AuthActions;
 
@@ -195,7 +184,7 @@ export const useAuthStore = create<AuthStore>()(
       }),
       {
         name: "auth-storage",
-        storage: createJSONStorage(() => mmkvStorage),
+        storage: createJSONStorage(() => secureStorage),
         partialize: (state) => ({
           currentUser: state.currentUser,
           isAuthenticated: state.isAuthenticated,
