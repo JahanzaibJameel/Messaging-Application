@@ -5,6 +5,8 @@
 
 import type { ChatModel, MessageModel, UserModel } from "../models/MessageModel";
 import { MockAuthDataSource } from "./MockAuthDataSource";
+import { secureFetch, type SecureResponse } from "@/security/secureTransport";
+import { getSSLPinningConfig } from "@/security/sslPinningConfig";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "https://api.chatapp.com";
 
@@ -45,32 +47,40 @@ export class RemoteApiDataSource {
       headers["Authorization"] = `Bearer ${this.authToken}`;
     }
 
-    let response: Response;
+    const requestBody = options.body
+      ? typeof options.body === "string"
+        ? options.body
+        : JSON.stringify(options.body)
+      : undefined;
+
+    let secureResponse: SecureResponse;
     try {
-      response = await fetch(url, {
-        ...options,
+      secureResponse = await secureFetch({
+        url,
+        method: (options.method as "GET" | "POST" | "PUT" | "DELETE" | "PATCH") || "GET",
         headers,
+        body: requestBody,
+        timeout: getSSLPinningConfig().timeout,
       });
     } catch (error) {
-      // Network-level failure (fetch rejected) — preserve the original message
-      // so callers can distinguish connectivity issues from API errors.
       throw new Error((error as Error)?.message || "Network error occurred");
     }
 
     let parsed: unknown = null;
     try {
-      const responseText = await response.text();
-      if (responseText) {
-        parsed = JSON.parse(responseText);
+      if (secureResponse.data) {
+        parsed = JSON.parse(secureResponse.data);
       }
     } catch (e) {
       throw new Error("Invalid JSON response");
     }
 
-    if (!response.ok) {
+    if (secureResponse.status >= 400) {
       const errorData = parsed as { error?: string; message?: string } | null;
       throw new Error(
-        errorData?.error || errorData?.message || `HTTP ${response.status}: ${response.statusText}`
+        errorData?.error ||
+          errorData?.message ||
+          `HTTP ${secureResponse.status}: ${secureResponse.statusText}`
       );
     }
 
