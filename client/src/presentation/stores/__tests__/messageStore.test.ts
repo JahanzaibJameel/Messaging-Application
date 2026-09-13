@@ -18,14 +18,21 @@ import type { Message } from "../../../domain/entities/Message";
 // Mocks
 // ---------------------------------------------------------------------------
 
-jest.mock("react-native-mmkv", () => ({
-  MMKV: jest.fn().mockImplementation(() => ({
-    getString: jest.fn().mockReturnValue(undefined),
-    set: jest.fn(),
-    delete: jest.fn(),
-    getAllKeys: jest.fn().mockReturnValue([]),
-  })),
-}));
+// Mock the secureStorageAdapter
+jest.mock("@/lib/secureStorageAdapter", () => {
+  const cache = new Map<string, string>();
+  return {
+    createSecureStorageAdapterWithKeys: jest.fn(() => ({
+      getItem: (name: string) => cache.get(name) ?? null,
+      setItem: (name: string, value: string) => {
+        cache.set(name, value);
+      },
+      removeItem: (name: string) => {
+        cache.delete(name);
+      },
+    })),
+  };
+});
 
 // ---------------------------------------------------------------------------
 // Helpers
