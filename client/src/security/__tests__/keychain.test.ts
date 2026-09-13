@@ -11,35 +11,90 @@ import {
   getUserCredentials,
   resetUserCredentials,
 } from "../keychain";
+import {
+  authenticateAppLock,
+  disableAppLock,
+  enableAppLock,
+  getAppLockEnabled,
+  getAppLockType,
+  isAppLockAvailable,
+} from "../biometricAuth";
 
 // Inline keychain mock (avoids stale moduleNameMapper transform caching)
 const getGenericPassword = jest.fn();
 const setGenericPassword = jest.fn();
 const resetGenericPassword = jest.fn();
+const hasGenericPassword = jest.fn();
+const canImplyAuthentication = jest.fn();
+const isPasscodeAuthAvailable = jest.fn();
+const getSupportedBiometryType = jest.fn();
+
+jest.mock("../secureStorage", () => ({
+  secureGetJSON: jest.fn(),
+  secureSetJSON: jest.fn(),
+}));
+const {
+  secureGetJSON: mockSecureGetJSON,
+  secureSetJSON: mockSecureSetJSON,
+} = jest.requireMock("../secureStorage") as {
+  secureGetJSON: jest.Mock;
+  secureSetJSON: jest.Mock;
+};
 
 jest.mock("react-native-keychain", () => {
   const ggp = jest.fn();
   const sgp = jest.fn();
   const rgp = jest.fn();
+  const hgp = jest.fn();
+  const cia = jest.fn();
+  const ipa = jest.fn();
+  const gbt = jest.fn();
   return {
     __esModule: true,
-    default: { getGenericPassword: ggp, setGenericPassword: sgp, resetGenericPassword: rgp },
+    default: {
+      getGenericPassword: ggp,
+      setGenericPassword: sgp,
+      resetGenericPassword: rgp,
+      hasGenericPassword: hgp,
+      canImplyAuthentication: cia,
+      isPasscodeAuthAvailable: ipa,
+      getSupportedBiometryType: gbt,
+    },
     getGenericPassword: ggp,
     setGenericPassword: sgp,
     resetGenericPassword: rgp,
-    ACCESS_CONTROL: {},
-    AUTHENTICATION_TYPE: {},
-    BIOMETRY_TYPE: {},
-    ACCESSIBLE: {},
-    STORAGE_TYPE: {},
+    hasGenericPassword: hgp,
+    canImplyAuthentication: cia,
+    isPasscodeAuthAvailable: ipa,
+    getSupportedBiometryType: gbt,
+    ACCESS_CONTROL: {
+      BIOMETRY_ANY_OR_DEVICE_PASSCODE: "BiometryAnyOrDevicePasscode",
+    },
+    AUTHENTICATION_TYPE: {
+      DEVICE_PASSCODE_OR_BIOMETRICS: "DevicePasscodeOrBiometrics",
+    },
+    BIOMETRY_TYPE: {
+      FACE_ID: "FaceID",
+      FINGERPRINT: "Fingerprint",
+      IRIS: "Iris",
+    },
+    ACCESSIBLE: {
+      WHEN_UNLOCKED_THIS_DEVICE_ONLY: "AccessibleWhenUnlockedThisDeviceOnly",
+    },
+    STORAGE_TYPE: {
+      AES_GCM: "KeystoreAESGCM",
+    },
   };
 });
 
-// Re-import the mocked module to obtain references to the same jest.fn instances
 const mockedKeychain = jest.requireMock("react-native-keychain") as {
   getGenericPassword: jest.Mock;
   setGenericPassword: jest.Mock;
   resetGenericPassword: jest.Mock;
+  hasGenericPassword: jest.Mock;
+  canImplyAuthentication: jest.Mock;
+  isPasscodeAuthAvailable: jest.Mock;
+  getSupportedBiometryType: jest.Mock;
 };
 void getGenericPassword;
 void setGenericPassword;
@@ -57,6 +112,12 @@ describe("Keychain Security", () => {
     kc.getGenericPassword?.mockReset();
     kc.setGenericPassword?.mockReset();
     kc.resetGenericPassword?.mockReset();
+    kc.hasGenericPassword?.mockReset();
+    kc.canImplyAuthentication?.mockReset();
+    kc.isPasscodeAuthAvailable?.mockReset();
+    kc.getSupportedBiometryType?.mockReset();
+    mockSecureGetJSON.mockReset();
+    mockSecureSetJSON.mockReset();
   });
 
   describe("Token Management", () => {
@@ -283,6 +344,95 @@ describe("Keychain Security", () => {
 
       // Assert
       expect(result).toBe(true); // Should still store, validation happens at usage
+    });
+  });
+
+  describe("App Lock", () => {
+    it("authenticates with the app-lock credential", async () => {
+      mockedKeychain.getGenericPassword.mockResolvedValue({
+        username: "app-lock",
+        password: "enabled",
+      });
+
+      await expect(authenticateAppLock()).resolves.toBe(true);
+      expect(mockedKeychain.getGenericPassword).toHaveBeenCalledWith(
+        expect.objectContaining({
+          service: "com.chatapp.app-lock",
+          accessControl: "BiometryAnyOrDevicePasscode",
+        })
+      );
+    });
+
+    it("rejects an invalid app-lock credential", async () => {
+      mockedKeychain.getGenericPassword.mockResolvedValue({
+        username: "app-lock",
+        password: "invalid",
+      });
+
+      await expect(authenticateAppLock()).resolves.toBe(false);
+    });
+
+    it("enables app lock only when biometric authentication is available", async () => {
+      mockedKeychain.canImplyAuthentication.mockResolvedValue(true);
+      mockedKeychain.resetGenericPassword.mockResolvedValue(true);
+      mockedKeychain.setGenericPassword.mockResolvedValue(true);
+      mockSecureSetJSON.mockResolvedValue(undefined);
+      await expect(enableAppLock()).resolves.toBe(true);
+      expect(mockedKeychain.setGenericPassword).toHaveBeenCalledWith(
+        "app-lock",
+        "enabled",
+        expect.objectContaining({
+          service: "com.chatapp.app-lock",
+          accessControl: "BiometryAnyOrDevicePasscode",
+          storage: "KeystoreAESGCM",
+        })
+      );
+      expect(mockSecureSetJSON).toHaveBeenCalledWith("app_lock_enabled", true);
+    });
+
+    it("does not enable app lock when authentication is unavailable", async () => {
+      mockedKeychain.canImplyAuthentication.mockResolvedValue(false);
+
+      await expect(enableAppLock()).resolves.toBe(false);
+      expect(mockedKeychain.setGenericPassword).not.toHaveBeenCalled();
+    });
+
+    it("requires authentication before disabling app lock", async () => {
+      mockedKeychain.hasGenericPassword.mockResolvedValue(true);
+      mockedKeychain.getGenericPassword.mockResolvedValue({
+        username: "app-lock",
+        password: "enabled",
+      });
+      mockedKeychain.resetGenericPassword.mockResolvedValue(true);
+      mockSecureSetJSON.mockResolvedValue(undefined);
+
+      await expect(disableAppLock()).resolves.toBe(true);
+      expect(mockedKeychain.resetGenericPassword).toHaveBeenCalledWith({
+        service: "com.chatapp.app-lock",
+      });
+      expect(mockSecureSetJSON).toHaveBeenCalledWith("app_lock_enabled", false);
+    });
+
+    it("does not disable app lock when authentication fails", async () => {
+      mockedKeychain.hasGenericPassword.mockResolvedValue(true);
+      mockedKeychain.getGenericPassword.mockResolvedValue(false);
+
+      await expect(disableAppLock()).resolves.toBe(false);
+      expect(mockedKeychain.resetGenericPassword).not.toHaveBeenCalled();
+      expect(mockSecureSetJSON).not.toHaveBeenCalled();
+    });
+
+    it("reads the app-lock preference from encrypted storage", async () => {
+      mockSecureGetJSON.mockResolvedValue(true);
+
+      await expect(getAppLockEnabled()).resolves.toBe(true);
+      expect(mockSecureGetJSON).toHaveBeenCalledWith("app_lock_enabled");
+    });
+
+    it("reports the enrolled biometry type", async () => {
+      mockedKeychain.getSupportedBiometryType.mockResolvedValue("FaceID");
+
+      await expect(getAppLockType()).resolves.toBe("FaceID");
     });
   });
 
