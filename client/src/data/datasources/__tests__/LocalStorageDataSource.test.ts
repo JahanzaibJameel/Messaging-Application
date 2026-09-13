@@ -1,40 +1,55 @@
 /**
  * Unit tests for LocalStorageDataSource
- * Testing local data storage operations
+ * Testing local data storage operations with secureStorage
  */
 
 import { LocalStorageDataSource } from "../LocalStorageDataSource";
 import type { ChatModel, MessageModel, UserModel } from "../../models/MessageModel";
 
-// Mock MMKV — return a shared singleton so the module-level storage and
-// the test's mockMMKV reference the same instance.
-let mockMMKV: jest.Mocked<Record<string, jest.Mock>>;
-jest.mock("react-native-mmkv", () => {
-  if (!mockMMKV) {
-    mockMMKV = {
-      set: jest.fn(),
-      getString: jest.fn(),
-      getNumber: jest.fn(),
-      getBoolean: jest.fn(),
-      contains: jest.fn(),
-      delete: jest.fn(),
-      clearAll: jest.fn(),
-    };
-  }
-  return { MMKV: jest.fn(() => mockMMKV) };
+import * as secureStorage from "@/security/secureStorage";
+
+// Mock secureStorage
+interface MockSecureStorage {
+  secureGetJSON: jest.Mock;
+  secureSetJSON: jest.Mock;
+  secureDelete: jest.Mock;
+  secureClear: jest.Mock;
+  secureGet: jest.Mock;
+  secureSet: jest.Mock;
+}
+
+jest.mock("@/security/secureStorage", () => {
+  const mockSecureStorage: MockSecureStorage = {
+    secureGetJSON: jest.fn(),
+    secureSetJSON: jest.fn(),
+    secureDelete: jest.fn(),
+    secureClear: jest.fn(),
+    secureGet: jest.fn(),
+    secureSet: jest.fn(),
+  };
+  return {
+    secureGetJSON: mockSecureStorage.secureGetJSON,
+    secureSetJSON: mockSecureStorage.secureSetJSON,
+    secureDelete: mockSecureStorage.secureDelete,
+    secureClear: mockSecureStorage.secureClear,
+    secureGet: mockSecureStorage.secureGet,
+    secureSet: mockSecureStorage.secureSet,
+    __mockStorage: mockSecureStorage,
+  };
 });
 
 describe("LocalStorageDataSource", () => {
   let dataSource: LocalStorageDataSource;
+  let mockSecureStorage: MockSecureStorage;
 
   beforeEach(() => {
-    mockMMKV = new (require("react-native-mmkv").MMKV)() as typeof mockMMKV;
+    mockSecureStorage = (secureStorage as any).__mockStorage;
     dataSource = new LocalStorageDataSource();
     jest.clearAllMocks();
   });
 
   describe("Constructor", () => {
-    it("should initialize MMKV storage", () => {
+    it("should initialize", () => {
       expect(dataSource).toBeInstanceOf(LocalStorageDataSource);
     });
   });
@@ -68,17 +83,17 @@ describe("LocalStorageDataSource", () => {
           },
         ];
 
-        mockMMKV.getString.mockReturnValue(JSON.stringify(chats));
+        mockSecureStorage.secureGetJSON.mockResolvedValue(chats);
 
         const result = await dataSource.getChats();
 
-        expect(mockMMKV.getString).toHaveBeenCalledWith("chats");
+        expect(mockSecureStorage.secureGetJSON).toHaveBeenCalledWith("chats");
         expect(result).toEqual(chats);
         expect(result).toHaveLength(2);
       });
 
       it("should return empty array when no chats exist", async () => {
-        mockMMKV.getString.mockReturnValue(undefined);
+        mockSecureStorage.secureGetJSON.mockResolvedValue(undefined);
 
         const result = await dataSource.getChats();
 
@@ -87,7 +102,7 @@ describe("LocalStorageDataSource", () => {
       });
 
       it("should handle malformed JSON gracefully", async () => {
-        mockMMKV.getString.mockReturnValue("invalid json");
+        mockSecureStorage.secureGetJSON.mockRejectedValue(new SyntaxError("Invalid JSON"));
 
         const result = await dataSource.getChats();
 
@@ -111,19 +126,17 @@ describe("LocalStorageDataSource", () => {
           },
         ];
 
-        mockMMKV.set.mockReturnValue(true);
+        mockSecureStorage.secureSetJSON.mockResolvedValue(undefined);
 
         await dataSource.saveChats(chats);
 
-        expect(mockMMKV.set).toHaveBeenCalledWith("chats", JSON.stringify(chats));
+        expect(mockSecureStorage.secureSetJSON).toHaveBeenCalledWith("chats", chats);
       });
 
       it("should handle save errors", async () => {
         const chats: ChatModel[] = [];
 
-        mockMMKV.set.mockImplementation(() => {
-          throw new Error("Storage error");
-        });
+        mockSecureStorage.secureSetJSON.mockRejectedValue(new Error("Storage error"));
 
         await expect(dataSource.saveChats(chats)).rejects.toThrow(
           "Failed to save chats to local storage"
@@ -147,11 +160,11 @@ describe("LocalStorageDataSource", () => {
         };
 
         const allChats = [chat];
-        mockMMKV.getString.mockReturnValue(JSON.stringify(allChats));
+        mockSecureStorage.secureGetJSON.mockResolvedValue(allChats);
 
         const result = await dataSource.getChatById("chat_456");
 
-        expect(mockMMKV.getString).toHaveBeenCalledWith("chats");
+        expect(mockSecureStorage.secureGetJSON).toHaveBeenCalledWith("chats");
         expect(result).toEqual(chat);
       });
 
@@ -170,7 +183,7 @@ describe("LocalStorageDataSource", () => {
           },
         ];
 
-        mockMMKV.getString.mockReturnValue(JSON.stringify(allChats));
+        mockSecureStorage.secureGetJSON.mockResolvedValue(allChats);
 
         const result = await dataSource.getChatById("nonexistent");
 
@@ -194,13 +207,13 @@ describe("LocalStorageDataSource", () => {
         };
 
         const existingChats: ChatModel[] = [];
-        mockMMKV.getString.mockReturnValue(JSON.stringify(existingChats));
-        mockMMKV.set.mockReturnValue(true);
+        mockSecureStorage.secureGetJSON.mockResolvedValue(existingChats);
+        mockSecureStorage.secureSetJSON.mockResolvedValue(undefined);
 
         await dataSource.saveChat(chat);
 
-        expect(mockMMKV.getString).toHaveBeenCalledWith("chats");
-        expect(mockMMKV.set).toHaveBeenCalledWith("chats", JSON.stringify([chat]));
+        expect(mockSecureStorage.secureGetJSON).toHaveBeenCalledWith("chats");
+        expect(mockSecureStorage.secureSetJSON).toHaveBeenCalledWith("chats", [chat]);
       });
 
       it("should update existing chat", async () => {
@@ -218,12 +231,12 @@ describe("LocalStorageDataSource", () => {
         };
 
         const updatedChat = { ...existingChat, unreadCount: 5 };
-        mockMMKV.getString.mockReturnValue(JSON.stringify([existingChat]));
-        mockMMKV.set.mockReturnValue(true);
+        mockSecureStorage.secureGetJSON.mockResolvedValue([existingChat]);
+        mockSecureStorage.secureSetJSON.mockResolvedValue(undefined);
 
         await dataSource.saveChat(updatedChat);
 
-        expect(mockMMKV.set).toHaveBeenCalledWith("chats", JSON.stringify([updatedChat]));
+        expect(mockSecureStorage.secureSetJSON).toHaveBeenCalledWith("chats", [updatedChat]);
       });
     });
 
@@ -254,17 +267,17 @@ describe("LocalStorageDataSource", () => {
           updatedAt: "2024-01-01T00:00:00Z",
         };
 
-        mockMMKV.getString.mockReturnValue(JSON.stringify([chat1, chat2]));
-        mockMMKV.set.mockReturnValue(true);
+        mockSecureStorage.secureGetJSON.mockResolvedValue([chat1, chat2]);
+        mockSecureStorage.secureSetJSON.mockResolvedValue(undefined);
 
         await dataSource.deleteChat("chat_1");
 
-        expect(mockMMKV.set).toHaveBeenCalledWith("chats", JSON.stringify([chat2]));
+        expect(mockSecureStorage.secureSetJSON).toHaveBeenCalledWith("chats", [chat2]);
       });
 
       it("should handle delete errors", async () => {
         const error = new Error("Delete failed");
-        mockMMKV.getString.mockImplementation(() => {
+        mockSecureStorage.secureGetJSON.mockImplementation(() => {
           throw error;
         });
 
@@ -303,17 +316,17 @@ describe("LocalStorageDataSource", () => {
           },
         ];
 
-        mockMMKV.getString.mockReturnValue(JSON.stringify(messages));
+        mockSecureStorage.secureGetJSON.mockResolvedValue(messages);
 
         const result = await dataSource.getMessages("chat_456");
 
-        expect(mockMMKV.getString).toHaveBeenCalledWith("messages_chat_456");
+        expect(mockSecureStorage.secureGetJSON).toHaveBeenCalledWith("messages_chat_456");
         expect(result).toEqual(messages);
         expect(result).toHaveLength(2);
       });
 
       it("should return empty array when no messages exist", async () => {
-        mockMMKV.getString.mockReturnValue(undefined);
+        mockSecureStorage.secureGetJSON.mockResolvedValue(undefined);
 
         const result = await dataSource.getMessages("chat_456");
 
@@ -339,11 +352,11 @@ describe("LocalStorageDataSource", () => {
           },
         ];
 
-        mockMMKV.set.mockReturnValue(true);
+        mockSecureStorage.secureSetJSON.mockResolvedValue(undefined);
 
         await dataSource.saveMessages("chat_456", messages);
 
-        expect(mockMMKV.set).toHaveBeenCalledWith("messages_chat_456", JSON.stringify(messages));
+        expect(mockSecureStorage.secureSetJSON).toHaveBeenCalledWith("messages_chat_456", messages);
       });
     });
 
@@ -363,12 +376,14 @@ describe("LocalStorageDataSource", () => {
         };
 
         const existingMessages: MessageModel[] = [];
-        mockMMKV.getString.mockReturnValue(JSON.stringify(existingMessages));
-        mockMMKV.set.mockReturnValue(true);
+        mockSecureStorage.secureGetJSON.mockResolvedValue(existingMessages);
+        mockSecureStorage.secureSetJSON.mockResolvedValue(undefined);
 
         await dataSource.saveMessage(message);
 
-        expect(mockMMKV.set).toHaveBeenCalledWith("messages_chat_456", JSON.stringify([message]));
+        expect(mockSecureStorage.secureSetJSON).toHaveBeenCalledWith("messages_chat_456", [
+          message,
+        ]);
       });
 
       it("should update existing message", async () => {
@@ -386,15 +401,14 @@ describe("LocalStorageDataSource", () => {
         };
 
         const updatedMessage = { ...existingMessage, text: "Updated message", edited: true };
-        mockMMKV.getString.mockReturnValue(JSON.stringify([existingMessage]));
-        mockMMKV.set.mockReturnValue(true);
+        mockSecureStorage.secureGetJSON.mockResolvedValue([existingMessage]);
+        mockSecureStorage.secureSetJSON.mockResolvedValue(undefined);
 
         await dataSource.saveMessage(updatedMessage);
 
-        expect(mockMMKV.set).toHaveBeenCalledWith(
-          "messages_chat_456",
-          JSON.stringify([updatedMessage])
-        );
+        expect(mockSecureStorage.secureSetJSON).toHaveBeenCalledWith("messages_chat_456", [
+          updatedMessage,
+        ]);
       });
     });
 
@@ -425,17 +439,17 @@ describe("LocalStorageDataSource", () => {
           localOnly: false,
         };
 
-        mockMMKV.getString.mockReturnValue(JSON.stringify([message1, message2]));
+        mockSecureStorage.secureGetJSON.mockResolvedValue([message1, message2]);
 
         const result = await dataSource.getMessagesByChatId("chat_456");
 
-        expect(mockMMKV.getString).toHaveBeenCalledWith("messages_chat_456");
+        expect(mockSecureStorage.secureGetJSON).toHaveBeenCalledWith("messages_chat_456");
         expect(result).toEqual([message1, message2]);
         expect(result).toHaveLength(2);
       });
 
       it("should return empty array for chat with no messages", async () => {
-        mockMMKV.getString.mockReturnValue(undefined);
+        mockSecureStorage.secureGetJSON.mockResolvedValue(undefined);
 
         const result = await dataSource.getMessagesByChatId("chat_456");
 
@@ -471,49 +485,24 @@ describe("LocalStorageDataSource", () => {
           localOnly: false,
         };
 
-        mockMMKV.getString.mockReturnValue(JSON.stringify([message1, message2]));
-        mockMMKV.set.mockReturnValue(true);
+        mockSecureStorage.secureGetJSON.mockResolvedValue([message1, message2]);
+        mockSecureStorage.secureSetJSON.mockResolvedValue(undefined);
 
         await dataSource.deleteMessage("chat_456", "msg_1");
 
-        expect(mockMMKV.set).toHaveBeenCalledWith("messages_chat_456", JSON.stringify([message2]));
+        expect(mockSecureStorage.secureSetJSON).toHaveBeenCalledWith("messages_chat_456", [
+          message2,
+        ]);
       });
     });
 
     describe("clearMessagesByChatId", () => {
       it("should clear all messages for specific chat", async () => {
-        const messages: MessageModel[] = [
-          {
-            id: "msg_1",
-            chatId: "chat_456",
-            senderId: "user_1",
-            type: "text",
-            text: "Message 1",
-            timestamp: "2024-01-01T00:00:00Z",
-            status: "sent",
-            reactions: [],
-            edited: false,
-            localOnly: false,
-          },
-          {
-            id: "msg_2",
-            chatId: "chat_789",
-            senderId: "user_2",
-            type: "text",
-            text: "Message 2",
-            timestamp: "2024-01-01T01:00:00Z",
-            status: "sent",
-            reactions: [],
-            edited: false,
-            localOnly: false,
-          },
-        ];
-
-        mockMMKV.delete.mockReturnValue(true);
+        mockSecureStorage.secureDelete.mockResolvedValue(undefined);
 
         await dataSource.clearMessagesByChatId("chat_456");
 
-        expect(mockMMKV.delete).toHaveBeenCalledWith("messages_chat_456");
+        expect(mockSecureStorage.secureDelete).toHaveBeenCalledWith("messages_chat_456");
       });
     });
   });
@@ -540,11 +529,11 @@ describe("LocalStorageDataSource", () => {
           },
         ];
 
-        mockMMKV.getString.mockReturnValue(JSON.stringify(users));
+        mockSecureStorage.secureGetJSON.mockResolvedValue(users);
 
         const result = await dataSource.getUsers();
 
-        expect(mockMMKV.getString).toHaveBeenCalledWith("users");
+        expect(mockSecureStorage.secureGetJSON).toHaveBeenCalledWith("users");
         expect(result).toEqual(users);
         expect(result).toHaveLength(2);
       });
@@ -563,11 +552,11 @@ describe("LocalStorageDataSource", () => {
           },
         ];
 
-        mockMMKV.set.mockReturnValue(true);
+        mockSecureStorage.secureSetJSON.mockResolvedValue(undefined);
 
         await dataSource.saveUsers(users);
 
-        expect(mockMMKV.set).toHaveBeenCalledWith("users", JSON.stringify(users));
+        expect(mockSecureStorage.secureSetJSON).toHaveBeenCalledWith("users", users);
       });
     });
 
@@ -583,11 +572,11 @@ describe("LocalStorageDataSource", () => {
         };
 
         const allUsers = [user];
-        mockMMKV.getString.mockReturnValue(JSON.stringify(allUsers));
+        mockSecureStorage.secureGetJSON.mockResolvedValue(allUsers);
 
         const result = await dataSource.getUserById("user_456");
 
-        expect(mockMMKV.getString).toHaveBeenCalledWith("users");
+        expect(mockSecureStorage.secureGetJSON).toHaveBeenCalledWith("users");
         expect(result).toEqual(user);
       });
 
@@ -603,7 +592,7 @@ describe("LocalStorageDataSource", () => {
           },
         ];
 
-        mockMMKV.getString.mockReturnValue(JSON.stringify(allUsers));
+        mockSecureStorage.secureGetJSON.mockResolvedValue(allUsers);
 
         const result = await dataSource.getUserById("nonexistent");
 
@@ -623,12 +612,12 @@ describe("LocalStorageDataSource", () => {
         };
 
         const existingUsers: UserModel[] = [];
-        mockMMKV.getString.mockReturnValue(JSON.stringify(existingUsers));
-        mockMMKV.set.mockReturnValue(true);
+        mockSecureStorage.secureGetJSON.mockResolvedValue(existingUsers);
+        mockSecureStorage.secureSetJSON.mockResolvedValue(undefined);
 
         await dataSource.saveUser(user);
 
-        expect(mockMMKV.set).toHaveBeenCalledWith("users", JSON.stringify([user]));
+        expect(mockSecureStorage.secureSetJSON).toHaveBeenCalledWith("users", [user]);
       });
     });
 
@@ -643,20 +632,20 @@ describe("LocalStorageDataSource", () => {
           updatedAt: "2024-01-01T00:00:00Z",
         };
 
-        mockMMKV.getString.mockReturnValue(JSON.stringify(user));
+        mockSecureStorage.secureGetJSON.mockResolvedValue(user);
 
         const result = await dataSource.getCurrentUser();
 
-        expect(mockMMKV.getString).toHaveBeenCalledWith("current_user");
+        expect(mockSecureStorage.secureGetJSON).toHaveBeenCalledWith("current_user");
         expect(result).toEqual(user);
       });
 
       it("should return null when no current user", async () => {
-        mockMMKV.getString.mockReturnValue(undefined);
+        mockSecureStorage.secureGetJSON.mockResolvedValue(undefined);
 
         const result = await dataSource.getCurrentUser();
 
-        expect(mockMMKV.getString).toHaveBeenCalledWith("current_user");
+        expect(mockSecureStorage.secureGetJSON).toHaveBeenCalledWith("current_user");
         expect(result).toBeNull();
       });
     });
@@ -672,19 +661,19 @@ describe("LocalStorageDataSource", () => {
           updatedAt: "2024-01-01T00:00:00Z",
         };
 
-        mockMMKV.set.mockReturnValue(true);
+        mockSecureStorage.secureSetJSON.mockResolvedValue(undefined);
 
         await dataSource.saveCurrentUser(user);
 
-        expect(mockMMKV.set).toHaveBeenCalledWith("current_user", JSON.stringify(user));
+        expect(mockSecureStorage.secureSetJSON).toHaveBeenCalledWith("current_user", user);
       });
 
       it("should clear current user when null", async () => {
-        mockMMKV.delete.mockReturnValue(true);
+        mockSecureStorage.secureDelete.mockResolvedValue(undefined);
 
         await dataSource.saveCurrentUser(null);
 
-        expect(mockMMKV.delete).toHaveBeenCalledWith("current_user");
+        expect(mockSecureStorage.secureDelete).toHaveBeenCalledWith("current_user");
       });
     });
   });
@@ -693,16 +682,16 @@ describe("LocalStorageDataSource", () => {
     describe("getSettings", () => {
       it("should retrieve settings from storage", async () => {
         const settings = { darkMode: true, fontSize: "large" };
-        mockMMKV.getString.mockReturnValue(JSON.stringify(settings));
+        mockSecureStorage.secureGetJSON.mockResolvedValue(settings);
 
         const result = await dataSource.getSettings();
 
-        expect(mockMMKV.getString).toHaveBeenCalledWith("settings");
+        expect(mockSecureStorage.secureGetJSON).toHaveBeenCalledWith("settings");
         expect(result).toEqual(settings);
       });
 
       it("should return null when no settings exist", async () => {
-        mockMMKV.getString.mockReturnValue(undefined);
+        mockSecureStorage.secureGetJSON.mockResolvedValue(undefined);
 
         const result = await dataSource.getSettings();
 
@@ -713,11 +702,11 @@ describe("LocalStorageDataSource", () => {
     describe("saveSettings", () => {
       it("should save settings to storage", async () => {
         const settings = { darkMode: false, fontSize: "small" };
-        mockMMKV.set.mockReturnValue(true);
+        mockSecureStorage.secureSetJSON.mockResolvedValue(undefined);
 
         await dataSource.saveSettings(settings);
 
-        expect(mockMMKV.set).toHaveBeenCalledWith("settings", JSON.stringify(settings));
+        expect(mockSecureStorage.secureSetJSON).toHaveBeenCalledWith("settings", settings);
       });
     });
   });
@@ -726,16 +715,16 @@ describe("LocalStorageDataSource", () => {
     describe("getSyncState", () => {
       it("should retrieve sync state from storage", async () => {
         const syncState = { lastSync: "2024-01-01T00:00:00Z" };
-        mockMMKV.getString.mockReturnValue(JSON.stringify(syncState));
+        mockSecureStorage.secureGetJSON.mockResolvedValue(syncState);
 
         const result = await dataSource.getSyncState();
 
-        expect(mockMMKV.getString).toHaveBeenCalledWith("sync_state");
+        expect(mockSecureStorage.secureGetJSON).toHaveBeenCalledWith("sync_state");
         expect(result).toEqual(syncState);
       });
 
       it("should return null when no sync state exists", async () => {
-        mockMMKV.getString.mockReturnValue(undefined);
+        mockSecureStorage.secureGetJSON.mockResolvedValue(undefined);
 
         const result = await dataSource.getSyncState();
 
@@ -746,18 +735,18 @@ describe("LocalStorageDataSource", () => {
     describe("saveSyncState", () => {
       it("should save sync state to storage", async () => {
         const syncState = { lastSync: "2024-01-01T01:00:00Z" };
-        mockMMKV.set.mockReturnValue(true);
+        mockSecureStorage.secureSetJSON.mockResolvedValue(undefined);
 
         await dataSource.saveSyncState(syncState);
 
-        expect(mockMMKV.set).toHaveBeenCalledWith("sync_state", JSON.stringify(syncState));
+        expect(mockSecureStorage.secureSetJSON).toHaveBeenCalledWith("sync_state", syncState);
       });
     });
   });
 
   describe("Error Handling", () => {
     it("should handle JSON parsing errors gracefully", async () => {
-      mockMMKV.getString.mockReturnValue('{"invalid": json}');
+      mockSecureStorage.secureGetJSON.mockRejectedValue(new SyntaxError("Invalid JSON"));
 
       const result = await dataSource.getChats();
 
@@ -767,9 +756,7 @@ describe("LocalStorageDataSource", () => {
     it("should handle storage write failures", async () => {
       const chats: ChatModel[] = [];
 
-      mockMMKV.set.mockImplementation(() => {
-        throw new Error("Storage full");
-      });
+      mockSecureStorage.secureSetJSON.mockRejectedValue(new Error("Storage full"));
 
       await expect(dataSource.saveChats(chats)).rejects.toThrow(
         "Failed to save chats to local storage"
@@ -777,9 +764,7 @@ describe("LocalStorageDataSource", () => {
     });
 
     it("should handle storage read failures", async () => {
-      mockMMKV.getString.mockImplementation(() => {
-        throw new Error("Storage corrupted");
-      });
+      mockSecureStorage.secureGetJSON.mockRejectedValue(new Error("Storage corrupted"));
 
       await expect(dataSource.getChats()).rejects.toThrow("Failed to get chats from local storage");
     });
@@ -800,7 +785,7 @@ describe("LocalStorageDataSource", () => {
         updatedAt: "2024-01-01T00:00:00Z",
       }));
 
-      mockMMKV.getString.mockReturnValue(JSON.stringify(largeChats));
+      mockSecureStorage.secureGetJSON.mockResolvedValue(largeChats);
 
       const startTime = Date.now();
       const result = await dataSource.getChats();
@@ -827,8 +812,8 @@ describe("LocalStorageDataSource", () => {
       };
 
       const allChats = [chat];
-      mockMMKV.getString.mockReturnValue(JSON.stringify(allChats));
-      mockMMKV.set.mockReturnValue(true);
+      mockSecureStorage.secureGetJSON.mockResolvedValue(allChats);
+      mockSecureStorage.secureSetJSON.mockResolvedValue(undefined);
 
       await dataSource.saveChat(chat);
       const result = await dataSource.getChatById("chat_consistency");
@@ -855,13 +840,36 @@ describe("LocalStorageDataSource", () => {
       };
 
       const allChats = [chat];
-      mockMMKV.getString.mockReturnValue(JSON.stringify(allChats));
-      mockMMKV.set.mockReturnValue(true);
+      mockSecureStorage.secureGetJSON.mockResolvedValue(allChats);
+      mockSecureStorage.secureSetJSON.mockResolvedValue(undefined);
 
       await dataSource.saveChat(chat);
       const result = await dataSource.getChatById("chat_special");
 
       expect(result).toEqual(chat);
+    });
+  });
+
+  describe("Clear All", () => {
+    it("should clear all data", async () => {
+      mockSecureStorage.secureClear.mockResolvedValue(undefined);
+
+      await dataSource.clearAll();
+
+      expect(mockSecureStorage.secureClear).toHaveBeenCalled();
+    });
+
+    it("should handle clear errors", async () => {
+      mockSecureStorage.secureClear.mockRejectedValue(new Error("Clear failed"));
+
+      await expect(dataSource.clearAll()).rejects.toThrow("Failed to clear all data");
+    });
+  });
+
+  describe("getAllKeys", () => {
+    it("should return empty array (not supported in secureStorage)", () => {
+      const result = dataSource.getAllKeys();
+      expect(result).toEqual([]);
     });
   });
 });
