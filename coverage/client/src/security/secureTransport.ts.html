@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">5.82% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/103</span>
+                <span class='fraction'>6/103</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">5.82% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/103</span>
+                <span class='fraction'>6/103</span>
             </div>
         
             
@@ -416,9 +416,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -501,10 +501,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -582,7 +582,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -598,11 +598,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -616,16 +616,16 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -708,7 +708,7 @@ function <span class="fstat-no" title="function not covered" >normalizeHeaders(<
 /**
  * HTTP request with SSL pinning in release builds; standard fetch in development (__DEV__).
  */
-export const secureFetch = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >as</span>ync (options: SecureRequestOptions): Promise&lt;SecureResponse&gt; =&gt; {</span>
+export const secureFetch = <span class="fstat-no" title="function not covered" >as</span>ync (options: SecureRequestOptions): Promise&lt;SecureResponse&gt; =&gt; {
 <span class="cstat-no" title="statement not covered" >  try {</span>
 <span class="cstat-no" title="statement not covered" >    addUserActionBreadcrumb("secure_fetch_attempt", {</span>
       url: options.url,
@@ -793,7 +793,7 @@ export const secureFetch = <span class="cstat-no" title="statement not covered" 
  * Opens a WebSocket. Production builds require wss://; development allows ws:// (e.g. localhost).
  * (Pinning applies to HTTP via sslFetch; RN WebSocket uses the system stack.)
  */
-export const createSecureWebSocket = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(o</span>ptions: SecureWebSocketOptions): Promise&lt;WebSocket&gt; =&gt; {</span>
+export const createSecureWebSocket = <span class="fstat-no" title="function not covered" >(o</span>ptions: SecureWebSocketOptions): Promise&lt;WebSocket&gt; =&gt; {
 <span class="cstat-no" title="statement not covered" >  return new Promise(<span class="fstat-no" title="function not covered" >(r</span>esolve, reject) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    try {</span>
 <span class="cstat-no" title="statement not covered" >      addUserActionBreadcrumb("secure_websocket_attempt", {</span>
@@ -874,7 +874,7 @@ export const createSecureWebSocket = <span class="cstat-no" title="statement not
   });
 };
 &nbsp;
-export const validateCertificate = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >as</span>ync (domain: string): Promise&lt;boolean&gt; =&gt; {</span>
+export const validateCertificate = <span class="fstat-no" title="function not covered" >as</span>ync (domain: string): Promise&lt;boolean&gt; =&gt; {
 <span class="cstat-no" title="statement not covered" >  try {</span>
 <span class="cstat-no" title="statement not covered" >    addUserActionBreadcrumb("certificate_validation_attempt", { domain });</span>
     const testUrl = <span class="cstat-no" title="statement not covered" >`https://${domain}/health`;</span>
@@ -890,7 +890,7 @@ export const validateCertificate = <span class="cstat-no" title="statement not c
   }
 };
 &nbsp;
-export const getSecureUrl = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(b</span>aseUrl: string, path: string, useWebSocket = <span class="branch-0 cbranch-no" title="branch not covered" >false)</span>: string =&gt; {</span>
+export const getSecureUrl = <span class="fstat-no" title="function not covered" >(b</span>aseUrl: string, path: string, useWebSocket = <span class="branch-0 cbranch-no" title="branch not covered" >false)</span>: string =&gt; {
   const config = <span class="cstat-no" title="statement not covered" >getSSLPinningConfig();</span>
   const domain = <span class="cstat-no" title="statement not covered" >useWebSocket ? config.wsDomain : config.domain;</span>
   const protocol = <span class="cstat-no" title="statement not covered" >useWebSocket ? "wss://" : "https://";</span>
@@ -908,7 +908,7 @@ export const getSecureUrl = <span class="cstat-no" title="statement not covered"
 <span class="cstat-no" title="statement not covered" >  return `${protocol}${domain}${cleanPath}`;</span>
 };
 &nbsp;
-export const isSecureUrl = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(u</span>rl: string): boolean =&gt; {</span>
+export const isSecureUrl = <span class="fstat-no" title="function not covered" >(u</span>rl: string): boolean =&gt; {
 <span class="cstat-no" title="statement not covered" >  try {</span>
     const parsedUrl = <span class="cstat-no" title="statement not covered" >new URL(url);</span>
 <span class="cstat-no" title="statement not covered" >    return parsedUrl.protocol === "https:" || parsedUrl.protocol === "wss:";</span>
@@ -917,7 +917,7 @@ export const isSecureUrl = <span class="cstat-no" title="statement not covered" 
   }
 };
 &nbsp;
-export const enforceSecureUrl = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(u</span>rl: string): string =&gt; {</span>
+export const enforceSecureUrl = <span class="fstat-no" title="function not covered" >(u</span>rl: string): string =&gt; {
 <span class="cstat-no" title="statement not covered" >  try {</span>
     const parsedUrl = <span class="cstat-no" title="statement not covered" >new URL(url);</span>
     const config = <span class="cstat-no" title="statement not covered" >getSSLPinningConfig();</span>
@@ -946,7 +946,7 @@ export default {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-09-12T06:43:38.401Z
+                at 2026-09-13T19:20:56.474Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
