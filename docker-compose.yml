@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # Chat Application Server
@@ -41,7 +41,7 @@ services:
     environment:
       - POSTGRES_DB=chatapp
       - POSTGRES_USER=chatuser
-      - POSTGRES_PASSWORD=chatpass
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./server/init.sql:/docker-entrypoint-initdb.d/init.sql
