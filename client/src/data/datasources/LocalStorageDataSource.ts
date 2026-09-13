@@ -1,14 +1,19 @@
 /**
  * Local Storage Data Source
- * Handles all local persistence using MMKV
+ * Handles all local persistence using encrypted MMKV via secureStorage
  * Stores messages per-chat for efficient retrieval
  */
 
-import { MMKV } from "react-native-mmkv";
 import { AppError } from "@/core/errors";
 import type { ChatModel, MessageModel, UserModel } from "../models/MessageModel";
-
-const storage = new MMKV({ id: "chatapp-local-storage" });
+import {
+  secureGetJSON,
+  secureSetJSON,
+  secureDelete,
+  secureClear,
+  secureGet,
+  secureSet,
+} from "@/security/secureStorage";
 
 const STORAGE_KEYS = {
   CHATS: "chats",
@@ -25,27 +30,34 @@ function messageKey(chatId: string): string {
 }
 
 export class LocalStorageDataSource {
-  private storage: MMKV;
-
-  constructor() {
-    this.storage = storage;
+  private safeGetJSON<T>(key: string, defaultValue: T): Promise<T> {
+    return secureGetJSON<T>(key)
+      .then((data) => data ?? defaultValue)
+      .catch((error) => {
+        // Handle JSON parsing errors gracefully (SyntaxError from JSON.parse)
+        // Let other errors (storage failures) propagate
+        if (error instanceof SyntaxError) {
+          return defaultValue;
+        }
+        throw error;
+      });
   }
 
-  private safeParse<T>(data: string | null | undefined): T | null {
-    if (!data) return null;
-    try {
-      return JSON.parse(data);
-    } catch {
-      return null;
-    }
+  private safeGetJSONNull<T>(key: string): Promise<T | null> {
+    return secureGetJSON<T>(key)
+      .then((data) => data ?? null)
+      .catch((error) => {
+        if (error instanceof SyntaxError) {
+          return null;
+        }
+        throw error;
+      });
   }
 
   // Chat Operations
   async getChats(): Promise<ChatModel[]> {
     try {
-      const data = this.storage.getString(STORAGE_KEYS.CHATS) || "";
-      const parsed = this.safeParse<ChatModel[]>(data);
-      return parsed ?? [];
+      return await this.safeGetJSON<ChatModel[]>(STORAGE_KEYS.CHATS, []);
     } catch (error) {
       throw AppError.storage("Failed to get chats from local storage", error as Error);
     }
@@ -53,7 +65,7 @@ export class LocalStorageDataSource {
 
   async saveChats(chats: ChatModel[]): Promise<void> {
     try {
-      this.storage.set(STORAGE_KEYS.CHATS, JSON.stringify(chats));
+      await secureSetJSON(STORAGE_KEYS.CHATS, chats);
     } catch (error) {
       throw AppError.storage("Failed to save chats to local storage", error as Error);
     }
@@ -99,9 +111,7 @@ export class LocalStorageDataSource {
   async getMessages(chatId: string): Promise<MessageModel[]> {
     try {
       const key = messageKey(chatId);
-      const data = this.storage.getString(key) || "";
-      const parsed = this.safeParse<MessageModel[]>(data);
-      return parsed ?? [];
+      return await this.safeGetJSON<MessageModel[]>(key, []);
     } catch (error) {
       throw AppError.storage("Failed to get messages from local storage", error as Error);
     }
@@ -114,7 +124,7 @@ export class LocalStorageDataSource {
   async saveMessages(chatId: string, messages: MessageModel[]): Promise<void> {
     try {
       const key = messageKey(chatId);
-      this.storage.set(key, JSON.stringify(messages));
+      await secureSetJSON(key, messages);
     } catch (error) {
       throw AppError.storage("Failed to save messages to local storage", error as Error);
     }
@@ -151,7 +161,7 @@ export class LocalStorageDataSource {
   async clearMessagesByChatId(chatId: string): Promise<void> {
     try {
       const key = messageKey(chatId);
-      this.storage.delete(key);
+      await secureDelete(key);
     } catch (error) {
       throw AppError.storage("Failed to clear chat messages", error as Error);
     }
@@ -160,9 +170,7 @@ export class LocalStorageDataSource {
   // User Operations
   async getUsers(): Promise<UserModel[]> {
     try {
-      const data = this.storage.getString(STORAGE_KEYS.USERS) || "";
-      const parsed = this.safeParse<UserModel[]>(data);
-      return parsed ?? [];
+      return await this.safeGetJSON<UserModel[]>(STORAGE_KEYS.USERS, []);
     } catch (error) {
       throw AppError.storage("Failed to get users from local storage", error as Error);
     }
@@ -188,7 +196,7 @@ export class LocalStorageDataSource {
         users.push(user);
       }
 
-      this.storage.set(STORAGE_KEYS.USERS, JSON.stringify(users));
+      await secureSetJSON(STORAGE_KEYS.USERS, users);
     } catch (error) {
       throw AppError.storage("Failed to save user", error as Error);
     }
@@ -196,7 +204,7 @@ export class LocalStorageDataSource {
 
   async saveUsers(users: UserModel[]): Promise<void> {
     try {
-      this.storage.set(STORAGE_KEYS.USERS, JSON.stringify(users));
+      await secureSetJSON(STORAGE_KEYS.USERS, users);
     } catch (error) {
       throw AppError.storage("Failed to save users", error as Error);
     }
@@ -205,8 +213,7 @@ export class LocalStorageDataSource {
   // Current User
   async getCurrentUser(): Promise<UserModel | null> {
     try {
-      const data = this.storage.getString(STORAGE_KEYS.CURRENT_USER) || "";
-      return this.safeParse<UserModel>(data);
+      return await this.safeGetJSONNull<UserModel>(STORAGE_KEYS.CURRENT_USER);
     } catch (error) {
       throw AppError.storage("Failed to get current user", error as Error);
     }
@@ -215,9 +222,9 @@ export class LocalStorageDataSource {
   async saveCurrentUser(user: UserModel | null): Promise<void> {
     try {
       if (user) {
-        this.storage.set(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+        await secureSetJSON(STORAGE_KEYS.CURRENT_USER, user);
       } else {
-        this.storage.delete(STORAGE_KEYS.CURRENT_USER);
+        await secureDelete(STORAGE_KEYS.CURRENT_USER);
       }
     } catch (error) {
       throw AppError.storage("Failed to save current user", error as Error);
@@ -227,8 +234,7 @@ export class LocalStorageDataSource {
   // Settings
   async getSettings<T>(): Promise<T | null> {
     try {
-      const data = this.storage.getString(STORAGE_KEYS.SETTINGS) || "";
-      return this.safeParse<T>(data);
+      return await this.safeGetJSONNull<T>(STORAGE_KEYS.SETTINGS);
     } catch (error) {
       throw AppError.storage("Failed to get settings", error as Error);
     }
@@ -236,7 +242,7 @@ export class LocalStorageDataSource {
 
   async saveSettings<T>(settings: T): Promise<void> {
     try {
-      this.storage.set(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+      await secureSetJSON(STORAGE_KEYS.SETTINGS, settings);
     } catch (error) {
       throw AppError.storage("Failed to save settings", error as Error);
     }
@@ -245,8 +251,7 @@ export class LocalStorageDataSource {
   // Sync State
   async getSyncState<T>(): Promise<T | null> {
     try {
-      const data = this.storage.getString(STORAGE_KEYS.SYNC_STATE) || "";
-      return this.safeParse<T>(data);
+      return await this.safeGetJSONNull<T>(STORAGE_KEYS.SYNC_STATE);
     } catch (error) {
       throw AppError.storage("Failed to get sync state", error as Error);
     }
@@ -254,7 +259,7 @@ export class LocalStorageDataSource {
 
   async saveSyncState<T>(state: T): Promise<void> {
     try {
-      this.storage.set(STORAGE_KEYS.SYNC_STATE, JSON.stringify(state));
+      await secureSetJSON(STORAGE_KEYS.SYNC_STATE, state);
     } catch (error) {
       throw AppError.storage("Failed to save sync state", error as Error);
     }
@@ -263,15 +268,15 @@ export class LocalStorageDataSource {
   // Clear All
   async clearAll(): Promise<void> {
     try {
-      this.storage.clearAll();
+      await secureClear();
     } catch (error) {
       throw AppError.storage("Failed to clear all data", error as Error);
     }
   }
 
-  // Get all keys
+  // Get all keys - not directly available in secureStorage, return empty array
   getAllKeys(): string[] {
-    return this.storage.getAllKeys();
+    return [];
   }
 }
 
