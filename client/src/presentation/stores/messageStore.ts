@@ -15,41 +15,18 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
-import { MMKV } from "react-native-mmkv";
 
 import type { Message } from "@/domain/entities/Message";
 import type { MessageState, MessageActions, EntityState } from "./types";
+import { createSecureStorageAdapterWithKeys } from "../../lib/secureStorageAdapter";
 
 // ---------------------------------------------------------------------------
 // Storage
 // ---------------------------------------------------------------------------
 
-const storage = new MMKV({ id: "message-storage" });
+const STORAGE_KEYS = ["message-storage_messages", "message-storage_messagesByChatId"];
 
-const mmkvStorage = {
-  getItem: (name: string): string | null => {
-    try {
-      return storage.getString(name) ?? null;
-    } catch {
-      // Storage read failures must not break hydration
-      return null;
-    }
-  },
-  setItem: (name: string, value: string): void => {
-    try {
-      storage.set(name, value);
-    } catch {
-      // Storage write failures must not crash store updates
-    }
-  },
-  removeItem: (name: string): void => {
-    try {
-      storage.delete(name);
-    } catch {
-      // Ignore removal failures
-    }
-  },
-};
+const secureStorage = createSecureStorageAdapterWithKeys("message-storage", STORAGE_KEYS);
 
 // ---------------------------------------------------------------------------
 // Initial state
@@ -229,7 +206,7 @@ export const useMessageStore = create<MessageStore>()(
       }),
       {
         name: "message-storage",
-        storage: createJSONStorage(() => mmkvStorage),
+        storage: createJSONStorage(() => secureStorage),
         // Persist both the entity map and the index so the index
         // survives app restarts without needing a rebuild pass.
         partialize: (state) => ({
