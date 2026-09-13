@@ -6,23 +6,12 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
-import { MMKV } from "react-native-mmkv";
 import type { SyncState, SyncActions, QueuedMessage, SyncStatus } from "./types";
+import { createSecureStorageAdapterWithKeys } from "../../lib/secureStorageAdapter";
 
-const storage = new MMKV({ id: "sync-storage" });
+const STORAGE_KEYS = ["sync-storage"];
 
-const mmkvStorage = {
-  getItem: (name: string): string | null => {
-    const value = storage.getString(name);
-    return value ?? null;
-  },
-  setItem: (name: string, value: string): void => {
-    storage.set(name, value);
-  },
-  removeItem: (name: string): void => {
-    storage.delete(name);
-  },
-};
+const secureStorage = createSecureStorageAdapterWithKeys("sync-storage", STORAGE_KEYS);
 
 type SyncStore = SyncState & SyncActions;
 
@@ -122,7 +111,7 @@ export const useSyncStore = create<SyncStore>()(
       }),
       {
         name: "sync-storage",
-        storage: createJSONStorage(() => mmkvStorage),
+        storage: createJSONStorage(() => secureStorage),
       }
     )
   )
