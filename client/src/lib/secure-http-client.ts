@@ -1,8 +1,10 @@
 /**
  * Secure HTTP Client with Certificate Pinning
  * Provides MITM protection for API calls
+ * DEPRECATED: Use @/security/secureTransport instead
  */
 
+import { getSSLPinningConfig } from "@/security/sslPinningConfig";
 import { fetch as fetchWithPinning } from "react-native-ssl-pinning";
 
 interface SecureHttpClientOptions {
@@ -84,8 +86,10 @@ class SecureHttpClient {
       let response;
       let status: number;
 
-      if (this.defaultOptions.enablePinning) {
-        // Use certificate pinning for sensitive requests
+      if (this.defaultOptions.enablePinning && !__DEV__) {
+        // Use certificate pinning for sensitive requests in production
+        // Certificate hashes are loaded from environment via getSSLPinningConfig()
+        const config = getSSLPinningConfig();
         const body =
           typeof requestOptions.body === "string"
             ? requestOptions.body
@@ -97,9 +101,7 @@ class SecureHttpClient {
           headers: requestOptions.headers as Record<string, string>,
           body,
           timeoutInterval: this.defaultOptions.timeout,
-          sslPinning: {
-            certs: ["sha256/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX="],
-          },
+          sslPinning: { certs: config.certificateHashes },
         });
         status = (response as any).status || 200;
       } else {
