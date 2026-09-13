@@ -18,6 +18,7 @@ import { SettingsItem } from "@/components/SettingsItem";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { useAuthStore } from "@/presentation/stores";
+import { useAppLock } from "@/hooks/useAppLock";
 import type { RootStackParamList } from "@/navigation/types";
 
 interface Props {
@@ -30,8 +31,29 @@ export default function SettingsScreen({ navigation }: Props) {
   const tabBarHeight = useBottomTabBarHeight();
   const { theme, isDark } = useTheme();
   const { currentUser, logout } = useAuthStore();
+  const appLock = useAppLock(false);
 
   const appVersion = Constants.expoConfig?.version ?? "1.0.0";
+
+  const handleToggleAppLock = async (enabled: boolean) => {
+    if (enabled && !appLock.available) {
+      Alert.alert("App Lock", "Biometric authentication is not available on this device.");
+      return;
+    }
+
+    const result = await appLock.setEnabled(enabled);
+    if (!result) {
+      Alert.alert(
+        "App Lock",
+        enabled
+          ? "Unable to enable App Lock. Try again."
+          : "Unable to disable App Lock. Authenticate and try again."
+      );
+      return;
+    }
+
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  };
 
   const handleLogout = () => {
     Alert.alert("Log Out", "Are you sure you want to log out?", [
@@ -65,6 +87,26 @@ export default function SettingsScreen({ navigation }: Props) {
           <ThemedText style={[styles.profilePhone, { color: theme.textSecondary }]}>
             {currentUser?.phone ?? ""}
           </ThemedText>
+        </View>
+      </View>
+
+      {/* Security */}
+      <View style={styles.section}>
+        <ThemedText style={[styles.sectionTitle, { color: theme.textSecondary }]}>
+          Security
+        </ThemedText>
+        <View style={[styles.sectionContent, { backgroundColor: theme.surface }]}>
+          <SettingsItem
+            icon="shield"
+            title="App Lock"
+            subtitle={appLock.enabled ? "Enabled" : appLock.available ? "Available" : "Unavailable"}
+            toggle={{
+              value: appLock.enabled,
+              onValueChange: (enabled) => void handleToggleAppLock(enabled),
+            }}
+            disabled={!appLock.available || appLock.checking}
+            showArrow={false}
+          />
         </View>
       </View>
 
