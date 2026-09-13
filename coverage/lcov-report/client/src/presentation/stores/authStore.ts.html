@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">97.53% </span>
+                <span class="strong">98.7% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>79/81</span>
+                <span class='fraction'>76/77</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">70.83% </span>
+                <span class="strong">68.18% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>17/24</span>
+                <span class='fraction'>15/22</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">96% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>24/25</span>
+                <span class='fraction'>22/22</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">97.53% </span>
+                <span class="strong">98.7% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>79/81</span>
+                <span class='fraction'>76/77</span>
             </div>
         
             
@@ -258,18 +258,7 @@
 <a name='L193'></a><a href='#L193'>193</a>
 <a name='L194'></a><a href='#L194'>194</a>
 <a name='L195'></a><a href='#L195'>195</a>
-<a name='L196'></a><a href='#L196'>196</a>
-<a name='L197'></a><a href='#L197'>197</a>
-<a name='L198'></a><a href='#L198'>198</a>
-<a name='L199'></a><a href='#L199'>199</a>
-<a name='L200'></a><a href='#L200'>200</a>
-<a name='L201'></a><a href='#L201'>201</a>
-<a name='L202'></a><a href='#L202'>202</a>
-<a name='L203'></a><a href='#L203'>203</a>
-<a name='L204'></a><a href='#L204'>204</a>
-<a name='L205'></a><a href='#L205'>205</a>
-<a name='L206'></a><a href='#L206'>206</a>
-<a name='L207'></a><a href='#L207'>207</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L196'></a><a href='#L196'>196</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -290,17 +279,6 @@
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">86x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -483,7 +461,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
-import { MMKV } from "react-native-mmkv";
 &nbsp;
 import type { User } from "../../domain/entities/User";
 import { UserEntity } from "../../domain/entities/User";
@@ -492,21 +469,11 @@ import type { AuthState, AuthActions } from "./types";
 import { logger } from "../../core/logger";
 import { remoteApiDataSource } from "../../data/datasources/RemoteApiDataSource";
 import { setToken, resetToken } from "../../security/keychain";
+import { createSecureStorageAdapterWithKeys } from "../../lib/secureStorageAdapter";
 &nbsp;
-const storage = new MMKV({ id: "auth-storage" });
+const STORAGE_KEYS = ["auth-storage_currentUser", "auth-storage_isAuthenticated"];
 &nbsp;
-const mmkvStorage = {
-  getItem: (name: string): string | null =&gt; {
-    const value = storage.getString(name);
-    return value ?? null;
-  },
-  setItem: (name: string, value: string): void =&gt; {
-    storage.set(name, value);
-  },
-  removeItem: <span class="fstat-no" title="function not covered" >(n</span>ame: string): void =&gt; {
-<span class="cstat-no" title="statement not covered" >    storage.delete(name);</span>
-  },
-};
+const secureStorage = createSecureStorageAdapterWithKeys("auth-storage", STORAGE_KEYS);
 &nbsp;
 type AuthStore = AuthState &amp; AuthActions;
 &nbsp;
@@ -672,7 +639,7 @@ export const useAuthStore = create&lt;AuthStore&gt;()(
       }),
       {
         name: "auth-storage",
-        storage: createJSONStorage(() =&gt; mmkvStorage),
+        storage: createJSONStorage(() =&gt; secureStorage),
         partialize: (state) =&gt; ({
           currentUser: state.currentUser,
           isAuthenticated: state.isAuthenticated,
@@ -688,7 +655,7 @@ export const useAuthStore = create&lt;AuthStore&gt;()(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-09-12T06:43:36.571Z
+                at 2026-09-13T19:20:55.301Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>
