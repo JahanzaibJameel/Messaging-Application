@@ -3,24 +3,31 @@
  * Handles real-time communication for chat features
  */
 
-import { WebSocketServer, WebSocket } from 'ws';
-import { createServer } from 'http';
-import type { IncomingMessage } from 'http';
-import jwt from 'jsonwebtoken';
+import { WebSocketServer, WebSocket } from "ws";
+import type { IncomingMessage } from "http";
+import jwt, { type JwtPayload } from "jsonwebtoken";
+import { randomUUID } from "crypto";
 
 // Simple logger for the server
 const logger = {
   info: (message: string, context?: string) => {
-    console.log(`[${new Date().toISOString()}] [INFO] ${context ? `[${context}] ` : ''}${message}`);
+    console.log(`[${new Date().toISOString()}] [INFO] ${context ? `[${context}] ` : ""}${message}`);
   },
   debug: (message: string, context?: string) => {
-    console.debug(`[${new Date().toISOString()}] [DEBUG] ${context ? `[${context}] ` : ''}${message}`);
+    console.debug(
+      `[${new Date().toISOString()}] [DEBUG] ${context ? `[${context}] ` : ""}${message}`
+    );
   },
   warn: (message: string, context?: string) => {
-    console.warn(`[${new Date().toISOString()}] [WARN] ${context ? `[${context}] ` : ''}${message}`);
+    console.warn(
+      `[${new Date().toISOString()}] [WARN] ${context ? `[${context}] ` : ""}${message}`
+    );
   },
   error: (message: string, error?: Error, context?: string) => {
-    console.error(`[${new Date().toISOString()}] [ERROR] ${context ? `[${context}] ` : ''}${message}`, error);
+    console.error(
+      `[${new Date().toISOString()}] [ERROR] ${context ? `[${context}] ` : ""}${message}`,
+      error
+    );
   },
 };
 
@@ -36,7 +43,7 @@ export interface Client {
 }
 
 export interface WebSocketMessage {
-  type: 'message' | 'typing' | 'read_receipt' | 'presence' | 'ping' | 'pong';
+  type: "message" | "typing" | "read_receipt" | "presence" | "ping" | "pong";
   data: any;
   timestamp: string;
   userId: string;
@@ -44,7 +51,7 @@ export interface WebSocketMessage {
 }
 
 export interface TypingMessage extends WebSocketMessage {
-  type: 'typing';
+  type: "typing";
   data: {
     isTyping: boolean;
     userName?: string;
@@ -52,7 +59,7 @@ export interface TypingMessage extends WebSocketMessage {
 }
 
 export interface MessageMessage extends WebSocketMessage {
-  type: 'message';
+  type: "message";
   data: {
     id: string;
     chatId: string;
@@ -62,7 +69,7 @@ export interface MessageMessage extends WebSocketMessage {
 }
 
 export interface ReadReceiptMessage extends WebSocketMessage {
-  type: 'read_receipt';
+  type: "read_receipt";
   data: {
     messageId: string;
     userId: string;
@@ -71,9 +78,9 @@ export interface ReadReceiptMessage extends WebSocketMessage {
 }
 
 export interface PresenceMessage extends WebSocketMessage {
-  type: 'presence';
+  type: "presence";
   data: {
-    status: 'online' | 'offline' | 'away';
+    status: "online" | "offline" | "away";
     lastSeen?: string;
   };
 }
@@ -91,10 +98,11 @@ export class WebSocketManager {
 
   constructor(server: any, jwtSecret: string) {
     this.jwtSecret = jwtSecret;
-    this.wss = new WebSocketServer({ 
+    this.wss = new WebSocketServer({
       server,
-      path: '/ws',
+      path: "/ws",
       verifyClient: this.verifyClient.bind(this),
+      maxPayload: 1024 * 1024,
     });
 
     this.setupWebSocketServer();
@@ -104,16 +112,16 @@ export class WebSocketManager {
   private verifyClient(info: { origin: string; secure: boolean; req: IncomingMessage }): boolean {
     try {
       const token = this.extractTokenFromRequest(info.req);
-      
+
       if (!token) {
-        logger.warn('Connection rejected: No token provided', 'WebSocketManager');
+        logger.warn("Connection rejected: No token provided", "WebSocketManager");
         return false;
       }
 
-      const decoded = jwt.verify(token, this.jwtSecret) as any;
-      
+      const decoded = jwt.verify(token, this.jwtSecret, { algorithms: ["HS256"] }) as JwtPayload;
+
       if (!decoded || !decoded.userId) {
-        logger.warn('Connection rejected: Invalid token', 'WebSocketManager');
+        logger.warn("Connection rejected: Invalid token", "WebSocketManager");
         return false;
       }
 
@@ -121,39 +129,35 @@ export class WebSocketManager {
       (info.req as any).user = decoded;
       return true;
     } catch (error) {
-      logger.warn('Connection rejected: Token verification failed', 'WebSocketManager');
+      logger.warn("Connection rejected: Token verification failed", "WebSocketManager");
       return false;
     }
   }
 
   private extractTokenFromRequest(req: IncomingMessage): string | null {
-    // Try to get token from Authorization header
     const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    if (authHeader && authHeader.startsWith("Bearer ")) {
       return authHeader.substring(7);
     }
-
-    // Try to get token from query parameters
-    const url = new URL(req.url || '/', `http://${req.headers.host}`);
-    return url.searchParams.get('token');
+    return null;
   }
 
   private setupWebSocketServer(): void {
-    this.wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
+    this.wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
       this.handleConnection(ws, req);
     });
 
-    this.wss.on('error', (error: Error) => {
-      logger.error('WebSocket server error', error, 'WebSocketManager');
+    this.wss.on("error", (error: Error) => {
+      logger.error("WebSocket server error", error, "WebSocketManager");
     });
 
-    logger.info('WebSocket server initialized', 'WebSocketManager');
+    logger.info("WebSocket server initialized", "WebSocketManager");
   }
 
   private handleConnection(ws: WebSocket, req: IncomingMessage): void {
     const clientId = this.generateClientId();
     const user = (req as any).user;
-    const userId = user?.userId || 'anonymous';
+    const userId = user?.userId || "anonymous";
     const token = this.extractTokenFromRequest(req);
 
     const client: Client = {
@@ -168,32 +172,35 @@ export class WebSocketManager {
     };
 
     this.clients.set(clientId, client);
-    logger.info(`Client connected: ${clientId} (userId: ${userId}, authenticated: ${client.isAuthenticated})`, 'WebSocketManager');
+    logger.info(
+      `Client connected: ${clientId} (userId: ${userId}, authenticated: ${client.isAuthenticated})`,
+      "WebSocketManager"
+    );
 
     // Send welcome message
     this.sendToClient(clientId, {
-      type: 'message',
-      data: { message: 'Connected to chat server', clientId },
+      type: "message",
+      data: { message: "Connected to chat server", clientId },
       timestamp: new Date().toISOString(),
-      userId: 'server',
+      userId: "server",
     });
 
     // Setup message handlers
-    ws.on('message', (data: Buffer) => {
+    ws.on("message", (data: Buffer) => {
       this.handleMessage(clientId, data);
     });
 
-    ws.on('close', (code: number, reason: Buffer) => {
+    ws.on("close", (code: number, reason: Buffer) => {
       this.handleDisconnection(clientId, code, reason.toString());
     });
 
-    ws.on('error', (error: Error) => {
-      logger.error(`Client error: ${clientId}`, error, 'WebSocketManager');
-      this.handleDisconnection(clientId, 1006, 'Client error');
+    ws.on("error", (error: Error) => {
+      logger.error(`Client error: ${clientId}`, error, "WebSocketManager");
+      this.handleDisconnection(clientId, 1006, "Client error");
     });
 
     // Setup ping/pong
-    ws.on('pong', () => {
+    ws.on("pong", () => {
       const client = this.clients.get(clientId);
       if (client) {
         client.lastPing = new Date();
@@ -205,18 +212,18 @@ export class WebSocketManager {
     try {
       const client = this.clients.get(clientId);
       if (!client) {
-        logger.warn(`Message from unknown client: ${clientId}`, 'WebSocketManager');
+        logger.warn(`Message from unknown client: ${clientId}`, "WebSocketManager");
         return;
       }
 
       // Check rate limit
       if (!this.checkRateLimit(clientId)) {
-        logger.warn(`Rate limit exceeded for client: ${clientId}`, 'WebSocketManager');
+        logger.warn(`Rate limit exceeded for client: ${clientId}`, "WebSocketManager");
         this.sendToClient(clientId, {
-          type: 'message',
-          data: { error: 'Rate limit exceeded. Please slow down.' },
+          type: "message",
+          data: { error: "Rate limit exceeded. Please slow down." },
           timestamp: new Date().toISOString(),
-          userId: 'server',
+          userId: "server",
         });
         return;
       }
@@ -227,59 +234,65 @@ export class WebSocketManager {
       message.userId = client.userId;
 
       // Require authentication for message sending
-      if (['message', 'typing', 'read_receipt'].includes(message.type) && !client.isAuthenticated) {
-        logger.warn(`Unauthenticated client attempted to send ${message.type}: ${clientId}`, 'WebSocketManager');
+      if (
+        ["message", "typing", "read_receipt", "presence"].includes(message.type) &&
+        !client.isAuthenticated
+      ) {
+        logger.warn(
+          `Unauthenticated client attempted to send ${message.type}: ${clientId}`,
+          "WebSocketManager"
+        );
         this.sendToClient(clientId, {
-          type: 'message',
-          data: { error: 'Authentication required for this action' },
+          type: "message",
+          data: { error: "Authentication required for this action" },
           timestamp: new Date().toISOString(),
-          userId: 'server',
+          userId: "server",
         });
         return;
       }
 
-      logger.debug(`Received message from ${clientId}: ${message.type}`, 'WebSocketManager');
+      logger.debug(`Received message from ${clientId}: ${message.type}`, "WebSocketManager");
 
       switch (message.type) {
-        case 'message':
+        case "message":
           this.handleChatMessage(clientId, message as MessageMessage);
           break;
-        case 'typing':
+        case "typing":
           this.handleTypingMessage(clientId, message as TypingMessage);
           break;
-        case 'read_receipt':
+        case "read_receipt":
           this.handleReadReceipt(clientId, message as ReadReceiptMessage);
           break;
-        case 'presence':
+        case "presence":
           this.handlePresence(clientId, message as PresenceMessage);
           break;
-        case 'ping':
+        case "ping":
           this.handlePing(clientId);
           break;
-        case 'pong':
+        case "pong":
           // Handled by socket event
           break;
         default:
-          logger.warn(`Unknown message type: ${message.type}`, 'WebSocketManager');
+          logger.warn(`Unknown message type: ${message.type}`, "WebSocketManager");
       }
     } catch (error) {
-      logger.error(`Failed to parse message from ${clientId}`, error as Error, 'WebSocketManager');
+      logger.error(`Failed to parse message from ${clientId}`, error as Error, "WebSocketManager");
     }
   }
 
   private handleChatMessage(clientId: string, message: MessageMessage): void {
     const { chatId, content, senderId } = message.data;
-    
+
     // Broadcast to all clients subscribed to this chat
     this.broadcastToChat(chatId, message, clientId);
-    
-    logger.info(`Message broadcast to chat ${chatId}: ${message.data.id}`, 'WebSocketManager');
+
+    logger.info(`Message broadcast to chat ${chatId}: ${message.data.id}`, "WebSocketManager");
   }
 
   private handleTypingMessage(clientId: string, message: TypingMessage): void {
     const { chatId } = message;
     const client = this.clients.get(clientId);
-    
+
     if (!client || !chatId) {
       return;
     }
@@ -295,39 +308,45 @@ export class WebSocketManager {
     };
 
     this.broadcastToChat(chatId, typingMessage, clientId);
-    
-    logger.debug(`Typing indicator broadcast to chat ${chatId} by ${client.userId}`, 'WebSocketManager');
+
+    logger.debug(
+      `Typing indicator broadcast to chat ${chatId} by ${client.userId}`,
+      "WebSocketManager"
+    );
   }
 
   private handleReadReceipt(clientId: string, message: ReadReceiptMessage): void {
     const { messageId, userId, readAt } = message.data;
-    
+
     // In a real implementation, this would:
     // 1. Store the read receipt in database
     // 2. Update message status
     // 3. Notify the message sender
-    
+
     // For now, just broadcast to the chat
     if (message.chatId) {
       this.broadcastToChat(message.chatId, message, clientId);
     }
-    
-    logger.info(`Read receipt processed: ${messageId} by ${userId}`, 'WebSocketManager');
+
+    logger.info(`Read receipt processed: ${messageId} by ${userId}`, "WebSocketManager");
   }
 
   private handlePresence(clientId: string, message: PresenceMessage): void {
     const client = this.clients.get(clientId);
-    if (!client) {
+    if (!client || !client.isAuthenticated) {
       return;
     }
 
     // Broadcast presence to all clients
-    this.broadcastToAll({
-      ...message,
-      userId: client.userId,
-    }, clientId);
-    
-    logger.info(`Presence update: ${client.userId} is ${message.data.status}`, 'WebSocketManager');
+    this.broadcastToAll(
+      {
+        ...message,
+        userId: client.userId,
+      },
+      clientId
+    );
+
+    logger.info(`Presence update: ${client.userId} is ${message.data.status}`, "WebSocketManager");
   }
 
   private handlePing(clientId: string): void {
@@ -335,10 +354,10 @@ export class WebSocketManager {
     if (client) {
       client.lastPing = new Date();
       this.sendToClient(clientId, {
-        type: 'pong',
+        type: "pong",
         data: { timestamp: new Date().toISOString() },
         timestamp: new Date().toISOString(),
-        userId: 'server',
+        userId: "server",
       });
     }
   }
@@ -346,7 +365,7 @@ export class WebSocketManager {
   private checkRateLimit(clientId: string): boolean {
     const now = Date.now();
     const rateLimitData = this.messageRateLimit.get(clientId);
-    
+
     if (!rateLimitData || now > rateLimitData.resetTime) {
       // Reset or initialize rate limit
       this.messageRateLimit.set(clientId, {
@@ -355,11 +374,11 @@ export class WebSocketManager {
       });
       return true;
     }
-    
+
     if (rateLimitData.count >= this.RATE_LIMIT_MAX) {
       return false; // Rate limit exceeded
     }
-    
+
     // Increment count
     rateLimitData.count++;
     return true;
@@ -384,22 +403,22 @@ export class WebSocketManager {
 
     // Remove client
     this.clients.delete(clientId);
-    
+
     // Clean up rate limit data
     this.messageRateLimit.delete(clientId);
 
     // Broadcast offline presence
     this.broadcastToAll({
-      type: 'presence',
+      type: "presence",
       data: {
-        status: 'offline',
+        status: "offline",
         lastSeen: new Date().toISOString(),
       },
       timestamp: new Date().toISOString(),
       userId: client.userId,
     });
 
-    logger.info(`Client disconnected: ${clientId} (${reason}, code: ${code})`, 'WebSocketManager');
+    logger.info(`Client disconnected: ${clientId} (${reason}, code: ${code})`, "WebSocketManager");
   }
 
   private sendToClient(clientId: string, message: WebSocketMessage): void {
@@ -411,11 +430,19 @@ export class WebSocketManager {
     try {
       client.socket.send(JSON.stringify(message));
     } catch (error) {
-      logger.error(`Failed to send message to client ${clientId}`, error as Error, 'WebSocketManager');
+      logger.error(
+        `Failed to send message to client ${clientId}`,
+        error as Error,
+        "WebSocketManager"
+      );
     }
   }
 
-  private broadcastToChat(chatId: string, message: WebSocketMessage, excludeClientId?: string): void {
+  private broadcastToChat(
+    chatId: string,
+    message: WebSocketMessage,
+    excludeClientId?: string
+  ): void {
     const subscribers = this.chatSubscriptions.get(chatId);
     if (!subscribers) {
       return;
@@ -438,23 +465,23 @@ export class WebSocketManager {
 
   private startPingInterval(): void {
     this.pingInterval = setInterval(() => {
+      if (this.isDestroyed) return;
       const now = new Date();
-      const timeout = 30000; // 30 seconds timeout
+      const timeout = 30000;
 
       for (const [clientId, client] of this.clients) {
-        // Check for timeout
         if (now.getTime() - client.lastPing.getTime() > timeout) {
-          logger.info(`Client timeout: ${clientId}`, 'WebSocketManager');
-          client.socket.terminate();
+          logger.info(`Client timeout: ${clientId}`, "WebSocketManager");
+          client.socket.close(1000, "Ping timeout");
+          this.handleDisconnection(clientId, 1000, "Ping timeout");
           continue;
         }
 
-        // Send ping
         if (client.socket.readyState === WebSocket.OPEN) {
           client.socket.ping();
         }
       }
-    }, 30000); // Every 30 seconds
+    }, 30000);
   }
 
   // Public API methods
@@ -472,7 +499,7 @@ export class WebSocketManager {
     }
     this.chatSubscriptions.get(chatId)!.add(clientId);
 
-    logger.info(`Client ${clientId} subscribed to chat ${chatId}`, 'WebSocketManager');
+    logger.info(`Client ${clientId} subscribed to chat ${chatId}`, "WebSocketManager");
   }
 
   unsubscribeFromChat(clientId: string, chatId: string): void {
@@ -491,7 +518,7 @@ export class WebSocketManager {
       }
     }
 
-    logger.info(`Client ${clientId} unsubscribed from chat ${chatId}`, 'WebSocketManager');
+    logger.info(`Client ${clientId} unsubscribed from chat ${chatId}`, "WebSocketManager");
   }
 
   getConnectedClients(): Client[] {
@@ -505,7 +532,7 @@ export class WebSocketManager {
     }
 
     return Array.from(subscribers)
-      .map(clientId => this.clients.get(clientId))
+      .map((clientId) => this.clients.get(clientId))
       .filter(Boolean) as Client[];
   }
 
@@ -516,8 +543,10 @@ export class WebSocketManager {
   } {
     const totalClients = this.clients.size;
     const totalChats = this.chatSubscriptions.size;
-    const totalSubscriptions = Array.from(this.chatSubscriptions.values())
-      .reduce((sum, subscribers) => sum + subscribers.size, 0);
+    const totalSubscriptions = Array.from(this.chatSubscriptions.values()).reduce(
+      (sum, subscribers) => sum + subscribers.size,
+      0
+    );
     const averageConnectionsPerChat = totalChats > 0 ? totalSubscriptions / totalChats : 0;
 
     return {
@@ -537,18 +566,18 @@ export class WebSocketManager {
 
     // Close all connections
     for (const client of this.clients.values()) {
-      client.socket.close(1001, 'Server shutting down');
+      client.socket.close(1001, "Server shutting down");
     }
 
     this.clients.clear();
     this.chatSubscriptions.clear();
 
     this.wss.close(() => {
-      logger.info('WebSocket server closed', 'WebSocketManager');
+      logger.info("WebSocket server closed", "WebSocketManager");
     });
   }
 
   private generateClientId(): string {
-    return `client_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    return randomUUID();
   }
 }
