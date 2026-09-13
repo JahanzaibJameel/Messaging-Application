@@ -3,22 +3,28 @@ import { createServer, type Server } from "node:http";
 import { randomUUID } from "node:crypto";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
+import rateLimit from "express-rate-limit";
+import { getJwtSecret } from "./config";
 
-const JWT_SECRET =
-  process.env.JWT_SECRET ||
-  (process.env.NODE_ENV !== "production" ? "dev-secret-change-in-production" : "");
+const JWT_SECRET = getJwtSecret();
 
 const verifyOtpSchema = z.object({
   phone: z.string().min(10).max(15),
   otp: z.string().length(6).regex(/^\d+$/, "OTP must be 6 digits"),
 });
 
+const verifyOtpLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many OTP verification attempts. Please try again later." },
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
-  // POST /api/auth/verify-otp
-  // Accepts any 6-digit OTP (dev-mode). Returns signed JWT with user info.
-  app.post("/api/auth/verify-otp", async (req, res) => {
+  app.post("/api/auth/verify-otp", verifyOtpLimiter, async (req, res) => {
     try {
       const result = verifyOtpSchema.safeParse(req.body);
       if (!result.success) {
@@ -28,11 +34,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { phone } = result.data;
 
-      // In a real system, verify OTP against a database.
-      // For this slice, any 6-digit OTP is accepted.
       const userId = randomUUID();
 
-      const token = jwt.sign({ userId, phone }, JWT_SECRET, { expiresIn: "7d" });
+      const token = jwt.sign({ userId, phone }, JWT_SECRET, {
+        expiresIn: "7d",
+        algorithm: "HS256",
+      });
 
       res.json({
         success: true,
