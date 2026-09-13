@@ -1,6 +1,6 @@
 /**
  * Unit tests for authStore
- * Tests the real authentication store API.
+ * Tests the real authentication store API with secureStorage adapter.
  */
 
 import { useAuthStore } from "../authStore";
@@ -37,6 +37,22 @@ jest.mock("../../../security/keychain", () => ({
   setToken: jest.fn(),
   resetToken: jest.fn(),
 }));
+
+// Mock the secureStorageAdapter
+jest.mock("../../../lib/secureStorageAdapter", () => {
+  const cache = new Map<string, string>();
+  return {
+    createSecureStorageAdapterWithKeys: jest.fn(() => ({
+      getItem: (name: string) => cache.get(name) ?? null,
+      setItem: (name: string, value: string) => {
+        cache.set(name, value);
+      },
+      removeItem: (name: string) => {
+        cache.delete(name);
+      },
+    })),
+  };
+});
 
 function makeUser(overrides = {}) {
   return new UserEntity({
