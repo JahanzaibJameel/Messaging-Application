@@ -11,8 +11,8 @@
  * - No static fallback key. If the keychain is unavailable the function
  *   throws — callers must handle the error. Silently degrading to a known
  *   key is worse than an explicit failure.
- * - The MMKV instance is created lazily and memoised. Subsequent calls
- *   reuse the same instance without re-reading the keychain.
+ * - The MMKV instance is created lazily and memoised per storage ID.
+ *   Subsequent calls reuse the same instance without re-reading the keychain.
  */
 
 import { MMKV } from "react-native-mmkv";
@@ -23,11 +23,7 @@ const STORAGE_ID = "secure-storage";
 const KEYCHAIN_SERVICE = "com.chatapp.securestorage";
 const KEYCHAIN_ACCOUNT = "mmkv-encryption-key";
 
-let _storage: MMKV | null = null;
-
-// ---------------------------------------------------------------------------
-// Private helpers
-// ---------------------------------------------------------------------------
+const _storages = new Map<string, MMKV>();
 
 /**
  * Returns a cryptographically random hex string of `byteLength` bytes.
@@ -89,20 +85,23 @@ async function getOrCreateEncryptionKey(): Promise<string> {
 }
 
 /**
- * Returns the memoised encrypted MMKV instance, initialising it on first call.
+ * Returns the memoised encrypted MMKV instance for the given storage ID,
+ * initialising it on first call.
  */
-async function getStorage(): Promise<MMKV> {
-  if (_storage) return _storage;
+async function getStorage(storageId?: string): Promise<MMKV> {
+  const id = storageId ?? STORAGE_ID;
+  if (_storages.has(id)) return _storages.get(id)!;
 
   const encryptionKey = await getOrCreateEncryptionKey();
 
-  _storage = new MMKV({
-    id: STORAGE_ID,
-    encryptionKey, // Single AES-256 layer via MMKV — no CryptoJS needed
+  const storage = new MMKV({
+    id,
+    encryptionKey,
   });
 
+  _storages.set(id, storage);
   addUserActionBreadcrumb("secure_storage_initialized");
-  return _storage;
+  return storage;
 }
 
 // ---------------------------------------------------------------------------
@@ -113,10 +112,10 @@ async function getStorage(): Promise<MMKV> {
  * Stores a string value under `key` in encrypted storage.
  * @throws if the keychain or MMKV is unavailable.
  */
-export async function secureSet(key: string, value: string): Promise<void> {
+export async function secureSet(key: string, value: string, storageId?: string): Promise<void> {
   try {
     addUserActionBreadcrumb("secure_set_attempt", { key });
-    const instance = await getStorage();
+    const instance = await getStorage(storageId);
     instance.set(key, value);
     addUserActionBreadcrumb("secure_set_success", { key });
   } catch (error) {
@@ -133,10 +132,10 @@ export async function secureSet(key: string, value: string): Promise<void> {
  * Retrieves the string stored under `key`, or `undefined` if not found.
  * @throws if the keychain or MMKV is unavailable.
  */
-export async function secureGet(key: string): Promise<string | undefined> {
+export async function secureGet(key: string, storageId?: string): Promise<string | undefined> {
   try {
     addUserActionBreadcrumb("secure_get_attempt", { key });
-    const instance = await getStorage();
+    const instance = await getStorage(storageId);
     const value = instance.getString(key);
     addUserActionBreadcrumb("secure_get_success", { key, found: value !== undefined });
     return value;
@@ -154,10 +153,10 @@ export async function secureGet(key: string): Promise<string | undefined> {
  * Removes the value stored under `key`.
  * @throws if the keychain or MMKV is unavailable.
  */
-export async function secureDelete(key: string): Promise<void> {
+export async function secureDelete(key: string, storageId?: string): Promise<void> {
   try {
     addUserActionBreadcrumb("secure_delete_attempt", { key });
-    const instance = await getStorage();
+    const instance = await getStorage(storageId);
     instance.delete(key);
     addUserActionBreadcrumb("secure_delete_success", { key });
   } catch (error) {
@@ -181,7 +180,7 @@ export async function secureClear(): Promise<void> {
     const instance = await getStorage();
     instance.clearAll();
     await Keychain.resetGenericPassword({ service: KEYCHAIN_SERVICE });
-    _storage = null; // Force re-initialisation with a new key
+    _storages.delete(STORAGE_ID);
     addUserActionBreadcrumb("secure_clear_success");
   } catch (error) {
     captureException(error as Error, {
@@ -196,8 +195,8 @@ export async function secureClear(): Promise<void> {
  * Serialises `data` to JSON and stores it under `key`.
  * @throws if serialisation, keychain, or MMKV fails.
  */
-export async function secureSetJSON<T>(key: string, data: T): Promise<void> {
-  await secureSet(key, JSON.stringify(data));
+export async function secureSetJSON<T>(key: string, data: T, storageId?: string): Promise<void> {
+  await secureSet(key, JSON.stringify(data), storageId);
 }
 
 /**
@@ -206,8 +205,8 @@ export async function secureSetJSON<T>(key: string, data: T): Promise<void> {
  * @throws if the keychain or MMKV is unavailable, or if the stored value
  *   is not valid JSON.
  */
-export async function secureGetJSON<T>(key: string): Promise<T | undefined> {
-  const raw = await secureGet(key);
+export async function secureGetJSON<T>(key: string, storageId?: string): Promise<T | undefined> {
+  const raw = await secureGet(key, storageId);
   if (raw === undefined) return undefined;
   return JSON.parse(raw) as T;
 }
