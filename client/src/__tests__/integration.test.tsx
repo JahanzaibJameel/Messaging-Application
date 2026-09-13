@@ -304,12 +304,14 @@ describe("Connection Management", () => {
 // ---------------------------------------------------------------------------
 
 describe("Data Persistence", () => {
-  it("writes normalized chat state through the MMKV-backed storage adapter", () => {
+  it("writes normalized chat state through the MMKV-backed storage adapter", async () => {
     const chat = makeChat({ id: "persisted-chat-1" });
 
     act(() => {
       useChatStore.getState().addChat(chat);
     });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
     const chatStorage = getInstance("chat-storage");
     expect(chatStorage.set).toHaveBeenCalledWith(

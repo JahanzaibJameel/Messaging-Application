@@ -111,7 +111,28 @@ global.fetch = mockFetch as any;
 
 // Mock keychain (the auth store uses setToken/resetToken which use react-native-keychain)
 let mockGetCallCount = 0;
+jest.mock("@/security/keychain", () => ({
+  __esModule: true,
+  setToken: jest.fn((accessToken: string, refreshToken?: string | null) => {
+    mockTokenStore.accessToken = accessToken;
+    mockTokenStore.refreshToken = refreshToken ?? null;
+    return Promise.resolve(true);
+  }),
+  getToken: jest.fn(() => {
+    return Promise.resolve({
+      accessToken: mockTokenStore.accessToken,
+      refreshToken: mockTokenStore.refreshToken,
+    });
+  }),
+  resetToken: jest.fn(() => {
+    mockTokenStore.accessToken = null;
+    mockTokenStore.refreshToken = null;
+    return Promise.resolve(true);
+  }),
+}));
+
 jest.mock("react-native-keychain", () => ({
+  __esModule: true,
   setGenericPassword: jest.fn((username: string, password: string) => {
     if (username === "access_token") {
       mockTokenStore.accessToken = password;
