@@ -6,6 +6,22 @@ import { useChatStore } from "../chatStore";
 import { ChatEntity } from "@/domain/entities/Chat";
 import { MessageEntity } from "@/domain/entities/Message";
 
+// Mock the secureStorageAdapter
+jest.mock("@/lib/secureStorageAdapter", () => {
+  const cache = new Map<string, string>();
+  return {
+    createSecureStorageAdapterWithKeys: jest.fn(() => ({
+      getItem: (name: string) => cache.get(name) ?? null,
+      setItem: (name: string, value: string) => {
+        cache.set(name, value);
+      },
+      removeItem: (name: string) => {
+        cache.delete(name);
+      },
+    })),
+  };
+});
+
 const emptyEntityState = { ids: [], entities: {} };
 
 describe("chatStore", () => {
