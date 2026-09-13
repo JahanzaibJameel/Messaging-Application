@@ -4,50 +4,33 @@ import { registerRoutes } from "./routes";
 import { WebSocketManager } from "./websocket";
 import * as fs from "fs";
 import * as path from "path";
-import { createServer } from "http";
+import { getJwtSecret } from "./config";
 
 const app = express();
 const log = console.log;
 
-// JWT secret for WebSocket authentication
-const JWT_SECRET =
-  process.env.JWT_SECRET ||
-  (process.env.NODE_ENV !== "production"
-    ? "dev-secret-change-in-production"
-    : (() => {
-        console.error("FATAL ERROR: JWT_SECRET environment variable is not set in production mode");
-        process.exit(1);
-      })());
-
-let wsManager: WebSocketManager | null = null;
-
-declare module "http" {
-  interface IncomingMessage {
-    rawBody: unknown;
-  }
-}
-
 function setupCors(app: express.Application): void {
   app.use((req, res, next) => {
-    const origins = new Set<string>();
+    const origin = req.header("origin");
+    const isLocalhost =
+      origin === "http://localhost:3000" ||
+      origin === "http://localhost:8081" ||
+      origin === "http://127.0.0.1:3000" ||
+      origin === "http://127.0.0.1:8081";
 
+    const allowedOrigins = new Set<string>();
     if (process.env.REPLIT_DEV_DOMAIN) {
-      origins.add(`https://${process.env.REPLIT_DEV_DOMAIN}`);
+      allowedOrigins.add(`https://${process.env.REPLIT_DEV_DOMAIN}`);
     }
-
     if (process.env.REPLIT_DOMAINS) {
       process.env.REPLIT_DOMAINS.split(",").forEach((d) => {
-        origins.add(`https://${d.trim()}`);
+        allowedOrigins.add(`https://${d.trim()}`);
       });
     }
 
-    const origin = req.header("origin");
-
-    const isLocalhost =
-      origin?.startsWith("http://localhost:") || origin?.startsWith("http://127.0.0.1:");
-
-    if (origin && (origins.has(origin) || isLocalhost)) {
+    if (origin && (allowedOrigins.has(origin) || isLocalhost)) {
       res.header("Access-Control-Allow-Origin", origin);
+      res.header("Vary", "Origin");
       res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
       res.header("Access-Control-Allow-Headers", "Content-Type");
       res.header("Access-Control-Allow-Credentials", "true");
@@ -70,7 +53,6 @@ function setupBodyParsing(app: express.Application) {
       },
     })
   );
-
   app.use(express.urlencoded({ extended: false }));
 }
 
@@ -234,7 +216,7 @@ function setupErrorHandler(app: express.Application) {
   const server = await registerRoutes(app);
 
   // Initialize WebSocket server with JWT secret
-  wsManager = new WebSocketManager(server, JWT_SECRET);
+  wsManager = new WebSocketManager(server, getJwtSecret());
   log("WebSocket server initialized with JWT authentication");
 
   setupErrorHandler(app);
@@ -250,4 +232,22 @@ function setupErrorHandler(app: express.Application) {
       log(`express server serving on port ${port}`);
     }
   );
+
+  function gracefulShutdown(signal: string): void {
+    log(`Received ${signal}. Shutting down gracefully...`);
+    if (wsManager) {
+      wsManager.destroy();
+    }
+    server.close(() => {
+      log("HTTP server closed");
+      process.exit(0);
+    });
+    setTimeout(() => {
+      log("Force shutdown after timeout");
+      process.exit(1);
+    }, 10000);
+  }
+
+  process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+  process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 })();
