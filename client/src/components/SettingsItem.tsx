@@ -18,6 +18,7 @@ interface SettingsItemProps {
     onValueChange: (value: boolean) => void;
   };
   destructive?: boolean;
+  disabled?: boolean;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -30,6 +31,7 @@ export function SettingsItem({
   showArrow = true,
   toggle,
   destructive = false,
+  disabled = false,
 }: SettingsItemProps) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
@@ -52,11 +54,11 @@ export function SettingsItem({
 
   return (
     <AnimatedPressable
-      onPress={onPress}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      disabled={!!toggle}
-      style={[styles.container, animatedStyle]}
+      onPress={disabled ? undefined : onPress}
+      onPressIn={disabled ? undefined : handlePressIn}
+      onPressOut={disabled ? undefined : handlePressOut}
+      disabled={disabled || !!toggle}
+      style={[styles.container, animatedStyle, disabled && styles.disabled]}
     >
       <View
         style={[
@@ -80,6 +82,7 @@ export function SettingsItem({
         <Switch
           value={toggle.value}
           onValueChange={toggle.onValueChange}
+          disabled={disabled}
           trackColor={{ false: theme.backgroundDefault, true: theme.primary }}
           thumbColor="#FFFFFF"
         />
@@ -115,5 +118,8 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 13,
     marginTop: 2,
+  },
+  disabled: {
+    opacity: 0.5,
   },
 });
