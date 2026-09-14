@@ -3,11 +3,11 @@
  * Manages offline-first synchronization with conflict resolution
  */
 
-import { useSyncStore, useMessageStore, useChatStore, useUIStore } from "../../presentation/stores";
-import { chatRepository } from "../../data/repositories";
 import { NetworkMonitor } from "./NetworkMonitor";
 import { logger } from "../logger";
 import type { Message } from "../../domain/entities/Message";
+import type { SyncUseCase } from "../../domain/usecases/SyncUseCase";
+import type { ChatUseCase } from "../../domain/usecases/ChatUseCase";
 
 export type SyncStatus = "idle" | "syncing" | "error" | "offline";
 
@@ -18,9 +18,9 @@ interface SyncEngineConfig {
 }
 
 const DEFAULT_CONFIG: SyncEngineConfig = {
-  syncInterval: 30000, // 30 seconds
+  syncInterval: 30000,
   retryAttempts: 3,
-  retryDelay: 5000, // 5 seconds
+  retryDelay: 5000,
 };
 
 export class SyncEngine {
@@ -30,36 +30,45 @@ export class SyncEngine {
   private retryTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
   private isProcessing = false;
   private isDestroyed = false;
+  private syncUseCase: SyncUseCase;
+  private chatUseCase: ChatUseCase;
+  private onStatusChange?: (status: SyncStatus) => void;
+  private onSyncingChange?: (isSyncing: boolean) => void;
 
-  constructor(config: Partial<SyncEngineConfig> = {}) {
+  constructor(
+    syncUseCase: SyncUseCase,
+    chatUseCase: ChatUseCase,
+    config: Partial<SyncEngineConfig> = {},
+    callbacks?: {
+      onStatusChange?: (status: SyncStatus) => void;
+      onSyncingChange?: (isSyncing: boolean) => void;
+    }
+  ) {
     this.config = { ...DEFAULT_CONFIG, ...config };
+    this.syncUseCase = syncUseCase;
+    this.chatUseCase = chatUseCase;
     this.networkMonitor = new NetworkMonitor();
+    this.onStatusChange = callbacks?.onStatusChange;
+    this.onSyncingChange = callbacks?.onSyncingChange;
     this.setupNetworkListener();
   }
 
   private setupNetworkListener(): void {
     this.networkMonitor.addListener((isOnline: boolean) => {
-      const syncStore = useSyncStore.getState();
-
       if (isOnline) {
-        syncStore.setStatus("idle");
+        this.onStatusChange?.("idle");
         this.processQueue();
       } else {
-        syncStore.setStatus("offline");
+        this.onStatusChange?.("offline");
       }
     });
   }
 
-  /**
-   * Start periodic sync
-   */
   start(): void {
     if (this.isDestroyed) {
       return;
     }
-
     this.stop();
-
     this.syncTimer = setInterval(() => {
       if (!this.isDestroyed) {
         this.sync();
@@ -67,205 +76,83 @@ export class SyncEngine {
     }, this.config.syncInterval);
   }
 
-  /**
-   * Stop periodic sync
-   */
   stop(): void {
     if (this.syncTimer) {
       clearInterval(this.syncTimer);
       this.syncTimer = null;
     }
-
-    // Clear all retry timers
     for (const timer of this.retryTimers.values()) {
       clearTimeout(timer);
     }
     this.retryTimers.clear();
   }
 
-  /**
-   * Destroy sync engine and cleanup all resources
-   */
   destroy(): void {
     this.isDestroyed = true;
     this.stop();
     this.networkMonitor.removeAllListeners();
   }
 
-  /**
-   * Queue a message for sending
-   */
-  queueMessage(message: Message): void {
-    const syncStore = useSyncStore.getState();
-    const messageStore = useMessageStore.getState();
-
-    // Add to message store
-    messageStore.addMessage(message);
-
-    // Add to sync queue
-    syncStore.queueMessage(message.id, message.chatId);
-
-    // Try to process immediately if online
+  async queueMessage(message: Message): Promise<void> {
+    await this.syncUseCase.queueMessage(message);
     if (this.networkMonitor.isOnline()) {
-      this.processQueue();
+      await this.processQueue();
     }
   }
 
-  /**
-   * Process the sync queue
-   */
   async processQueue(): Promise<void> {
     if (this.isDestroyed || this.isProcessing || !this.networkMonitor.isOnline()) {
       return;
     }
 
     this.isProcessing = true;
-    const syncStore = useSyncStore.getState();
-    const messageStore = useMessageStore.getState();
-    const uiStore = useUIStore.getState();
-
-    syncStore.setStatus("syncing");
-    uiStore.setSyncing(true);
+    this.onSyncingChange?.(true);
 
     try {
-      const { pendingMessages } = syncStore;
-
-      for (const queuedMessage of pendingMessages) {
-        const message = messageStore.getMessageById(queuedMessage.messageId);
-
-        if (!message) {
-          syncStore.removeFromQueue(queuedMessage.messageId);
-          continue;
-        }
-
-        // Skip if already sent
-        if (message.status === "sent" || message.status === "read") {
-          syncStore.removeFromQueue(queuedMessage.messageId);
-          continue;
-        }
-
-        try {
-          // Update status to sending
-          messageStore.updateMessage(message.id, { status: "sending" });
-
-          // Send via repository
-          await chatRepository.saveMessage(message);
-
-          // Mark as sent
-          messageStore.updateMessage(message.id, {
-            status: "sent",
-            localOnly: false,
-          });
-
-          // Remove from queue
-          syncStore.removeFromQueue(queuedMessage.messageId);
-        } catch (error) {
-          logger.error(`Failed to sync message ${message.id}`, error as Error, "SyncEngine");
-
-          // Increment retry count
-          const retryCount = queuedMessage.retryCount + 1;
-
-          if (retryCount >= this.config.retryAttempts) {
-            // Mark as failed
-            syncStore.markAsFailed(queuedMessage.messageId);
-            messageStore.updateMessage(message.id, { status: "error" });
-          } else {
-            // Schedule retry with timer
-            const timerId = setTimeout(() => {
-              if (!this.isDestroyed) {
-                syncStore.retryMessage(queuedMessage.messageId);
-              }
-            }, this.config.retryDelay);
-            this.retryTimers.set(queuedMessage.messageId, timerId);
-          }
-        }
-      }
-
-      // Update last sync time
-      syncStore.setLastSync(new Date().toISOString());
-      syncStore.setStatus("idle");
+      await this.syncUseCase.processQueue();
     } catch (error) {
-      logger.error("Sync error", error as Error, "SyncEngine");
-      syncStore.setStatus("error");
-      syncStore.setError(error instanceof Error ? error.message : "Sync failed");
+      logger.error(`Failed to sync messages`, error as Error, "SyncEngine");
     } finally {
       this.isProcessing = false;
-      uiStore.setSyncing(false);
+      this.onSyncingChange?.(false);
     }
   }
 
-  /**
-   * Full sync with server
-   */
   async sync(): Promise<void> {
     if (this.isDestroyed || !this.networkMonitor.isOnline()) {
       return;
     }
 
-    const syncStore = useSyncStore.getState();
-    const chatStore = useChatStore.getState();
-    const messageStore = useMessageStore.getState();
-
-    syncStore.setStatus("syncing");
-
     try {
-      const lastSync = syncStore.lastSyncAt;
-
-      // Sync with remote
-      const result = await chatRepository.syncWithRemote(lastSync || undefined);
-
-      // Update stores
-      for (const chat of result.chats) {
-        chatStore.updateChat(chat.id, chat);
-      }
-
-      for (const message of result.messages) {
-        messageStore.addMessage(message);
-      }
-
-      syncStore.setLastSync(result.timestamp);
-      syncStore.setStatus("idle");
+      await this.syncUseCase.sync();
     } catch (error) {
       logger.error("Full sync error", error as Error, "SyncEngine");
-      syncStore.setStatus("error");
     }
   }
 
-  /**
-   * Retry failed messages
-   */
   async retryFailed(): Promise<void> {
-    const syncStore = useSyncStore.getState();
-    const { failedMessages } = syncStore;
-
-    for (const failed of failedMessages) {
-      syncStore.retryMessage(failed.messageId);
-    }
-
+    await this.syncUseCase.retryFailed();
     await this.processQueue();
   }
 
-  /**
-   * Get sync status
-   */
   getStatus(): SyncStatus {
-    return useSyncStore.getState().status;
+    return this.syncUseCase.getStatus();
   }
 
-  /**
-   * Check if online
-   */
   isOnline(): boolean {
     return this.networkMonitor.isOnline();
   }
 }
 
-// Singleton instance
 let syncEngineInstance: SyncEngine | null = null;
 
-export function getSyncEngine(config?: Partial<SyncEngineConfig>): SyncEngine {
+export function getSyncEngine(
+  syncUseCase: SyncUseCase,
+  chatUseCase: ChatUseCase,
+  config?: Partial<SyncEngineConfig>
+): SyncEngine {
   if (!syncEngineInstance) {
-    syncEngineInstance = new SyncEngine(config);
+    syncEngineInstance = new SyncEngine(syncUseCase, chatUseCase, config);
   }
   return syncEngineInstance;
 }
