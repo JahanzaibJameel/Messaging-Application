@@ -65,7 +65,7 @@ export const useSentryBreadcrumbs = () => {
 
   // Log user actions
   const logUserAction = useCallback(
-    (action: string, data?: Record<string, any>) => {
+    (action: string, data?: Record<string, unknown>) => {
       Sentry.addBreadcrumb({
         category: BreadcrumbCategory.USER_ACTION,
         message: `User action: ${action}`,
@@ -81,7 +81,7 @@ export const useSentryBreadcrumbs = () => {
   );
 
   // Log network events
-  const logNetworkEvent = useCallback((event: string, data?: Record<string, any>) => {
+  const logNetworkEvent = useCallback((event: string, data?: Record<string, unknown>) => {
     Sentry.addBreadcrumb({
       category: BreadcrumbCategory.NETWORK,
       message: `Network: ${event}`,
@@ -91,7 +91,7 @@ export const useSentryBreadcrumbs = () => {
   }, []);
 
   // Log errors with context
-  const logError = useCallback((error: Error, context?: Record<string, any>) => {
+  const logError = useCallback((error: Error, context?: Record<string, unknown>) => {
     Sentry.addBreadcrumb({
       category: BreadcrumbCategory.ERROR,
       message: error.message || "Unknown error",
@@ -212,7 +212,7 @@ export const useSentryBreadcrumbs = () => {
 export interface SentryErrorBoundaryProps {
   children: React.ReactNode;
   fallback?: React.ComponentType;
-  onError?: (error: Error, errorInfo: any) => void;
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
 }
 
 export const SentryErrorBoundary: React.FC<SentryErrorBoundaryProps> = ({
@@ -223,7 +223,7 @@ export const SentryErrorBoundary: React.FC<SentryErrorBoundaryProps> = ({
   const { logError } = useSentryBreadcrumbs();
 
   const handleError = useCallback(
-    (error: Error, errorInfo: any) => {
+    (error: Error, errorInfo: React.ErrorInfo) => {
       // Log the error with full context
       logError(error, {
         component_stack: errorInfo?.componentStack,
@@ -271,12 +271,12 @@ SentryErrorBoundary.displayName = "SentryErrorBoundary";
 export const withSentryLogging = <P extends object>(WrappedComponent: React.ComponentType<P>) => {
   const wrappedComponentName = WrappedComponent.displayName || WrappedComponent.name || "Component";
 
-  const WithSentryLogging = React.forwardRef<any, P>((props, ref) => {
+  const WithSentryLogging = React.forwardRef<P>((props, ref) => {
     const { logUserAction } = useSentryBreadcrumbs();
 
     // Enhanced event handler that logs actions
     const createLoggedHandler = (eventName: string) => {
-      return (event: any, ...args: any[]) => {
+      return (event: React.SyntheticEvent, ...args: unknown[]) => {
         // Log the user action
         logUserAction(`${wrappedComponentName}.${eventName}`, {
           props: Object.keys(props),
@@ -284,7 +284,7 @@ export const withSentryLogging = <P extends object>(WrappedComponent: React.Comp
         });
 
         // Call the original handler
-        const handler = (props as any)[eventName];
+        const handler = (props as Record<string, unknown>)[eventName];
         if (handler && typeof handler === "function") {
           return handler(event, ...args);
         }
@@ -292,7 +292,7 @@ export const withSentryLogging = <P extends object>(WrappedComponent: React.Comp
     };
 
     // Create wrapped component props with logged handlers
-    const loggedProps: any = {};
+    const loggedProps: Record<string, unknown> = {};
 
     // Common interactive events to log
     const interactiveEvents = [
@@ -315,7 +315,7 @@ export const withSentryLogging = <P extends object>(WrappedComponent: React.Comp
 
     // Wrap interactive event handlers
     interactiveEvents.forEach((eventName) => {
-      if (eventName in (WrappedComponent as any).prototype) {
+      if (eventName in (WrappedComponent as Record<string, unknown>).prototype) {
         loggedProps[eventName] = createLoggedHandler(eventName);
       }
     });
@@ -356,7 +356,7 @@ export const usePerformanceMonitoring = () => {
     try {
       // In React Native, we can use the Performance API if available
       if ("memory" in performance) {
-        const memory = (performance as any).memory;
+        const memory = (performance as Record<string, unknown>).memory;
         logPerformance("memory_usage", memory.usedJSHeapSize, "bytes");
       }
     } catch (error) {
