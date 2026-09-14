@@ -1,5 +1,5 @@
 import { MessageMapper } from "../MessageMapper";
-import { MessageModel } from "../models/MessageModel";
+import { MessageModel } from "../../models/MessageModel";
 
 describe("MessageMapper", () => {
   it("performs round-trip conversion", () => {
