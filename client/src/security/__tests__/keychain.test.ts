@@ -33,10 +33,9 @@ jest.mock("../secureStorage", () => ({
   secureGetJSON: jest.fn(),
   secureSetJSON: jest.fn(),
 }));
-const {
-  secureGetJSON: mockSecureGetJSON,
-  secureSetJSON: mockSecureSetJSON,
-} = jest.requireMock("../secureStorage") as {
+const { secureGetJSON: mockSecureGetJSON, secureSetJSON: mockSecureSetJSON } = jest.requireMock(
+  "../secureStorage"
+) as {
   secureGetJSON: jest.Mock;
   secureSetJSON: jest.Mock;
 };
