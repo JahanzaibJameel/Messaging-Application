@@ -5,7 +5,6 @@
 
 import {
   detectLanguage,
-  changeLanguage,
   getCurrentLanguage,
   isRTLLanguage,
   formatNumber,
@@ -73,14 +72,19 @@ describe("i18n", () => {
     it("should include English as first language", () => {
       const en = SUPPORTED_LANGUAGES.find((l) => l.code === "en");
       expect(en).toBeDefined();
-      expect(en!.rtl).toBe(false);
+      if (!en) throw new Error("English language is missing");
+      expect(en.rtl).toBe(false);
     });
 
     it("should include RTL languages", () => {
       const ar = SUPPORTED_LANGUAGES.find((l) => l.code === "ar");
       const he = SUPPORTED_LANGUAGES.find((l) => l.code === "he");
-      expect(ar!.rtl).toBe(true);
-      expect(he!.rtl).toBe(true);
+      expect(ar).toBeDefined();
+      expect(he).toBeDefined();
+      if (!ar) throw new Error("Arabic language is missing");
+      if (!he) throw new Error("Hebrew language is missing");
+      expect(ar.rtl).toBe(true);
+      expect(he.rtl).toBe(true);
     });
   });
 
