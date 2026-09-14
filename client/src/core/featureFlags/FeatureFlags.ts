@@ -16,7 +16,7 @@ export interface FeatureFlag {
   enabled: boolean;
   rolloutPercentage: number;
   conditions?: FeatureFlagCondition[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   lastUpdated: string;
 }
 
@@ -39,7 +39,7 @@ export interface UserContext {
   version: string;
   buildNumber: string;
   environment: "development" | "staging" | "production";
-  userProperties?: Record<string, any>;
+  userProperties?: Record<string, unknown>;
   deviceInfo?: {
     platform: "ios" | "android";
     osVersion: string;
@@ -411,12 +411,12 @@ function evaluateStringCondition(
   }
 }
 
-function evaluateValueCondition(value: any, condition: FeatureFlagCondition): boolean {
+function evaluateValueCondition(value: unknown, condition: FeatureFlagCondition): boolean {
   switch (condition.operator) {
     case "equals":
       return value === condition.value;
     case "in_range":
-      if (Array.isArray(condition.value)) {
+      if (Array.isArray(condition.value) && typeof value === "string") {
         return condition.value.includes(value);
       }
       return false;
