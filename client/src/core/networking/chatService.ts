@@ -105,14 +105,11 @@ export class SimpleChatService implements ChatService {
               messageCount: data.messages?.length || 0,
             });
             // Handle initial message history
-            data.messages.forEach((msg: any) => {
-              const message: ChatMessage = {
-                id: msg.id,
-                text: msg.text,
-                senderId: msg.senderId,
-                timestamp: new Date(msg.timestamp),
-                chatId: msg.chatId,
-              };
+            const messages = data.messages;
+            if (!Array.isArray(messages)) return;
+
+            messages.forEach((msg: unknown) => {
+              const message = msg as ChatMessage;
               this.messageCallbacks.forEach((callback) => {
                 try {
                   callback(message);
