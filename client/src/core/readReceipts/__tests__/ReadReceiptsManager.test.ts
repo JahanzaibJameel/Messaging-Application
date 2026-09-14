@@ -8,12 +8,8 @@ import {
   getReadReceiptsManager,
   resetReadReceiptsManager,
   markMessageAsRead,
-  markChatAsRead,
-  getUnreadCount,
-  getTotalUnreadCount,
 } from "../ReadReceiptsManager";
 import { useMessageStore, useChatStore } from "../../../presentation/stores";
-import { Message } from "../../../domain/entities/Message";
 
 jest.mock("../../../core/logger", () => ({
   logger: {
