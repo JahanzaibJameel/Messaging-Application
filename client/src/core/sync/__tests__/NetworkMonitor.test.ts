@@ -13,7 +13,7 @@ jest.mock("@react-native-community/netinfo", () => ({
   addEventListener: jest.fn((callback: (state: any) => void) => {
     // Immediately notify with current state, mimicking real NetInfo behavior
     callback(netInfoState);
-    return () => {};
+    return () => undefined;
   }),
 }));
 
