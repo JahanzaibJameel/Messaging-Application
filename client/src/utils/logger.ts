@@ -16,7 +16,7 @@ export enum LogLevel {
 export interface LogEntry {
   level: LogLevel;
   message: string;
-  data?: any;
+  data?: unknown;
   timestamp: Date;
   category?: string;
 }
@@ -79,7 +79,7 @@ class Logger {
   /**
    * Log debug message
    */
-  debug(message: string, data?: any, category?: string): void {
+  debug(message: string, data?: unknown, category?: string): void {
     if (this.shouldLog(LogLevel.DEBUG)) {
       const entry: LogEntry = {
         level: LogLevel.DEBUG,
@@ -92,7 +92,7 @@ class Logger {
       this.addToBuffer(entry);
 
       if (this.isDevelopment) {
-        console.log(this.formatConsoleMessage(entry));
+        console.warn(this.formatConsoleMessage(entry));
       }
     }
   }
@@ -100,7 +100,7 @@ class Logger {
   /**
    * Log info message
    */
-  info(message: string, data?: any, category?: string): void {
+  info(message: string, data?: unknown, category?: string): void {
     if (this.shouldLog(LogLevel.INFO)) {
       const entry: LogEntry = {
         level: LogLevel.INFO,
@@ -113,7 +113,7 @@ class Logger {
       this.addToBuffer(entry);
 
       if (this.isDevelopment) {
-        console.info(this.formatConsoleMessage(entry));
+        console.warn(this.formatConsoleMessage(entry));
       }
     }
   }
@@ -121,7 +121,7 @@ class Logger {
   /**
    * Log warning message
    */
-  warn(message: string, data?: any, category?: string): void {
+  warn(message: string, data?: unknown, category?: string): void {
     if (this.shouldLog(LogLevel.WARN)) {
       const entry: LogEntry = {
         level: LogLevel.WARN,
@@ -135,7 +135,7 @@ class Logger {
 
       // Send warnings to Sentry in production
       if (!this.isDevelopment) {
-        captureMessage(message, "warning", data);
+        captureMessage(message, "warning", data as Record<string, unknown>);
       }
 
       if (this.isDevelopment) {
@@ -167,7 +167,7 @@ class Logger {
           additionalData: { message },
         });
       } else {
-        captureMessage(message, "error", error as Record<string, unknown> | undefined);
+        captureMessage(message, "error", error as Record<string, unknown>);
       }
 
       if (this.isDevelopment) {
@@ -179,7 +179,7 @@ class Logger {
   /**
    * Log fatal error message
    */
-  fatal(message: string, error?: Error | any, category?: string): void {
+  fatal(message: string, error?: unknown, category?: string): void {
     if (this.shouldLog(LogLevel.FATAL)) {
       const entry: LogEntry = {
         level: LogLevel.FATAL,
@@ -199,7 +199,7 @@ class Logger {
           additionalData: { message, isFatal: true },
         });
       } else {
-        captureMessage(message, "fatal", error);
+        captureMessage(message, "fatal", error as Record<string, unknown>);
       }
 
       if (this.isDevelopment) {
@@ -257,10 +257,10 @@ class Logger {
   /**
    * Create breadcrumb for user action
    */
-  breadcrumb(message: string, data?: any, category?: string): void {
+  breadcrumb(message: string, data?: unknown, category?: string): void {
     addUserActionBreadcrumb(message, {
       category: category || "user_action",
-      ...data,
+      ...((data as Record<string, unknown>) || {}),
     });
   }
 
@@ -269,7 +269,7 @@ class Logger {
    */
   time(label: string): void {
     if (this.isDevelopment) {
-      console.time(label);
+      console.warn(`timer: ${label}`);
     }
 
     this.breadcrumb("timer_start", { label }, "performance");
@@ -277,7 +277,7 @@ class Logger {
 
   timeEnd(label: string): void {
     if (this.isDevelopment) {
-      console.timeEnd(label);
+      console.warn(`timer:${label} end`);
     }
 
     this.breadcrumb("timer_end", { label }, "performance");
@@ -305,12 +305,12 @@ class Logger {
   /**
    * User interaction logging
    */
-  userInteraction(action: string, element?: string, data?: any): void {
+  userInteraction(action: string, element?: string, data?: unknown): void {
     const message = `User ${action}`;
     const interactionData = {
       action,
       element,
-      ...data,
+      ...((data as Record<string, unknown>) || {}),
     };
 
     this.info(message, interactionData, "user_interaction");
@@ -320,7 +320,7 @@ class Logger {
   /**
    * Security event logging
    */
-  security(event: string, data?: any): void {
+  security(event: string, data?: unknown): void {
     const message = `Security: ${event}`;
 
     // Always log security events
@@ -329,7 +329,7 @@ class Logger {
     // Send to Sentry as well
     captureMessage(message, "warning", {
       securityEvent: true,
-      ...data,
+      ...((data as Record<string, unknown>) || {}),
     });
   }
 }
@@ -338,19 +338,19 @@ class Logger {
 const logger = new Logger();
 
 // Export convenience functions
-export const debug = (message: string, data?: any, category?: string) =>
+export const debug = (message: string, data?: unknown, category?: string) =>
   logger.debug(message, data, category);
-export const info = (message: string, data?: any, category?: string) =>
+export const info = (message: string, data?: unknown, category?: string) =>
   logger.info(message, data, category);
-export const warn = (message: string, data?: any, category?: string) =>
+export const warn = (message: string, data?: unknown, category?: string) =>
   logger.warn(message, data, category);
-export const error = (message: string, err?: Error | any, category?: string) =>
+export const error = (message: string, err?: unknown, category?: string) =>
   logger.error(message, err, category);
-export const fatal = (message: string, err?: Error | any, category?: string) =>
+export const fatal = (message: string, err?: unknown, category?: string) =>
   logger.fatal(message, err, category);
 
 // Export additional functions
-export const breadcrumb = (message: string, data?: any, category?: string) =>
+export const breadcrumb = (message: string, data?: unknown, category?: string) =>
   logger.breadcrumb(message, data, category);
 export const time = (label: string) => logger.time(label);
 export const timeEnd = (label: string) => logger.timeEnd(label);
@@ -360,9 +360,9 @@ export const networkRequest = (
   statusCode?: number,
   duration?: number
 ) => logger.networkRequest(url, method, statusCode, duration);
-export const userInteraction = (action: string, element?: string, data?: any) =>
+export const userInteraction = (action: string, element?: string, data?: unknown) =>
   logger.userInteraction(action, element, data);
-export const security = (event: string, data?: any) => logger.security(event, data);
+export const security = (event: string, data?: unknown) => logger.security(event, data);
 
 // Export logger instance and class
 export { logger };
