@@ -12,6 +12,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   getChat(id: string): Promise<Chat | undefined>;
+  getChat(userId: string): Promise<Chat[]>;
   createChat(chat: Omit<Chat, "id" | "createdAt" | "updatedAt">): Promise<Chat>;
   getMessages(chatId: string): Promise<Message[]>;
   createMessage(message: Omit<Message, "id" | "createdAt" | "updatedAt">): Promise<Message>;
@@ -49,6 +50,10 @@ export class MemStorage implements IStorage {
 
   async getChat(id: string): Promise<Chat | undefined> {
     return this.chats.get(id);
+  }
+
+  async getChat(userId: string): Promise<Chat[]> {
+    return Array.from(this.chats.values()).filter((chat) => chat.participantIds.includes(userId));
   }
 
   async createChat(chat: Omit<Chat, "id" | "createdAt" | "updatedAt">): Promise<Chat> {
