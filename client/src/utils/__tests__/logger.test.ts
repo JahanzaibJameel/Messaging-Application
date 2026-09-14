@@ -403,7 +403,8 @@ describe("Logger Utility", () => {
     const fn = () => {};
     logger.info("Test message", { fn }, "category");
 
-    expect(logger.getRecentLogs()[0].data.fn).toBe(fn);
+    const entry = logger.getRecentLogs()[0];
+    expect((entry.data as Record<string, unknown> | undefined)?.fn).toBe(fn);
   });
 
   it("creates log entries with timestamps", () => {
