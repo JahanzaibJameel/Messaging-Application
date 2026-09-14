@@ -7,7 +7,6 @@ import * as path from "path";
 import { getJwtSecret } from "./config";
 
 const app = express();
-const log = console.log;
 
 function setupCors(app: express.Application): void {
   app.use((req, res, next) => {
@@ -82,7 +81,7 @@ function setupRequestLogging(app: express.Application) {
         logLine = logLine.slice(0, 79) + "…";
       }
 
-      log(logLine);
+      console.log(logLine);
     });
 
     next();
@@ -134,8 +133,8 @@ function serveLandingPage({
   const baseUrl = `${protocol}://${host}`;
   const expsUrl = `${host}`;
 
-  log(`baseUrl`, baseUrl);
-  log(`expsUrl`, expsUrl);
+  console.log(`baseUrl`, baseUrl);
+  console.log(`expsUrl`, expsUrl);
 
   const html = landingPageTemplate
     .replace(/BASE_URL_PLACEHOLDER/g, baseUrl)
@@ -151,7 +150,7 @@ function configureExpoAndLanding(app: express.Application) {
   const landingPageTemplate = fs.readFileSync(templatePath, "utf-8");
   const appName = getAppName();
 
-  log("Serving static Expo files with dynamic manifest routing");
+  console.log("Serving static Expo files with dynamic manifest routing");
 
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.path.startsWith("/api")) {
@@ -182,7 +181,7 @@ function configureExpoAndLanding(app: express.Application) {
   app.use("/assets", express.static(path.resolve(process.cwd(), "assets")));
   app.use(express.static(path.resolve(process.cwd(), "static-build")));
 
-  log("Expo routing: Checking expo-platform header on / and /manifest");
+  console.log("Expo routing: Checking expo-platform header on / and /manifest");
 }
 
 function setupErrorHandler(app: express.Application) {
@@ -206,6 +205,8 @@ function setupErrorHandler(app: express.Application) {
   });
 }
 
+let wsManager: WebSocketManager | null = null;
+
 (async () => {
   setupCors(app);
   setupBodyParsing(app);
@@ -217,7 +218,7 @@ function setupErrorHandler(app: express.Application) {
 
   // Initialize WebSocket server with JWT secret
   wsManager = new WebSocketManager(server, getJwtSecret());
-  log("WebSocket server initialized with JWT authentication");
+  console.log("WebSocket server initialized with JWT authentication");
 
   setupErrorHandler(app);
 
@@ -229,21 +230,21 @@ function setupErrorHandler(app: express.Application) {
       reusePort: true,
     },
     () => {
-      log(`express server serving on port ${port}`);
+      console.log(`express server serving on port ${port}`);
     }
   );
 
   function gracefulShutdown(signal: string): void {
-    log(`Received ${signal}. Shutting down gracefully...`);
+    console.log(`Received ${signal}. Shutting down gracefully...`);
     if (wsManager) {
       wsManager.destroy();
     }
     server.close(() => {
-      log("HTTP server closed");
+      console.log("HTTP server closed");
       process.exit(0);
     });
     setTimeout(() => {
-      log("Force shutdown after timeout");
+      console.log("Force shutdown after timeout");
       process.exit(1);
     }, 10000);
   }
