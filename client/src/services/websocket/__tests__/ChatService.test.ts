@@ -98,14 +98,19 @@ const mockMessageHandler = {
 };
 
 // Set up mocks for imported functions
-getWebSocketClient.mockReturnValue(mockWsClient);
-resetWebSocketClient.mockImplementation(() => {
+const mockGetWebSocketClient = getWebSocketClient as jest.Mock;
+const mockResetWebSocketClient = resetWebSocketClient as jest.Mock;
+const mockGetMessageHandler = getMessageHandler as jest.Mock;
+const mockResetMessageHandler = resetMessageHandler as jest.Mock;
+
+mockGetWebSocketClient.mockReturnValue(mockWsClient);
+mockResetWebSocketClient.mockImplementation(() => {
   mockWsClient.isConnected.mockReturnValue(false);
   mockWsClient.getStatus.mockReturnValue("disconnected");
 });
 
-getMessageHandler.mockReturnValue(mockMessageHandler);
-resetMessageHandler.mockImplementation(() => {
+mockGetMessageHandler.mockReturnValue(mockMessageHandler);
+mockResetMessageHandler.mockImplementation(() => {
   mockMessageHandler.sendMessage.mockClear();
   mockMessageHandler.joinChat.mockClear();
   mockMessageHandler.leaveChat.mockClear();
@@ -114,8 +119,8 @@ resetMessageHandler.mockImplementation(() => {
   mockMessageHandler.sendReaction.mockClear();
 });
 
-jest.mocked(getMessageHandler).mockReturnValue(mockMessageHandler);
-jest.mocked(resetMessageHandler).mockImplementation(() => {
+mockGetMessageHandler.mockReturnValue(mockMessageHandler);
+mockResetMessageHandler.mockImplementation(() => {
   mockMessageHandler.sendMessage.mockClear();
   mockMessageHandler.joinChat.mockClear();
   mockMessageHandler.leaveChat.mockClear();
@@ -153,8 +158,8 @@ describe("ChatService", () => {
     jest
       .mocked(getToken)
       .mockResolvedValue({ accessToken: "mock-token", refreshToken: "mock-refresh" });
-    jest.mocked(getWebSocketClient).mockReturnValue(mockWsClient);
-    jest.mocked(getMessageHandler).mockReturnValue(mockMessageHandler);
+    mockGetWebSocketClient.mockReturnValue(mockWsClient);
+    mockGetMessageHandler.mockReturnValue(mockMessageHandler);
   });
 
   afterEach(() => {
