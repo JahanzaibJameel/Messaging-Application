@@ -93,7 +93,10 @@ class DeviceSecurity {
       this.securityStatus = status;
 
       logger.info("Device security check completed", status, "security");
-      addUserActionBreadcrumb("device_security_check_complete", status);
+      addUserActionBreadcrumb(
+        "device_security_check_complete",
+        status as unknown as Record<string, unknown>
+      );
 
       // Handle security threats
       if (!status.isSecure && this.config.enabled) {
@@ -201,7 +204,7 @@ class DeviceSecurity {
       captureException(new Error("Security threat detected"), {
         action: "security_threat_detected",
         screen: "security_module",
-        additionalData: status,
+        additionalData: status as unknown as Record<string, unknown>,
       });
 
       // Show warning to user
