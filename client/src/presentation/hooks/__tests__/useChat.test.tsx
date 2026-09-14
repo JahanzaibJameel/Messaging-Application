@@ -7,6 +7,7 @@ import { renderHook, act } from "@testing-library/react";
 import { useChat } from "../useChat";
 import { chatRepository } from "../../../data/repositories";
 import { logger } from "../../../core/logger";
+import type { Chat } from "../../../domain/entities";
 
 jest.mock("../../../data/repositories", () => ({
   chatRepository: {
@@ -117,7 +118,7 @@ describe("useChat", () => {
 
     it("should return null when no currentUser", async () => {
       const { mockAuthStore } = setupStores();
-      mockAuthStore.currentUser = null;
+      mockAuthStore.currentUser = null as unknown as typeof mockAuthStore.currentUser;
       const { result } = renderHook(() => useChat({ chatId: "chat_1" }));
       const message = await result.current.sendMessage("Hello");
       expect(message).toBeNull();
@@ -322,13 +323,12 @@ describe("useChat", () => {
 
   describe("useGroupChat", () => {
     it("should return null groupChat for non-group chat", () => {
-      const mockChat = { id: "chat_1", type: "private", participantIds: [] };
+      const mockChat = { id: "chat_1", type: "private", participantIds: [] } as Chat;
       const { mockChatStore } = setupStores();
       mockChatStore.getChatById.mockReturnValue(mockChat);
 
-      const { result } = renderHook(() => useChat("chat_1"));
-      const hook = result.current as any;
-      // useGroupChat is not exported, test useChat behavior instead
+      const { result } = renderHook(() => useChat({ chatId: "chat_1" }));
+      expect(result.current.chat).toBe(mockChat);
     });
   });
 });
