@@ -59,17 +59,12 @@ export class VoiceRecorder {
    * Request recording permissions
    */
   static async requestPermissions(): Promise<boolean> {
-    try {
-      // Note: expo-av needs to be installed
-      // const { status } = await Audio.requestPermissionsAsync();
-      // return status === 'granted';
+    // Note: expo-av needs to be installed
+    // const { status } = await Audio.requestPermissionsAsync();
+    // return status === 'granted';
 
-      // For now, return true (will be implemented with expo-av)
-      return true;
-    } catch (error) {
-      logger.error("Recording permission error", error as Error, "VoiceRecorder");
-      return false;
-    }
+    // For now, return true (will be implemented with expo-av)
+    return true;
   }
 
   /**
