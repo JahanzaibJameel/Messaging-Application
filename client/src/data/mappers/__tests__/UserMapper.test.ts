@@ -1,6 +1,6 @@
 import { UserMapper } from "../UserMapper";
 import { UserEntity } from "@/domain/entities/User";
-import { UserModel } from "../models/MessageModel";
+import { UserModel } from "../../models/MessageModel";
 
 describe("UserMapper", () => {
   it("performs round-trip conversion", () => {
