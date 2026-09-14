@@ -76,7 +76,7 @@ export const initializeSentry = () => {
   });
 };
 
-export const configureNavigationTracing = (_navigationRef: any) => {
+export const configureNavigationTracing = (_navigationRef: unknown) => {
   // Navigation tracing is handled by reactNavigationIntegration
 };
 
@@ -92,7 +92,7 @@ export const clearUserContext = () => {
   Sentry.setUser(null);
 };
 
-export const addUserActionBreadcrumb = (action: string, data?: Record<string, any>) => {
+export const addUserActionBreadcrumb = (action: string, data?: Record<string, unknown>) => {
   Sentry.addBreadcrumb({
     category: "user",
     message: action,
@@ -101,7 +101,7 @@ export const addUserActionBreadcrumb = (action: string, data?: Record<string, an
   });
 };
 
-export const addNavigationBreadcrumb = (screenName: string, params?: Record<string, any>) => {
+export const addNavigationBreadcrumb = (screenName: string, params?: Record<string, unknown>) => {
   Sentry.addBreadcrumb({
     category: "navigation",
     message: `Navigated to ${screenName}`,
@@ -113,7 +113,7 @@ export const addNavigationBreadcrumb = (screenName: string, params?: Record<stri
   });
 };
 
-export const addWebSocketBreadcrumb = (event: string, data?: Record<string, any>) => {
+export const addWebSocketBreadcrumb = (event: string, data?: Record<string, unknown>) => {
   Sentry.addBreadcrumb({
     category: "websocket",
     message: `WebSocket ${event}`,
@@ -122,7 +122,7 @@ export const addWebSocketBreadcrumb = (event: string, data?: Record<string, any>
   });
 };
 
-export const addStoreBreadcrumb = (action: string, data?: Record<string, any>) => {
+export const addStoreBreadcrumb = (action: string, data?: Record<string, unknown>) => {
   Sentry.addBreadcrumb({
     category: "store",
     message: `Store action: ${action}`,
@@ -137,7 +137,7 @@ export const captureException = (
     action?: string;
     screen?: string;
     userId?: string;
-    additionalData?: Record<string, any>;
+    additionalData?: Record<string, unknown>;
   }
 ) => {
   if (context) {
@@ -165,7 +165,7 @@ export const captureException = (
 export const captureMessage = (
   message: string,
   level: Sentry.SeverityLevel = "info",
-  data?: Record<string, any>
+  data?: Record<string, unknown>
 ) => {
   Sentry.withScope((scope) => {
     if (data) {
@@ -175,11 +175,11 @@ export const captureMessage = (
   });
 };
 
-const sanitizeData = (data?: Record<string, any>): Record<string, any> | undefined => {
+const sanitizeData = (data?: Record<string, unknown>): Record<string, unknown> | undefined => {
   if (!data) return undefined;
 
   const sensitiveKeys = ["password", "token", "secret", "key", "auth", "credential"];
-  const sanitized: Record<string, any> = {};
+  const sanitized: Record<string, unknown> = {};
 
   Object.keys(data).forEach((key) => {
     const lowerKey = key.toLowerCase();
@@ -188,7 +188,7 @@ const sanitizeData = (data?: Record<string, any>): Record<string, any> | undefin
     } else if (typeof data[key] === "string" && data[key].length > 100) {
       sanitized[key] = data[key].substring(0, 100) + "...";
     } else if (typeof data[key] === "object" && data[key] !== null) {
-      sanitized[key] = sanitizeData(data[key]);
+      sanitized[key] = sanitizeData(data[key] as Record<string, unknown>);
     } else {
       sanitized[key] = data[key];
     }
@@ -197,18 +197,21 @@ const sanitizeData = (data?: Record<string, any>): Record<string, any> | undefin
   return sanitized;
 };
 
-const sanitizeWebSocketData = (data?: Record<string, any>): Record<string, any> | undefined => {
+const sanitizeWebSocketData = (
+  data?: Record<string, unknown>
+): Record<string, unknown> | undefined => {
   if (!data) return undefined;
 
   const sanitized = { ...data };
 
   if (sanitized.content) {
-    sanitized.content = "[REDACTED]";
+    (sanitized as Record<string, unknown>).content = "[REDACTED]";
   }
 
   if (sanitized.text) {
-    sanitized.text =
-      sanitized.text.length > 50 ? sanitized.text.substring(0, 50) + "..." : sanitized.text;
+    const text = sanitized.text as string;
+    (sanitized as Record<string, unknown>).text =
+      text.length > 50 ? text.substring(0, 50) + "..." : text;
   }
 
   return sanitizeData(sanitized);
