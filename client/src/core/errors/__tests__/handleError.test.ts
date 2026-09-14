@@ -429,7 +429,7 @@ describe("handleError", () => {
         42,
         false,
         [],
-        () => {},
+        () => undefined,
         /regex/,
         new Date(),
       ];
