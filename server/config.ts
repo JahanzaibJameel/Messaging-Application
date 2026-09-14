@@ -1,13 +1,10 @@
 import jwt, { type JwtPayload } from "jsonwebtoken";
 
-const JWT_SECRET =
-  process.env.JWT_SECRET ||
-  (process.env.NODE_ENV !== "production"
-    ? "dev-secret-change-in-production"
-    : (() => {
-        console.error("FATAL ERROR: JWT_SECRET environment variable is not set in production mode");
-        process.exit(1);
-      })());
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET environment variable is not set");
+}
 
 export function getJwtSecret(): string {
   return JWT_SECRET;
