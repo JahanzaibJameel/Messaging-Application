@@ -24,7 +24,7 @@ const originalConsole = {
 };
 
 // Mock __DEV__ for testing
-const originalDev = (global as any).__DEV__;
+const _originalDev = (global as Record<string, unknown>).__DEV__;
 
 describe("Logger", () => {
   beforeEach(() => {
@@ -439,21 +439,22 @@ describe("Logger", () => {
         logger.info(maliciousMessage);
       }).not.toThrow();
 
-      const buffer = (logger as any).buffer;
+      const buffer = (logger as unknown as { buffer: { message: string }[] }).buffer;
       expect(buffer[0].message).toBe(maliciousMessage);
     });
   });
 
   describe("Memory Management", () => {
     it("should not leak memory with repeated logging", () => {
-      const initialBufferSize = (logger as any).buffer.length;
+      const _initialBufferSize = (logger as unknown as { buffer: unknown[] }).buffer.length;
+      expect(_initialBufferSize).toBeLessThanOrEqual(100);
 
       for (let i = 0; i < 100; i++) {
         logger.info(`Memory test ${i}`);
       }
 
       // Buffer should not grow indefinitely due to max buffer size
-      expect((logger as any).buffer.length).toBeLessThanOrEqual(100);
+      expect((logger as unknown as { buffer: unknown[] }).buffer.length).toBeLessThanOrEqual(100);
     });
 
     it("should handle buffer overflow gracefully", () => {
