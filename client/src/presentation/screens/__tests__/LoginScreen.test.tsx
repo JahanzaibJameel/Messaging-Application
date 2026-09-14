@@ -6,16 +6,10 @@
 import "../../../test-utils/i18nMock";
 
 import React from "react";
-import { View } from "react-native";
+import { Pressable } from "react-native";
 import { render, fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 import LoginScreen from "../LoginScreen";
-
-const mockPressable = ({ children, onPress, disabled, style }: any) => (
-  <View onPress={onPress} disabled={disabled} testID="button-continue">
-    {children}
-  </View>
-);
 
 const mockLogin = jest.fn();
 
@@ -80,10 +74,10 @@ jest.mock("../../../components/ThemedText", () => ({
 jest.mock("@/components/Button", () => {
   const RN = require("react-native");
   return {
-    Button: ({ children, onPress, disabled, style }: any) => (
-      <RN.View onPress={onPress} disabled={disabled} testID="button-continue">
+    Button: ({ children, onPress, disabled, _style }: any) => (
+      <Pressable onPress={onPress} disabled={disabled} testID="button-continue">
         {children}
-      </RN.View>
+      </Pressable>
     ),
   };
 });
