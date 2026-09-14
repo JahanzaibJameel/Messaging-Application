@@ -7,11 +7,6 @@ import {
   VoiceRecorder,
   voiceRecorder,
   startRecording,
-  pauseRecording,
-  resumeRecording,
-  stopRecording,
-  cancelRecording,
-  getRecordingStatus,
   VoiceRecorder as VoiceRecorderClass,
 } from "../VoiceRecorder";
 import { AppError } from "../../errors";
@@ -81,7 +76,7 @@ describe("VoiceRecorder", () => {
   describe("startRecording", () => {
     it("should throw AppError.media when already recording", async () => {
       jest.spyOn(recorder, "startRecording").mockImplementation(async () => {
-        throw new AppError("UNKNOWN_ERROR", "Recording already in progress");
+        throw new AppError({ code: "UNKNOWN_ERROR", message: "Recording already in progress" });
       });
       // Reset state to ensure not recording
       const freshRecorder = VoiceRecorder.getInstance();
