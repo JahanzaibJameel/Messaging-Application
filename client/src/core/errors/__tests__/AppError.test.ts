@@ -1,4 +1,4 @@
-import { AppError, ErrorCode, ErrorDetails } from "../AppError";
+import { AppError, ErrorCode } from "../AppError";
 
 describe("AppError", () => {
   describe("Constructor", () => {
