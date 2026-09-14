@@ -373,7 +373,7 @@ describe("withErrorHandling", () => {
 
     it("should handle function that never resolves (timeout simulation)", async () => {
       // Note: This test might take a while, so we'll use a timeout
-      const neverResolvesFunction = () => new Promise(() => {});
+      const neverResolvesFunction = () => new Promise(() => undefined);
 
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error("Timeout")), 100)
