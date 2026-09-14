@@ -29,7 +29,7 @@ export default [
     },
     rules: {
       // TypeScript strict rules
-      "@typescript-eslint/no-explicit-any": "off", // Temporarily disabled for CI green
+      "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": [
         "warn",
         {
@@ -41,8 +41,8 @@ export default [
       "@typescript-eslint/explicit-module-boundary-types": "off",
       "@typescript-eslint/no-empty-function": "warn",
       "@typescript-eslint/no-non-null-assertion": "warn",
-      "@typescript-eslint/prefer-nullish-coalescing": "off", // Temporarily disabled for CI green
-      "@typescript-eslint/prefer-optional-chain": "off", // Temporarily disabled for CI green
+      "@typescript-eslint/prefer-nullish-coalescing": "off",
+      "@typescript-eslint/prefer-optional-chain": "off",
       "@typescript-eslint/strict-boolean-expressions": "off",
 
       // React rules
