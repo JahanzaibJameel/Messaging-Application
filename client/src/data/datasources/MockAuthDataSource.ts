@@ -27,7 +27,7 @@ export interface MockAuthVerifyOtpResponse {
 }
 
 export class MockAuthDataSource {
-  async login(phone: string): Promise<MockAuthLoginResponse> {
+  async login(_phone: string): Promise<MockAuthLoginResponse> {
     await delay(250);
     return { success: true };
   }
