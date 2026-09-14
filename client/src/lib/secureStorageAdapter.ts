@@ -135,7 +135,7 @@ export function createSecureStorageAdapterWithKeys(
         await Promise.all(
           knownKeys.map(async (key) => {
             try {
-        const value = await secureGet(key, storageName);
+              const value = await secureGet(key, storageName);
               if (value !== undefined) {
                 cache.set(key, value);
               }
