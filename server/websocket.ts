@@ -4,7 +4,7 @@
  */
 
 import { WebSocketServer, WebSocket } from "ws";
-import type { IncomingMessage } from "http";
+import type { IncomingMessage, Server } from "http";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import { randomUUID } from "crypto";
 
@@ -96,7 +96,7 @@ export class WebSocketManager {
   private readonly RATE_LIMIT_WINDOW = 1000; // 1 second in milliseconds
   private readonly RATE_LIMIT_MAX = 20; // 20 messages per second
 
-  constructor(server: any, jwtSecret: string) {
+  constructor(server: Server, jwtSecret: string) {
     this.jwtSecret = jwtSecret;
     this.wss = new WebSocketServer({
       server,
@@ -126,7 +126,7 @@ export class WebSocketManager {
       }
 
       // Attach decoded token to request for later use
-      (info.req as any).user = decoded;
+      (info.req as unknown as Record<string, unknown>).user = decoded;
       return true;
     } catch (error) {
       logger.warn("Connection rejected: Token verification failed", "WebSocketManager");
@@ -156,7 +156,7 @@ export class WebSocketManager {
 
   private handleConnection(ws: WebSocket, req: IncomingMessage): void {
     const clientId = this.generateClientId();
-    const user = (req as any).user;
+    const user = (req as unknown as Record<string, unknown>).user as { userId?: string };
     const userId = user?.userId || "anonymous";
     const token = this.extractTokenFromRequest(req);
 
