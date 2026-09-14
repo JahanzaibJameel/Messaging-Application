@@ -109,10 +109,10 @@ class Logger {
 
     switch (entry.level) {
       case "debug":
-        console.debug(fullMessage, entry.data ?? "");
+        console.warn(fullMessage, entry.data ?? "");
         break;
       case "info":
-        console.info(fullMessage, entry.data ?? "");
+        console.warn(fullMessage, entry.data ?? "");
         break;
       case "warn":
         console.warn(fullMessage, entry.data ?? "");
@@ -129,7 +129,7 @@ class Logger {
 
     try {
       if (this.config.remoteUrl) {
-        await fetch(this.config.remoteUrl!, {
+        await fetch(this.config.remoteUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(entry),
