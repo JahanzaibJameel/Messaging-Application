@@ -40,10 +40,11 @@ export class ChatRepositoryImpl implements ChatRepository {
     // Apply pagination if options provided
     if (options) {
       if (options.before) {
-        messages = messages.filter((m) => m.timestamp < options.before!);
+        const beforeTime = options.before;
+        messages = messages.filter((m) => m.timestamp < beforeTime);
       }
       if (options.after) {
-        messages = messages.filter((m) => m.timestamp > options.after!);
+        messages = messages.filter((m) => m.timestamp > (options.after ?? new Date()));
       }
       if (options.limit) {
         messages = messages.slice(0, options.limit);
@@ -90,10 +91,10 @@ export class ChatRepositoryImpl implements ChatRepository {
   }
 
   async deleteMessage(messageId: string, chatId: string): Promise<void> {
-    await this.localDataSource.deleteMessage(chatId, messageId!);
+    await this.localDataSource.deleteMessage(chatId, messageId);
 
     try {
-      await this.remoteDataSource.deleteMessage(messageId!);
+      await this.remoteDataSource.deleteMessage(messageId);
     } catch {
       // Will be synced later
     }
