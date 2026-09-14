@@ -32,8 +32,20 @@ describe("ChatRepositoryImpl Extended", () => {
   describe("getMessages", () => {
     it("should return messages without pagination", async () => {
       const mockMessages = [
-        { id: "msg_1", chatId: "chat_1", text: "Hello", timestamp: Date.now(), reactions: [] },
-        { id: "msg_2", chatId: "chat_1", text: "World", timestamp: Date.now(), reactions: [] },
+        {
+          id: "msg_1",
+          chatId: "chat_1",
+          text: "Hello",
+          timestamp: new Date(Date.now()),
+          reactions: [],
+        },
+        {
+          id: "msg_2",
+          chatId: "chat_1",
+          text: "World",
+          timestamp: new Date(Date.now()),
+          reactions: [],
+        },
       ];
       mockLocalStorage.getMessagesByChatId.mockResolvedValue(mockMessages as any);
 
@@ -42,10 +54,22 @@ describe("ChatRepositoryImpl Extended", () => {
     });
 
     it("should apply before pagination filter", async () => {
-      const now = Date.now();
+      const now = new Date(Date.now());
       const mockMessages = [
-        { id: "msg_1", chatId: "chat_1", text: "Old", timestamp: now - 1000, reactions: [] },
-        { id: "msg_2", chatId: "chat_1", text: "New", timestamp: now, reactions: [] },
+        {
+          id: "msg_1",
+          chatId: "chat_1",
+          text: "Old",
+          timestamp: new Date(now.getTime() - 1000),
+          reactions: [],
+        },
+        {
+          id: "msg_2",
+          chatId: "chat_1",
+          text: "New",
+          timestamp: new Date(now.getTime()),
+          reactions: [],
+        },
       ];
       mockLocalStorage.getMessagesByChatId.mockResolvedValue(mockMessages as any);
 
@@ -55,23 +79,55 @@ describe("ChatRepositoryImpl Extended", () => {
     });
 
     it("should apply after pagination filter", async () => {
-      const now = Date.now();
+      const now = new Date(Date.now());
       const mockMessages = [
-        { id: "msg_1", chatId: "chat_1", text: "Old", timestamp: now - 1000, reactions: [] },
-        { id: "msg_2", chatId: "chat_1", text: "New", timestamp: now, reactions: [] },
+        {
+          id: "msg_1",
+          chatId: "chat_1",
+          text: "Old",
+          timestamp: new Date(now.getTime() - 1000),
+          reactions: [],
+        },
+        {
+          id: "msg_2",
+          chatId: "chat_1",
+          text: "New",
+          timestamp: new Date(now.getTime()),
+          reactions: [],
+        },
       ];
       mockLocalStorage.getMessagesByChatId.mockResolvedValue(mockMessages as any);
 
-      const result = await chatRepository.getMessages("chat_1", { after: now - 500 });
+      const result = await chatRepository.getMessages("chat_1", {
+        after: new Date(now.getTime() - 500),
+      });
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe("msg_2");
     });
 
     it("should apply limit", async () => {
       const mockMessages = [
-        { id: "msg_1", chatId: "chat_1", text: "1", timestamp: Date.now(), reactions: [] },
-        { id: "msg_2", chatId: "chat_1", text: "2", timestamp: Date.now(), reactions: [] },
-        { id: "msg_3", chatId: "chat_1", text: "3", timestamp: Date.now(), reactions: [] },
+        {
+          id: "msg_1",
+          chatId: "chat_1",
+          text: "1",
+          timestamp: new Date(Date.now()),
+          reactions: [],
+        },
+        {
+          id: "msg_2",
+          chatId: "chat_1",
+          text: "2",
+          timestamp: new Date(Date.now()),
+          reactions: [],
+        },
+        {
+          id: "msg_3",
+          chatId: "chat_1",
+          text: "3",
+          timestamp: new Date(Date.now()),
+          reactions: [],
+        },
       ];
       mockLocalStorage.getMessagesByChatId.mockResolvedValue(mockMessages as any);
 
@@ -91,6 +147,7 @@ describe("ChatRepositoryImpl Extended", () => {
         type: "text",
         status: "sent",
         reactions: [],
+        edited: false,
       };
       const chat: Chat = {
         id: "chat_1",
@@ -125,6 +182,7 @@ describe("ChatRepositoryImpl Extended", () => {
         type: "text",
         status: "sent",
         reactions: [],
+        edited: false,
       };
       await chatRepository.updateMessage(message);
       expect(mockLocalStorage.saveMessage).toHaveBeenCalledWith(
@@ -336,6 +394,8 @@ describe("ChatRepositoryImpl Extended", () => {
         type: "group",
         participantIds: ["user_1", "user_2"],
         adminIds: ["user_1"],
+        name: "Test Group",
+        createdBy: "user_1",
         unreadCount: 0,
         lastActivity: undefined,
         isPinned: false,
@@ -357,6 +417,8 @@ describe("ChatRepositoryImpl Extended", () => {
         type: "group",
         participantIds: ["user_1", "user_2"],
         adminIds: ["user_1", "user_2"],
+        name: "Test Group",
+        createdBy: "user_1",
         unreadCount: 0,
         lastActivity: undefined,
         isPinned: false,
@@ -380,6 +442,8 @@ describe("ChatRepositoryImpl Extended", () => {
         type: "group",
         participantIds: ["user_1", "user_2"],
         adminIds: ["user_1"],
+        name: "Test Group",
+        createdBy: "user_1",
         unreadCount: 0,
         lastActivity: undefined,
         isPinned: false,
@@ -416,6 +480,8 @@ describe("ChatRepositoryImpl Extended", () => {
         type: "group",
         participantIds: ["user_1"],
         adminIds: ["user_1"],
+        name: "Test Group",
+        createdBy: "user_1",
         unreadCount: 0,
         lastActivity: undefined,
         isPinned: false,
@@ -424,7 +490,12 @@ describe("ChatRepositoryImpl Extended", () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      const remoteGroup = { ...groupChat, id: "remote_id" };
+      const remoteGroup = {
+        ...groupChat,
+        id: "remote_id",
+        name: "Test Group",
+        createdBy: "user_1",
+      };
       mockLocalStorage.getChatById.mockResolvedValue(groupChat as any);
       mockRemoteApi.createGroup.mockResolvedValue(remoteGroup as any);
       mockLocalStorage.deleteChat.mockResolvedValue(undefined as any);
