@@ -4,7 +4,13 @@
  * Supports RTL languages, ICU message syntax, and dynamic loading
  */
 
-import i18n from "i18next";
+import i18n, {
+  changeLanguage as changeI18nLanguage,
+  init as initI18n,
+  off as offI18n,
+  on as onI18n,
+  t as translate,
+} from "i18next";
 import { initReactI18next } from "react-i18next";
 import { Platform, I18nManager } from "react-native";
 import { logger } from "../logger";
@@ -152,7 +158,9 @@ export const detectLanguage = (): string => {
 
     // 2. Check device locale
     const deviceLocale =
-      Platform.OS === "ios" ? (Settings as any).AppleLocale : (Settings as any).AndroidLocale;
+      Platform.OS === "ios"
+        ? (Settings as Record<string, unknown>).AppleLocale
+        : (Settings as Record<string, unknown>).AndroidLocale;
 
     if (deviceLocale) {
       const langCode = deviceLocale.split("-")[0];
@@ -185,7 +193,7 @@ export const initializeI18n = async (language?: string) => {
     // Load translation resources
     const resources = await loadTranslationResources();
 
-    await i18n.init({
+    await initI18n({
       resources,
       lng: targetLanguage,
       fallbackLng: "en",
@@ -290,7 +298,7 @@ export const changeLanguage = async (languageCode: string): Promise<void> => {
     }
 
     // Change language
-    await i18n.changeLanguage(languageCode);
+    await changeI18nLanguage(languageCode);
 
     // Store preference
     localStorage?.setItem?.("app-language", languageCode);
@@ -361,28 +369,28 @@ export const getRelativeTime = (date: Date | string | number): string => {
   }
 
   if (diffDays > 0) {
-    return i18n.t("common.relativeTime.daysAgo", { count: diffDays });
+    return translate("common.relativeTime.daysAgo", { count: diffDays });
   }
 
   if (diffHours > 0) {
-    return i18n.t("common.relativeTime.hoursAgo", { count: diffHours });
+    return translate("common.relativeTime.hoursAgo", { count: diffHours });
   }
 
   if (diffMinutes > 0) {
-    return i18n.t("common.relativeTime.minutesAgo", { count: diffMinutes });
+    return translate("common.relativeTime.minutesAgo", { count: diffMinutes });
   }
 
-  return i18n.t("common.relativeTime.justNow");
+  return translate("common.relativeTime.justNow");
 };
 
 // Translation validation utilities
 export const validateTranslationStructure = (
-  translations: any,
+  translations: Record<string, unknown>,
   path: string = ""
 ): { valid: boolean; errors: string[] } => {
   const errors: string[] = [];
 
-  const validate = (obj: any, currentPath: string) => {
+  const validate = (obj: Record<string, unknown>, currentPath: string) => {
     if (typeof obj === "string") {
       // Check for ICU syntax errors
       if (obj.includes("{") && obj.includes("}")) {
@@ -433,10 +441,10 @@ export const useLanguage = () => {
       setCurrentLanguage(lng);
     };
 
-    i18n.on("languageChanged", handleLanguageChange);
+    onI18n("languageChanged", handleLanguageChange);
 
     return () => {
-      i18n.off("languageChanged", handleLanguageChange);
+      offI18n("languageChanged", handleLanguageChange);
     };
   }, []);
 
