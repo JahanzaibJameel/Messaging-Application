@@ -3,13 +3,7 @@
  * Tests for enterprise feature flag management system
  */
 
-import {
-  useFeatureFlagsStore,
-  useFeatureFlag,
-  useFeatureFlags,
-  FeatureFlag,
-  FeatureFlagCondition,
-} from "../FeatureFlags";
+import { useFeatureFlagsStore, useFeatureFlag, useFeatureFlags } from "../FeatureFlags";
 
 jest.mock("react-native-mmkv", () => {
   const instances: any[] = [];
@@ -46,7 +40,17 @@ const mockStoreState = {
       conditions: [],
       lastUpdated: "2024-01-01T00:00:00Z",
     },
-  },
+  } as Record<
+    string,
+    {
+      id: string;
+      name: string;
+      enabled: boolean;
+      rolloutPercentage: number;
+      conditions: unknown[];
+      lastUpdated: string;
+    }
+  >,
   userContext: {},
   isEnabled: (id: string) => mockStoreState.flags[id]?.enabled ?? false,
   getFlag: (id: string) => mockStoreState.flags[id] ?? null,
@@ -55,7 +59,7 @@ const mockStoreState = {
 };
 
 jest.mock("zustand", () => ({
-  create: jest.fn(() => (config: any) => {
+  create: jest.fn(() => (_config: unknown) => {
     const hook = (selector?: any) => {
       if (typeof selector === "function") return selector(mockStoreState);
       return mockStoreState;
@@ -70,7 +74,7 @@ jest.mock("zustand", () => ({
 }));
 
 jest.mock("zustand/middleware", () => ({
-  persist: (config: any) => config,
+  persist: (_config: unknown) => _config,
   createJSONStorage: () => ({
     getItem: jest.fn(),
     setItem: jest.fn(),
