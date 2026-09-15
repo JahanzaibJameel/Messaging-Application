@@ -6,7 +6,7 @@
 import "../../../test-utils/i18nMock";
 
 import React from "react";
-import { Pressable } from "react-native";
+import { Pressable as MockPressable } from "react-native";
 import { render, fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 import LoginScreen from "../LoginScreen";
@@ -64,30 +64,29 @@ jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 
-jest.mock("../../../components/ThemedText", () => ({
-  ThemedText: ({ children, style }: any) => {
-    const RN = require("react-native");
-    return <RN.Text>{children}</RN.Text>;
-  },
-}));
-
-jest.mock("@/components/Button", () => {
-  const RN = require("react-native");
+jest.mock("../../../components/ThemedText", () => {
+  const { Text } = jest.requireActual("react-native");
   return {
-    Button: ({ children, onPress, disabled, _style }: any) => (
-      <Pressable onPress={onPress} disabled={disabled} testID="button-continue">
-        {children}
-      </Pressable>
-    ),
+    ThemedText: ({ children, style }: any) => <Text style={style}>{children}</Text>,
   };
 });
+
+const MockButton = ({ children, onPress, disabled }: any) => (
+  <MockPressable onPress={onPress} disabled={disabled} testID="button-continue">
+    {children}
+  </MockPressable>
+);
+
+jest.mock("@/components/Button", () => ({
+  Button: MockButton,
+}));
 
 jest.mock("../../../components/KeyboardAwareScrollViewCompat", () => ({
   KeyboardAwareScrollViewCompat: ({ children }: any) => <>{children}</>,
 }));
 
 jest.mock("react-native-reanimated", () => {
-  const RN = require("react-native");
+  const RN = jest.requireActual("react-native");
 
   const createChainable = () => {
     const chain = {
