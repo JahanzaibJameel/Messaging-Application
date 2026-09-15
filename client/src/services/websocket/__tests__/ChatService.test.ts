@@ -3,12 +3,8 @@
  * Tests chat service lifecycle, message handling, and connection logic.
  */
 
-import React from "react";
-
 // Import after mocks
 import { renderHook } from "@testing-library/react-native";
-import type { WebSocketClient } from "../WebSocketClient";
-import type { MessageHandler } from "../MessageHandler";
 // We'll get the mocks via jest.mock() calls below
 import {
   initializeChatService,
