@@ -92,7 +92,7 @@ class Logger {
       this.addToBuffer(entry);
 
       if (this.isDevelopment) {
-        console.warn(this.formatConsoleMessage(entry));
+        console.debug(this.formatConsoleMessage(entry));
       }
     }
   }
@@ -113,7 +113,7 @@ class Logger {
       this.addToBuffer(entry);
 
       if (this.isDevelopment) {
-        console.warn(this.formatConsoleMessage(entry));
+        console.info(this.formatConsoleMessage(entry));
       }
     }
   }
@@ -269,7 +269,7 @@ class Logger {
    */
   time(label: string): void {
     if (this.isDevelopment) {
-      console.warn(`timer: ${label}`);
+      console.time(label);
     }
 
     this.breadcrumb("timer_start", { label }, "performance");
@@ -277,7 +277,7 @@ class Logger {
 
   timeEnd(label: string): void {
     if (this.isDevelopment) {
-      console.warn(`timer:${label} end`);
+      console.timeEnd(label);
     }
 
     this.breadcrumb("timer_end", { label }, "performance");
