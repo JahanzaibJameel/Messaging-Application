@@ -500,7 +500,7 @@ describe("ChatRepositoryImpl Extended", () => {
       mockRemoteApi.createGroup.mockResolvedValue(remoteGroup as any);
       mockLocalStorage.deleteChat.mockResolvedValue(undefined as any);
 
-      const result = await chatRepository.createGroup("Test", ["user_1"], "user_1");
+      await chatRepository.createGroup("Test", ["user_1"], "user_1");
       expect(mockLocalStorage.deleteChat).toHaveBeenCalledWith(expect.any(String));
     });
   });
