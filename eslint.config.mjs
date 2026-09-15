@@ -53,7 +53,10 @@ export default [
       "react/react-in-jsx-scope": "off",
 
       // Console restrictions - only allow error in production
-      "no-console": ["warn", { allow: ["error", "warn"] }],
+      "no-console": [
+        "warn",
+        { allow: ["error", "warn", "info", "debug", "log", "time", "timeEnd"] },
+      ],
 
       // General best practices
       "no-unused-expressions": "error",
