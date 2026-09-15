@@ -15,7 +15,7 @@ import {
 
 const deviceInfoMock = DeviceInfo as unknown as {
   isEmulator: jest.Mock;
-  isJailbroken: jest.Mock;
+  isJailBroken: jest.Mock;
   isRooted: jest.Mock;
 };
 
@@ -131,7 +131,7 @@ describe("DeviceSecurity", () => {
       jest.restoreAllMocks();
 
       (DeviceInfo.isEmulator as jest.Mock).mockResolvedValueOnce(false);
-      (DeviceInfo.isJailbroken as jest.Mock).mockResolvedValueOnce(true);
+      deviceInfoMock.isJailBroken.mockResolvedValueOnce(true);
 
       const instance = new (require("../deviceSecurity").DeviceSecurity)();
       const status = await instance.checkDeviceSecurity();
@@ -149,7 +149,7 @@ describe("DeviceSecurity", () => {
       jest.restoreAllMocks();
 
       (DeviceInfo.isEmulator as jest.Mock).mockResolvedValueOnce(false);
-      (DeviceInfo.isRooted as jest.Mock).mockResolvedValueOnce(true);
+      deviceInfoMock.isRooted.mockResolvedValueOnce(true);
 
       const instance = new (require("../deviceSecurity").DeviceSecurity)();
       const status = await instance.checkDeviceSecurity();
@@ -184,7 +184,7 @@ describe("DeviceSecurity", () => {
       jest.restoreAllMocks();
 
       (DeviceInfo.isEmulator as jest.Mock).mockResolvedValueOnce(true);
-      (DeviceInfo.isJailbroken as jest.Mock).mockResolvedValueOnce(false);
+      deviceInfoMock.isJailBroken.mockResolvedValueOnce(false);
 
       const instance = new (require("../deviceSecurity").DeviceSecurity)({ allowEmulators: false });
       const status = await instance.checkDeviceSecurity();
@@ -323,7 +323,7 @@ describe("DeviceSecurity", () => {
       jest.restoreAllMocks();
 
       (DeviceInfo.isEmulator as jest.Mock).mockResolvedValueOnce(false);
-      (DeviceInfo.isJailbroken as jest.Mock).mockResolvedValueOnce(false);
+      deviceInfoMock.isJailBroken.mockResolvedValueOnce(false);
 
       const instance = new (require("../deviceSecurity").DeviceSecurity)();
       const status = await instance.refreshSecurityStatus();
