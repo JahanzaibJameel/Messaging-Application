@@ -9,7 +9,6 @@ import i18n, {
   init as initI18n,
   off as offI18n,
   on as onI18n,
-  t as translate,
 } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { Platform, I18nManager } from "react-native";
@@ -369,18 +368,18 @@ export const getRelativeTime = (date: Date | string | number): string => {
   }
 
   if (diffDays > 0) {
-    return translate("common.relativeTime.daysAgo", { count: diffDays });
+    return i18n["t"]("common.relativeTime.daysAgo", { count: diffDays });
   }
 
   if (diffHours > 0) {
-    return translate("common.relativeTime.hoursAgo", { count: diffHours });
+    return i18n["t"]("common.relativeTime.hoursAgo", { count: diffHours });
   }
 
   if (diffMinutes > 0) {
-    return translate("common.relativeTime.minutesAgo", { count: diffMinutes });
+    return i18n["t"]("common.relativeTime.minutesAgo", { count: diffMinutes });
   }
 
-  return translate("common.relativeTime.justNow");
+  return i18n["t"]("common.relativeTime.justNow");
 };
 
 // Translation validation utilities
