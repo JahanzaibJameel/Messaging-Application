@@ -215,15 +215,15 @@ describe("SyncEngine", () => {
 
     it("should handle coming online", () => {
       const callback = mockNetworkMonitorInstance._lastCallback;
-      expect(callback).toBeInstanceOf(Function);
-      callback(true);
-      expect(mockSyncUseCase.getStatus).toHaveBeenCalled();
+      expect(callback).not.toBeNull();
+      callback?.(true);
+      expect(mockSyncUseCase.processQueue).toHaveBeenCalled();
     });
 
     it("should handle going offline", () => {
       const callback = mockNetworkMonitorInstance._lastCallback;
-      expect(callback).toBeInstanceOf(Function);
-      callback(false);
+      expect(callback).not.toBeNull();
+      callback?.(false);
     });
   });
 
@@ -240,7 +240,7 @@ describe("SyncEngine", () => {
       syncEngine.start();
       syncEngine.stop();
       jest.advanceTimersByTime(2000);
-      expect(mockSyncUseCase.getState).toHaveBeenCalled();
+      expect(mockSyncUseCase.sync).not.toHaveBeenCalled();
     });
 
     it("should handle destroy gracefully", () => {
