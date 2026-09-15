@@ -37,10 +37,11 @@ describe("Additional Formatters", () => {
       mondayThisWeek.setDate(now.getDate() - daysFromMonday);
       mondayThisWeek.setHours(10, 0, 0, 0);
 
-      if (daysFromMonday > 0) {
-        const result = formatChatListTime(mondayThisWeek);
-        expect(result).toMatch(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)$/);
-      }
+      const weekdayOffset = daysFromMonday === 0 ? 1 : daysFromMonday === 1 ? 2 : 0;
+      const weekday = new Date(mondayThisWeek);
+      weekday.setDate(mondayThisWeek.getDate() + weekdayOffset);
+      const result = formatChatListTime(weekday);
+      expect(result).toMatch(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)$/);
     });
 
     it("should return MMM d for this year", () => {
