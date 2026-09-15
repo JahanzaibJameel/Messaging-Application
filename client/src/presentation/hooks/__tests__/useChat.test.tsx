@@ -323,7 +323,17 @@ describe("useChat", () => {
 
   describe("useGroupChat", () => {
     it("should return null groupChat for non-group chat", () => {
-      const mockChat = { id: "chat_1", type: "private", participantIds: [] } as Chat;
+      const mockChat: Chat = {
+        id: "chat_1",
+        type: "private",
+        participantIds: [],
+        unreadCount: 0,
+        isPinned: false,
+        isMuted: false,
+        isArchived: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
       const { mockChatStore } = setupStores();
       mockChatStore.getChatById.mockReturnValue(mockChat);
 
