@@ -71,11 +71,13 @@ jest.mock("../../../components/ThemedText", () => {
   };
 });
 
-const MockButton = ({ children, onPress, disabled }: any) => (
-  <MockPressable onPress={onPress} disabled={disabled} testID="button-continue">
-    {children}
-  </MockPressable>
-);
+function MockButton({ children, onPress, disabled }: any) {
+  return (
+    <MockPressable onPress={onPress} disabled={disabled} testID="button-continue">
+      {children}
+    </MockPressable>
+  );
+}
 
 jest.mock("@/components/Button", () => ({
   Button: MockButton,
@@ -218,7 +220,7 @@ describe("LoginScreen", () => {
 
       fireEvent.changeText(screen.getByTestId("input-phone"), "123");
       const button = screen.getByTestId("button-continue");
-      expect(button.props.disabled).toBe(true);
+      expect(button).toBeDisabled();
     });
 
     it("enables button when phone number is 10+ chars", () => {
@@ -226,7 +228,7 @@ describe("LoginScreen", () => {
 
       fireEvent.changeText(screen.getByTestId("input-phone"), "1234567890");
       const button = screen.getByTestId("button-continue");
-      expect(button.props.disabled).toBe(false);
+      expect(button).toBeEnabled();
     });
 
     it("calls login with full phone number on Continue press", async () => {
