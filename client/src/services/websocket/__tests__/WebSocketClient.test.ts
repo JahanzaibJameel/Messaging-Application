@@ -95,6 +95,7 @@ describe("WebSocketClient", () => {
       const client = new WebSocketClient({ url: "ws://localhost:8080" });
       expect(client.getStatus()).toBe("disconnected");
       expect(client.isConnected()).toBe(false);
+      expect(socketFactory).not.toHaveBeenCalled();
     });
 
     it("applies default configuration values", () => {
@@ -132,6 +133,17 @@ describe("WebSocketClient", () => {
       client.connect();
 
       expect(socketFactory).toHaveBeenCalledWith("ws://localhost:8080?token=tok-1");
+      client.disconnect();
+    });
+
+    it("does not open a second socket while connecting", () => {
+      const client = new WebSocketClient({ url: "ws://localhost:8080" });
+      client.connect();
+      client.connect();
+
+      expect(socketFactory).toHaveBeenCalledTimes(1);
+      expect(client.getStatus()).toBe("connecting");
+
       client.disconnect();
     });
 
