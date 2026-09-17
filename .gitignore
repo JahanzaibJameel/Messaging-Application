@@ -40,6 +40,9 @@ yarn-error.*
 # server build output
 server_dist/
 
+# coverage
+coverage/
+
 app-example
 
 # generated native folders
