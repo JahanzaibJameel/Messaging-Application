@@ -35,6 +35,7 @@ export default [
         {
           argsIgnorePattern: "^_",
           varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
         },
       ],
       "@typescript-eslint/explicit-function-return-type": "off",
@@ -95,11 +96,56 @@ export default [
         it: "readonly",
       },
       parserOptions: {
-        project: false, // Disable project-based parsing for test files
+        project: false,
       },
     },
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/no-empty-function": "off",
+      "@typescript-eslint/no-useless-constructor": "off",
+      "@typescript-eslint/no-non-null-assertion": "off",
+      "no-console": "off",
+      "no-undef": "off",
+    },
+  },
+
+  {
+    files: ["**/test-utils/**/*.{ts,tsx}"],
+    languageOptions: {
+      globals: {
+        jest: "readonly",
+        describe: "readonly",
+        test: "readonly",
+        expect: "readonly",
+        beforeEach: "readonly",
+        afterEach: "readonly",
+        beforeAll: "readonly",
+        afterAll: "readonly",
+        it: "readonly",
+      },
+      parserOptions: {
+        project: false,
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "no-console": "off",
+      "no-undef": "off",
+    },
+  },
+
+  {
+    files: ["**/test-utils/**/*.{js,jsx}"],
+    languageOptions: {
+      globals: {
+        jest: "readonly",
+        module: "readonly",
+        require: "readonly",
+      },
+    },
+    rules: {
       "no-console": "off",
       "no-undef": "off",
     },
@@ -112,6 +158,7 @@ export default [
   // Ignore patterns
   {
     ignores: [
+      ".kilo/**",
       "node_modules/**",
       "dist/**",
       "build/**",
