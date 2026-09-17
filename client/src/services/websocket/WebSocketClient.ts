@@ -42,12 +42,11 @@ export class WebSocketClient {
 
   constructor(config: Omit<WebSocketConfig, "authToken"> & { authToken?: string }) {
     this.config = { ...DEFAULT_CONFIG, ...config } as WebSocketConfig;
-    this.connect();
   }
 
   // Connection Management
   connect(): void {
-    if (this.ws?.readyState === WebSocket.OPEN) {
+    if (this.ws?.readyState === WebSocket.OPEN || this.ws?.readyState === WebSocket.CONNECTING) {
       return;
     }
 
