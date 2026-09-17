@@ -67,7 +67,7 @@ describe("Logger Utility", () => {
   it("logs debug messages and adds an entry", () => {
     logger.debug("Debug message", { data: "test" }, "debug-category");
 
-    expect(mockConsole.log).toHaveBeenCalled();
+    expect(mockConsole.debug).toHaveBeenCalled();
     const entry = logger.getRecentLogs()[0];
     expect(entry).toMatchObject({
       level: LogLevel.DEBUG,
@@ -367,7 +367,7 @@ describe("Logger Utility", () => {
     userInteraction("click", "button", { id: "1" });
     security("test_event", { data: "test" });
 
-    expect(mockConsole.log).toHaveBeenCalled();
+    expect(mockConsole.debug).toHaveBeenCalled();
     expect(mockConsole.info).toHaveBeenCalled();
     expect(mockConsole.warn).toHaveBeenCalled();
     expect(mockConsole.error).toHaveBeenCalled();
