@@ -243,7 +243,9 @@ export const validateCertificate = async (domain: string): Promise<boolean> => {
 
 export const getSecureUrl = (baseUrl: string, path: string, useWebSocket = false): string => {
   const config = getSSLPinningConfig();
-  const domain = useWebSocket ? config.wsDomain : config.domain;
+  const domain = (baseUrl || (useWebSocket ? config.wsDomain : config.domain))
+    .replace(/^(?:https?|wss?):\/\//i, "")
+    .replace(/\/+$/, "");
   const protocol = useWebSocket ? "wss://" : "https://";
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
 
@@ -251,7 +253,8 @@ export const getSecureUrl = (baseUrl: string, path: string, useWebSocket = false
     return `${protocol}${domain}${cleanPath}`;
   }
 
-  if (domain.includes("localhost") || domain.includes("127.0.0.1")) {
+  const hostname = new URL(`${protocol}${domain}`).hostname;
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
     const devProtocol = useWebSocket ? "ws://" : "http://";
     return `${devProtocol}${domain}${cleanPath}`;
   }
