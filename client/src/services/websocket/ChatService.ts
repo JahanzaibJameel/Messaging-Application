@@ -14,14 +14,26 @@ import type { Message } from "@/domain/entities/Message";
 
 let isInitialized = false;
 let isConnecting = false;
+let initializationVersion = 0;
 
 export async function initializeChatService(): Promise<void> {
   if (isInitialized || isConnecting) return;
 
+  const { currentUser, isAuthenticated } = useAuthStore.getState();
+  if (!currentUser || !isAuthenticated) return;
+
+  const version = initializationVersion;
   isConnecting = true;
 
   try {
     const { accessToken } = await getToken();
+    const auth = useAuthStore.getState();
+    if (
+      version !== initializationVersion ||
+      !auth.isAuthenticated ||
+      auth.currentUser?.id !== currentUser.id
+    )
+      return;
     if (!accessToken) {
       logger.warn("No auth token available for chat service", "ChatService");
       isConnecting = false;
@@ -39,11 +51,13 @@ export async function initializeChatService(): Promise<void> {
   } catch (error) {
     logger.error("Failed to initialize chat service", error as Error, "ChatService");
   } finally {
-    isConnecting = false;
+    if (version === initializationVersion) isConnecting = false;
   }
 }
 
 export function disconnectChatService(): void {
+  initializationVersion++;
+  isConnecting = false;
   const wsClient = getWebSocketClient();
   wsClient.disconnect();
   resetMessageHandler();
@@ -111,6 +125,7 @@ export function getConnectionStatus():
 }
 
 export function resetChatService(): void {
+  initializationVersion++;
   resetWebSocketClient();
   resetMessageHandler();
   isInitialized = false;
@@ -119,22 +134,34 @@ export function resetChatService(): void {
 
 // Hook for React components
 export function useChatService(chatId: string | null) {
-  const { currentUser } = useAuthStore();
+  const { currentUser, isAuthenticated } = useAuthStore();
   const { getMessagesByChatId, addMessage, updateMessage, deleteMessage, setReplyingTo } =
     useMessageStore();
   const { markChatAsRead } = useChatStore();
+  const [connected, setConnected] = React.useState(false);
+  const userId = currentUser?.id;
 
   // Join/leave chat when chatId changes
   React.useEffect(() => {
-    if (!chatId || !currentUser) return;
+    if (!userId || !isAuthenticated) {
+      setConnected(false);
+      disconnectChatService();
+      return;
+    }
 
-    joinChat(chatId);
-    markChatAsRead(chatId);
+    const wsClient = getWebSocketClient();
+    const unsubscribe = wsClient.onStatusChange((status) => {
+      setConnected(status === "connected");
+      if (status === "connected" && chatId) joinChat(chatId);
+    });
+    void initializeChatService();
+    if (chatId) markChatAsRead(chatId);
 
     return () => {
-      leaveChat(chatId);
+      unsubscribe();
+      if (chatId) leaveChat(chatId);
     };
-  }, [chatId, currentUser, markChatAsRead]);
+  }, [chatId, userId, isAuthenticated, markChatAsRead]);
 
   const sendMessage = React.useCallback(
     (text: string, replyTo?: string) => {
@@ -173,7 +200,7 @@ export function useChatService(chatId: string | null) {
   );
 
   return {
-    isConnected: isConnected(),
+    isConnected: isAuthenticated && !!userId && connected,
     sendMessage,
     sendTyping: (chatId: string) => {
       sendTypingIndicator(chatId, true);
