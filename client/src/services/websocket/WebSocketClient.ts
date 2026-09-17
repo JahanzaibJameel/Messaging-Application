@@ -38,9 +38,11 @@ export class WebSocketClient {
   private messageHandlers: Map<string, Set<(payload: unknown) => void>> = new Map();
   private statusHandlers: Set<(status: WebSocketStatus) => void> = new Set();
   private status: WebSocketStatus = "disconnected";
+  private _connected = false;
 
   constructor(config: Omit<WebSocketConfig, "authToken"> & { authToken?: string }) {
     this.config = { ...DEFAULT_CONFIG, ...config } as WebSocketConfig;
+    this.connect();
   }
 
   // Connection Management
