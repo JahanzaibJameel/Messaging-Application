@@ -9,7 +9,7 @@
 [![Coverage](https://img.shields.io/badge/Coverage-85%25-brightgreen)](coverage)
 [![Security](https://img.shields.io/badge/Security-Approved-green)](SECURITY.md)
 
-## Overview
+## Overview 
 
 Enterprise-grade WhatsApp-style messaging app built with **Clean Architecture**, **offline-first sync**, and **premium UI**. This repo showcases a production-ready mobile platform that supports real-time communication, advanced state management, and enterprise security features.
 
