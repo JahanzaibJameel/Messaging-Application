@@ -1,6 +1,5 @@
 # Messaging Application
 
-![CI Status](https://github.com/YOUR_ORG/Messaging-Application/workflows/Build/badge.svg)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
 [![React Native](https://img.shields.io/badge/React%20Native-0.81.5-61DAFB)](https://reactnative.dev/)
