@@ -1,0 +1,1 @@
+"C:\nvm4w\nodejs\node.exe" "D:\reactnative\Messaging-Application\install.ts"
