@@ -1,6 +1,6 @@
 name: CD Pipeline
 
-on:
+"on":
   push:
     branches: [ main ]
   workflow_dispatch:
@@ -83,25 +83,25 @@ jobs:
             echo "Statements: $STATEMENTS%"
             
             if (( $(echo "$LINES < 85" | bc -l) )); then
-              echo "Ã¢ÂÅ’ Lines coverage $LINES% is below 85%"
+              echo "ERROR: Lines coverage $LINES% is below 85%"
               exit 1
             fi
             if (( $(echo "$BRANCHES < 85" | bc -l) )); then
-              echo "Ã¢ÂÅ’ Branches coverage $BRANCHES% is below 85%"
+              echo "ERROR: Branches coverage $BRANCHES% is below 85%"
               exit 1
             fi
             if (( $(echo "$FUNCTIONS < 85" | bc -l) )); then
-              echo "Ã¢ÂÅ’ Functions coverage $FUNCTIONS% is below 85%"
+              echo "ERROR: Functions coverage $FUNCTIONS% is below 85%"
               exit 1
             fi
             if (( $(echo "$STATEMENTS < 85" | bc -l) )); then
-              echo "Ã¢ÂÅ’ Statements coverage $STATEMENTS% is below 85%"
+              echo "ERROR: Statements coverage $STATEMENTS% is below 85%"
               exit 1
             fi
             
-            echo "Ã¢Å“â€¦ All coverage thresholds met (Ã¢â€°Â¥85%)"
+            echo "PASS: All coverage thresholds met (85%)"
           else
-            echo "Ã¢ÂÅ’ Coverage file not found"
+            echo "ERROR: Coverage file not found"
             exit 1
           fi
 
@@ -114,15 +114,15 @@ jobs:
           rm -rf dist
           npx expo export --platform web
           if [ ! -d dist ]; then
-            echo "âŒ expo export did not produce a dist/ directory"
+            echo "ERROR: expo export did not produce a dist/ directory"
             exit 1
           fi
           BUNDLE_SIZE=$(du -sk dist | cut -f1)
           if [ "$BUNDLE_SIZE" -gt "12288" ]; then
-            echo "âŒ Expo web export size ${BUNDLE_SIZE}KB exceeds limit of 12288KB"
+            echo "ERROR: Expo web export size ${BUNDLE_SIZE}KB exceeds limit of 12288KB"
             exit 1
           else
-            echo "âœ… Expo web export size ${BUNDLE_SIZE}KB is within limit of 12288KB"
+            echo "PASS: Expo web export size ${BUNDLE_SIZE}KB is within limit of 12288KB"
           fi
 
       - name: Check for console.log in production code
@@ -449,7 +449,7 @@ jobs:
     steps:
       - name: Rollback deployment
         run: |
-          echo "Ã°Å¸Å¡Â¨ Deployment failed, initiating rollback..."
+          echo "ERROR: Deployment failed, initiating rollback..."
           echo "Failed jobs:"
           echo "- CI Checks: ${{ needs.ci-checks.result }}"
           echo "- Sentry Release: ${{ needs.sentry-release.result }}"
@@ -472,6 +472,6 @@ jobs:
         if: env.SLACK_WEBHOOK_URL != ''
         with:
           status: 'failure'
-          text: 'Ã°Å¸Å¡Â¨ Deployment failed and rollback initiated for version ${{ needs.sentry-release.outputs.release-version }}'
+          text: 'Deployment failed and rollback initiated for version ${{ needs.sentry-release.outputs.release-version }}'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
