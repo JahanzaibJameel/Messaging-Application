@@ -1,6 +1,6 @@
 name: CI Pipeline
 
-on:
+"on":
   pull_request:
     branches: [ main, develop ]
 
@@ -165,25 +165,25 @@ jobs:
             
             # Fail if any metric is below 85%
             if (( $(echo "$LINES < 85" | bc -l) )); then
-              echo "âŒ Lines coverage $LINES% is below 85%"
+              echo "FAIL: Lines coverage $LINES% is below 85%"
               exit 1
             fi
             if (( $(echo "$BRANCHES < 85" | bc -l) )); then
-              echo "âŒ Branches coverage $BRANCHES% is below 85%"
+              echo "FAIL: Branches coverage $BRANCHES% is below 85%"
               exit 1
             fi
             if (( $(echo "$FUNCTIONS < 85" | bc -l) )); then
-              echo "âŒ Functions coverage $FUNCTIONS% is below 85%"
+              echo "FAIL: Functions coverage $FUNCTIONS% is below 85%"
               exit 1
             fi
             if (( $(echo "$STATEMENTS < 85" | bc -l) )); then
-              echo "âŒ Statements coverage $STATEMENTS% is below 85%"
+              echo "FAIL: Statements coverage $STATEMENTS% is below 85%"
               exit 1
             fi
             
-            echo "âœ… All coverage thresholds met (â‰¥85%)"
+            echo "PASS: All coverage thresholds met (85%)"
           else
-            echo "âŒ Coverage file not found"
+            echo "FAIL: Coverage file not found"
             exit 1
           fi
 
@@ -234,7 +234,7 @@ jobs:
           rm -rf dist
           npx expo export --platform web
           if [ ! -d dist ]; then
-            echo "âŒ expo export did not produce a dist/ directory"
+            echo "FAIL: expo export did not produce a dist/ directory"
             exit 1
           fi
           BUNDLE_SIZE_KB=$(du -sk dist | cut -f1)
@@ -244,10 +244,10 @@ jobs:
         run: |
           BUNDLE_SIZE=$(du -sk dist | cut -f1)
           if [ "$BUNDLE_SIZE" -gt "${{ env.BUNDLE_SIZE_LIMIT }}" ]; then
-            echo "âŒ Expo web export size ${BUNDLE_SIZE}KB exceeds limit of ${{ env.BUNDLE_SIZE_LIMIT }}KB"
+            echo "FAIL: Expo web export size ${BUNDLE_SIZE}KB exceeds limit of ${{ env.BUNDLE_SIZE_LIMIT }}KB"
             exit 1
           else
-            echo "âœ… Expo web export size ${BUNDLE_SIZE}KB is within limit of ${{ env.BUNDLE_SIZE_LIMIT }}KB"
+            echo "PASS: Expo web export size ${BUNDLE_SIZE}KB is within limit of ${{ env.BUNDLE_SIZE_LIMIT }}KB"
           fi
 
   console-check:
