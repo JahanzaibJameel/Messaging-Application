@@ -12,6 +12,7 @@ import { ChatEntity } from "@/domain/entities/Chat";
 import type { Message } from "@/domain/entities/Message";
 import type { ChatState, ChatActions, EntityState } from "./types";
 import { createSecureStorageAdapterWithKeys } from "../../lib/secureStorageAdapter";
+import { useAuthStore } from "./authStore";
 
 const STORAGE_KEYS = ["chat-storage_chats"];
 
@@ -39,7 +40,7 @@ export const useChatStore = create<ChatStore>()(
 
         setChats: (chats: Chat[]) => {
           set((state) => {
-            state.chats.ids = chats.map((c) => c.id);
+            state.chats.ids = [...new Set(chats.map((c) => c.id))];
             state.chats.entities = chats.reduce(
               (acc, chat) => {
                 acc[chat.id] = chat;
@@ -59,11 +60,11 @@ export const useChatStore = create<ChatStore>()(
           });
         },
 
-        updateChat: (chatId: string, updates: Partial<Chat>) => {
+        updateChat: (chatId: string, updates: Partial<Omit<Chat, "id">>) => {
           set((state) => {
             const chat = state.chats.entities[chatId];
             if (chat) {
-              state.chats.entities[chatId] = { ...chat, ...updates, updatedAt: new Date() };
+              state.chats.entities[chatId] = { ...chat, ...updates, id: chatId, updatedAt: new Date() };
             }
           });
         },
@@ -162,7 +163,7 @@ export const useChatStore = create<ChatStore>()(
         },
 
         createGroup: (name: string, participantIds: string[]) => {
-          const currentUserId = "currentUser"; // Get from auth store in real implementation
+          const currentUserId = useAuthStore.getState().currentUser?.id ?? "currentUser";
           const groupChat = ChatEntity.createGroup(name, participantIds, currentUserId);
 
           set((state) => {
@@ -209,8 +210,35 @@ export const useChatStore = create<ChatStore>()(
         },
       }),
       {
-        name: "chat-storage",
+        name: "chat-storage_chats",
         storage: createJSONStorage(() => secureStorage),
+        onRehydrateStorage: () => (state) => {
+          if (!state) return;
+          state.setChats(
+            state.chats.ids.map((id) => {
+              const chat = state.chats.entities[id];
+              return {
+                ...chat,
+                createdAt: new Date(chat.createdAt),
+                updatedAt: new Date(chat.updatedAt),
+                lastActivity: chat.lastActivity ? new Date(chat.lastActivity) : undefined,
+                lastMessage: chat.lastMessage
+                  ? {
+                      ...chat.lastMessage,
+                      timestamp: new Date(chat.lastMessage.timestamp),
+                      editedAt: chat.lastMessage.editedAt
+                        ? new Date(chat.lastMessage.editedAt)
+                        : undefined,
+                      reactions: chat.lastMessage.reactions.map((reaction) => ({
+                        ...reaction,
+                        createdAt: new Date(reaction.createdAt),
+                      })),
+                    }
+                  : undefined,
+              };
+            })
+          );
+        },
         partialize: (state) => ({
           chats: state.chats,
         }),
