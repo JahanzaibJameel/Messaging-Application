@@ -41,7 +41,7 @@ export interface ChatState {
 export interface ChatActions {
   setChats: (chats: Chat[]) => void;
   addChat: (chat: Chat) => void;
-  updateChat: (chatId: string, updates: Partial<Chat>) => void;
+  updateChat: (chatId: string, updates: Partial<Omit<Chat, "id">>) => void;
   removeChat: (chatId: string) => void;
   setActiveChat: (chatId: string | null) => void;
   pinChat: (chatId: string) => void;
