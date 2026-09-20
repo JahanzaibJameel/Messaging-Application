@@ -131,6 +131,7 @@
     "react-native-bundle-visualizer": "^4.0.0",
     "react-native-testing-library": "^2.2.0",
     "react-test-renderer": "19.1.0",
+    "ts-jest": "^29.4.12",
     "tsx": "^4.20.3",
     "typescript": "^5.9.2"
   },
