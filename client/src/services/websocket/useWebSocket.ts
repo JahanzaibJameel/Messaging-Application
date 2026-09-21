@@ -16,7 +16,7 @@ interface UseWebSocketOptions {
 }
 
 export function useWebSocket(options: UseWebSocketOptions = {}) {
-  const { autoConnect = true, onConnect, onDisconnect, onError } = options;
+  const { autoConnect = true, onConnect, onDisconnect } = options;
   const [status, setStatus] = useState<WebSocketStatus>("disconnected");
   const wsClientRef = useRef(getWebSocketClient());
   const messageHandlerRef = useRef(getMessageHandler(wsClientRef.current));
