@@ -23,8 +23,8 @@ export function sortChatsByLastMessage(chats: Chat[]): Chat[] {
     if (!dateA && dateB) return 1;
     if (dateA && !dateB) return -1;
     if (!dateA && !dateB) return 0;
-
     // Descending order (newest first)
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return dateB!.getTime() - dateA!.getTime();
   });
 }
