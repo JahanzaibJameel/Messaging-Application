@@ -90,7 +90,8 @@ async function getOrCreateEncryptionKey(): Promise<string> {
  */
 async function getStorage(storageId?: string): Promise<MMKV> {
   const id = storageId ?? STORAGE_ID;
-  if (_storages.has(id)) return _storages.get(id)!;
+  const existing = _storages.get(id);
+  if (existing) return existing;
 
   const encryptionKey = await getOrCreateEncryptionKey();
 
