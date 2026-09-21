@@ -107,12 +107,12 @@ jest.mock("date-fns/locale", () => ({
 
 // Mock the date helper functions
 jest.mock("../i18n/dateHelper", () => ({
-  timeAgo: jest.fn((date: Date) => "2 hours ago"),
-  formatDate: jest.fn((date: Date) => "January 1, 2023"),
-  formatTime: jest.fn((date: Date) => "3:30 PM"),
-  formatDateTime: jest.fn((date: Date) => "January 1, 2023 at 3:30 PM"),
-  getRelativeTime: jest.fn((date: Date) => "2 hours ago"),
-  formatMessageTime: jest.fn((date: Date) => "3:30 PM"),
+  timeAgo: jest.fn((_date: Date) => "2 hours ago"),
+  formatDate: jest.fn((_date: Date) => "January 1, 2023"),
+  formatTime: jest.fn((_date: Date) => "3:30 PM"),
+  formatDateTime: jest.fn((_date: Date) => "January 1, 2023 at 3:30 PM"),
+  getRelativeTime: jest.fn((_date: Date) => "2 hours ago"),
+  formatMessageTime: jest.fn((_date: Date) => "3:30 PM"),
   getCurrentLocale: jest.fn(() => ({ code: "en-US" })),
 }));
 
