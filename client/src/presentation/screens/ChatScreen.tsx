@@ -18,7 +18,6 @@ import { useTheme } from "@/hooks/useTheme";
 import { Spacing } from "@/constants/theme";
 
 import { useChatStore, useMessageStore, useUIStore, useAuthStore } from "@/presentation/stores";
-import { MessageEntity } from "@/domain/entities/Message";
 import type { Message } from "@/domain/entities/Message";
 import type { GroupChat } from "@/domain/entities/Chat";
 import type { ChatNavProp, ChatRouteProp } from "@/navigation/types";
@@ -29,7 +28,7 @@ interface Props {
 }
 
 export default function ChatScreen({ navigation, route }: Props) {
-  const { chatId, participantId, isGroup } = route.params;
+  const { chatId, isGroup } = route.params;
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const { theme } = useTheme();
@@ -108,19 +107,11 @@ export default function ChatScreen({ navigation, route }: Props) {
     (text: string) => {
       if (!currentUser) return;
 
-      const message = MessageEntity.create({
-        chatId,
-        senderId: currentUser.id,
-        type: "text",
-        text,
-        replyTo: replyingTo?.id,
-      });
-
       sendMessage(text, replyingTo?.id);
 
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     },
-    [chatId, currentUser, replyingTo, sendMessage]
+    [currentUser, replyingTo, sendMessage]
   );
 
   const handleLongPress = useCallback((message: Message) => {
@@ -145,11 +136,9 @@ export default function ChatScreen({ navigation, route }: Props) {
   const handleDelete = useCallback(() => {
     if (selectedMessage) {
       deleteMessage(selectedMessage.id);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      showToast({ type: "success", message: "Message deleted", duration: 1500 });
     }
     setShowActionSheet(false);
-  }, [selectedMessage, deleteMessage, showToast]);
+  }, [selectedMessage, deleteMessage]);
 
   const getReplyToMessage = useCallback(
     (replyToId?: string) => {
