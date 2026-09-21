@@ -49,7 +49,7 @@ function authenticateToken(req: Request, res: Response, next: NextFunction): voi
     return;
   }
 
-  (req as Record<string, unknown>).user = decoded;
+  (req as unknown as Record<string, unknown>).user = decoded;
   next();
 }
 
@@ -94,7 +94,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/auth/me", authenticateToken, async (req, res) => {
     try {
-      const user = (req as Record<string, unknown>).user as { userId: string };
+      const user = (req as unknown as Record<string, unknown>).user as { userId: string };
       const storedUser = await storage.getUser(user.userId);
       if (!storedUser) {
         res.status(404).json({ error: "User not found" });
@@ -116,18 +116,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { name, participantIds, type } = result.data;
-      const userId = (req as Record<string, unknown>).user as { userId: string };
+      const userId = (req as unknown as Record<string, unknown>).user as { userId: string };
 
       const chat = await storage.createChat({
-        id: randomUUID(),
-        name,
+        name: name ?? null,
         type,
         participantIds:
           type === "group"
             ? [userId.userId, ...participantIds]
             : [userId.userId, participantIds[0]],
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       res.json({ success: true, data: chat });
@@ -139,8 +136,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/chats", authenticateToken, async (req, res) => {
     try {
-      const userId = (req as Record<string, unknown>).user as { userId: string };
-      const chats = await storage.getChat(userId.userId);
+      const userId = (req as unknown as Record<string, unknown>).user as { userId: string };
+      const chats = await storage.getUserChats(userId.userId);
       res.json({ success: true, data: chats });
     } catch (error) {
       console.error("Get chats error:", error);
@@ -150,7 +147,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/chats/:chatId/messages", authenticateToken, async (req, res) => {
     try {
-      const { chatId } = req.params;
+      const chatId = req.params.chatId as string;
       const messages = await storage.getMessages(chatId);
       res.json({ success: true, data: messages });
     } catch (error) {
@@ -168,17 +165,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { chatId, content, type } = result.data;
-      const userId = (req as Record<string, unknown>).user as { userId: string };
+      const userId = (req as unknown as Record<string, unknown>).user as { userId: string };
 
       const message = await storage.createMessage({
-        id: randomUUID(),
         chatId,
         senderId: userId.userId,
         content,
         type,
         status: "sent",
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       res.json({ success: true, data: message });
@@ -190,7 +184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/chats/:chatId/participants", authenticateToken, async (req, res) => {
     try {
-      const { chatId } = req.params;
+      const chatId = req.params.chatId as string;
       const participants = await storage.getParticipants(chatId);
       res.json({ success: true, data: participants });
     } catch (error) {
@@ -201,7 +195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/chats/:chatId/participants", authenticateToken, async (req, res) => {
     try {
-      const { chatId } = req.params;
+      const chatId = req.params.chatId as string;
       const { userId } = req.body;
       await storage.addParticipant(chatId, userId);
       res.json({ success: true });
