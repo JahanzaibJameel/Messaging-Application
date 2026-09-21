@@ -48,7 +48,7 @@ export default function ChatListScreen({ navigation }: Props) {
   const { t } = useTranslation();
 
   const { getSortedChats, isLoading } = useChatStore();
-  const { searchQuery, showSearch, setSearchQuery, setShowSearch } = useUIStore();
+  const { searchQuery, showSearch, setSearchQuery } = useUIStore();
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -67,15 +67,18 @@ export default function ChatListScreen({ navigation }: Props) {
     setTimeout(() => setRefreshing(false), 1000);
   }, []);
 
-  const handleChatPress = (chat: Chat | GroupChat) => {
-    if (isGroupChat(chat)) {
-      navigation.navigate("Chat", { chatId: chat.id, participantId: "", isGroup: true });
-    } else {
-      const other =
-        chat.participantIds.find((id) => id !== "currentUser") ?? chat.participantIds[0] ?? "";
-      navigation.navigate("Chat", { chatId: chat.id, participantId: other });
-    }
-  };
+  const handleChatPress = useCallback(
+    (chat: Chat | GroupChat) => {
+      if (isGroupChat(chat)) {
+        navigation.navigate("Chat", { chatId: chat.id, participantId: "", isGroup: true });
+      } else {
+        const other =
+          chat.participantIds.find((id) => id !== "currentUser") ?? chat.participantIds[0] ?? "";
+        navigation.navigate("Chat", { chatId: chat.id, participantId: other });
+      }
+    },
+    [navigation]
+  );
 
   const renderItem = useCallback(
     ({ item, index }: { item: Chat | GroupChat; index: number }) => {
@@ -149,7 +152,7 @@ export default function ChatListScreen({ navigation }: Props) {
         </Animated.View>
       );
     },
-    [theme, t]
+    [theme, t, handleChatPress]
   );
 
   if (isLoading) {
