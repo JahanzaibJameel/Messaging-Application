@@ -64,7 +64,12 @@ export const useChatStore = create<ChatStore>()(
           set((state) => {
             const chat = state.chats.entities[chatId];
             if (chat) {
-              state.chats.entities[chatId] = { ...chat, ...updates, id: chatId, updatedAt: new Date() };
+              state.chats.entities[chatId] = {
+                ...chat,
+                ...updates,
+                id: chatId,
+                updatedAt: new Date(),
+              };
             }
           });
         },
