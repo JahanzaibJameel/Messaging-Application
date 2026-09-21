@@ -74,6 +74,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
     }, toast.duration ?? 3000);
 
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reduceMotion]);
 
   const handleDismiss = () => {
