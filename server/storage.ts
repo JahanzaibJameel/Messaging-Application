@@ -1,21 +1,32 @@
 import {
   type User,
   type InsertUser,
-  type Chat,
+  type Chat as BaseChat,
   type Message,
   type ChatParticipant,
 } from "../shared/schema";
 import { randomUUID } from "crypto";
+
+type Chat = BaseChat & {
+  participantIds: string[];
+  type: "private" | "group";
+  status?: "sent" | "delivered" | "read";
+};
+
+type ChatMessage = Message & {
+  type: "text" | "image" | "video" | "audio" | "document";
+  status: "sent" | "delivered" | "read";
+};
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   getChat(id: string): Promise<Chat | undefined>;
-  getChat(userId: string): Promise<Chat[]>;
+  getUserChats(userId: string): Promise<Chat[]>;
   createChat(chat: Omit<Chat, "id" | "createdAt" | "updatedAt">): Promise<Chat>;
-  getMessages(chatId: string): Promise<Message[]>;
-  createMessage(message: Omit<Message, "id" | "createdAt" | "updatedAt">): Promise<Message>;
+  createMessage(message: Omit<ChatMessage, "id" | "createdAt" | "updatedAt">): Promise<ChatMessage>;
+  getMessages(chatId: string): Promise<ChatMessage[]>;
   addParticipant(chatId: string, userId: string): Promise<void>;
   getParticipants(chatId: string): Promise<string[]>;
 }
@@ -23,7 +34,7 @@ export interface IStorage {
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private chats: Map<string, Chat>;
-  private messages: Map<string, Message>;
+  private messages: Map<string, ChatMessage>;
   private participants: Map<string, Set<string>>;
 
   constructor() {
@@ -52,10 +63,6 @@ export class MemStorage implements IStorage {
     return this.chats.get(id);
   }
 
-  async getChat(userId: string): Promise<Chat[]> {
-    return Array.from(this.chats.values()).filter((chat) => chat.participantIds.includes(userId));
-  }
-
   async createChat(chat: Omit<Chat, "id" | "createdAt" | "updatedAt">): Promise<Chat> {
     const id = randomUUID();
     const now = new Date();
@@ -64,14 +71,20 @@ export class MemStorage implements IStorage {
     return fullChat;
   }
 
-  async getMessages(chatId: string): Promise<Message[]> {
+  async getUserChats(userId: string): Promise<Chat[]> {
+    return Array.from(this.chats.values()).filter((chat) => chat.participantIds.includes(userId));
+  }
+
+  async getMessages(chatId: string): Promise<ChatMessage[]> {
     return Array.from(this.messages.values()).filter((m) => m.chatId === chatId);
   }
 
-  async createMessage(message: Omit<Message, "id" | "createdAt" | "updatedAt">): Promise<Message> {
+  async createMessage(
+    message: Omit<ChatMessage, "id" | "createdAt" | "updatedAt">
+  ): Promise<ChatMessage> {
     const id = randomUUID();
     const now = new Date();
-    const fullMessage: Message = { ...message, id, createdAt: now, updatedAt: now };
+    const fullMessage: ChatMessage = { ...message, id, createdAt: now, updatedAt: now };
     this.messages.set(id, fullMessage);
     return fullMessage;
   }
