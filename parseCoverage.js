@@ -1,5 +1,4 @@
 const fs = require("fs");
-const path = require("path");
 
 // Read LCOV file
 const lcovContent = fs.readFileSync(
