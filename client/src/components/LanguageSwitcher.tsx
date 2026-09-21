@@ -1,5 +1,5 @@
 import React from "react";
-import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
+import { View, TouchableOpacity, Text, StyleSheet, StyleProp, ViewStyle } from "react-native";
 import { useTranslation } from "react-i18next";
 import { applyRTL } from "../i18n/rtl";
 
@@ -7,7 +7,7 @@ interface LanguageSwitcherProps {
   /** Whether to show the switcher (development only) */
   show?: boolean;
   /** Custom styles */
-  style?: any;
+  style?: StyleProp<ViewStyle>;
 }
 
 const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ show = __DEV__, style }) => {
