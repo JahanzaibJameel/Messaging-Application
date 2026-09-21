@@ -10,3 +10,8 @@ out/
 *.log
 *.tgz
 .DS_Store
+.kilo/
+.upm/
+.vscode/
+server_dist/
+coverage/
