@@ -85,18 +85,18 @@ export interface Message {
 }
 
 export interface MessageContent {
-  type: 'text' | 'image' | 'video' | 'audio' | 'document';
+  type: "text" | "image" | "video" | "audio" | "document";
   text?: string;
   uri?: string;
   metadata?: Record<string, unknown>;
 }
 
 export enum MessageStatus {
-  SENDING = 'sending',
-  SENT = 'sent',
-  DELIVERED = 'delivered',
-  READ = 'read',
-  FAILED = 'failed'
+  SENDING = "sending",
+  SENT = "sent",
+  DELIVERED = "delivered",
+  READ = "read",
+  FAILED = "failed",
 }
 ```
 
@@ -106,7 +106,7 @@ export enum MessageStatus {
 // client/src/domain/repositories/MessageRepository.ts
 export interface MessageRepository {
   getMessages(chatId: string, limit?: number): Promise<Message[]>;
-  sendMessage(message: Omit<Message, 'id' | 'timestamp'>): Promise<Message>;
+  sendMessage(message: Omit<Message, "id" | "timestamp">): Promise<Message>;
   updateMessageStatus(messageId: string, status: MessageStatus): Promise<void>;
   deleteMessage(messageId: string): Promise<void>;
   searchMessages(query: string, chatId?: string): Promise<Message[]>;
@@ -123,13 +123,13 @@ export class SendMessageUseCase {
     private syncEngine: SyncEngine
   ) {}
 
-  async execute(messageData: Omit<Message, 'id' | 'timestamp'>): Promise<Message> {
+  async execute(messageData: Omit<Message, "id" | "timestamp">): Promise<Message> {
     // Business logic for sending messages
     const message: Message = {
       ...messageData,
       id: generateId(),
       timestamp: new Date(),
-      status: MessageStatus.SENDING
+      status: MessageStatus.SENDING,
     };
 
     // Queue for sync if offline
@@ -171,7 +171,7 @@ export class MessageRepositoryImpl implements MessageRepository {
     }
   }
 
-  async sendMessage(message: Omit<Message, 'id' | 'timestamp'>): Promise<Message> {
+  async sendMessage(message: Omit<Message, "id" | "timestamp">): Promise<Message> {
     const createdMessage = await this.remoteDataSource.sendMessage(message);
     await this.localDataSource.saveMessage(createdMessage);
     return createdMessage;
@@ -212,7 +212,9 @@ export const useChatStore = create<ChatState & ChatActions>()(
 
       // Actions
       loadChats: async () => {
-        set((state) => { state.isLoading = true; });
+        set((state) => {
+          state.isLoading = true;
+        });
         try {
           const chats = await chatRepository.getChats();
           set((state) => {
@@ -235,13 +237,15 @@ export const useChatStore = create<ChatState & ChatActions>()(
           await messageRepository.sendMessage({
             chatId: activeChatId,
             senderId: getCurrentUserId(),
-            content: { type: 'text', text: content },
-            status: MessageStatus.SENDING
+            content: { type: "text", text: content },
+            status: MessageStatus.SENDING,
           });
         } catch (error) {
-          set((state) => { state.error = error.message; });
+          set((state) => {
+            state.error = error.message;
+          });
         }
-      }
+      },
     }))
   )
 );
@@ -325,7 +329,7 @@ export class SyncEngine {
 
   async queueMessage(message: Message): Promise<void> {
     await this.messageQueue.enqueue(message);
-    
+
     if (this.isOnline()) {
       await this.processQueue();
     }
@@ -333,7 +337,7 @@ export class SyncEngine {
 
   async processQueue(): Promise<void> {
     const messages = await this.messageQueue.getQueued();
-    
+
     for (const message of messages) {
       try {
         await this.sendMessage(message);
@@ -347,7 +351,7 @@ export class SyncEngine {
 
   private async handleRetry(message: Message, error: Error): Promise<void> {
     const retryCount = await this.messageQueue.getRetryCount(message.id);
-    
+
     if (retryCount < MAX_RETRIES) {
       const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff
       setTimeout(() => this.queueMessage(message), delay);
@@ -365,12 +369,9 @@ export class SyncEngine {
 ```typescript
 // client/src/core/sync/ConflictResolver.ts
 export class ConflictResolver {
-  async resolveConflicts(
-    localMessages: Message[],
-    remoteMessages: Message[]
-  ): Promise<Message[]> {
+  async resolveConflicts(localMessages: Message[], remoteMessages: Message[]): Promise<Message[]> {
     const conflicts = this.detectConflicts(localMessages, remoteMessages);
-    
+
     return Promise.all(
       conflicts.map(async (conflict) => {
         // Last Write Wins strategy with timestamp comparison
@@ -381,10 +382,7 @@ export class ConflictResolver {
     );
   }
 
-  private detectConflicts(
-    local: Message[],
-    remote: Message[]
-  ): Conflict[] {
+  private detectConflicts(local: Message[], remote: Message[]): Conflict[] {
     // Implementation for detecting conflicting messages
     return [];
   }
@@ -418,8 +416,8 @@ class ServiceLocator {
 export const serviceLocator = new ServiceLocator();
 
 // Registration
-serviceLocator.register('messageRepository', new MessageRepositoryImpl());
-serviceLocator.register('syncEngine', new SyncEngine());
+serviceLocator.register("messageRepository", new MessageRepositoryImpl());
+serviceLocator.register("syncEngine", new SyncEngine());
 ```
 
 ### Future Plans: Constructor Injection
@@ -440,7 +438,7 @@ export class ChatService {
   async sendMessage(content: string): Promise<void> {
     // Use injected dependencies
     await this.deps.syncEngine.queueMessage({
-      content: { type: 'text', text: content },
+      content: { type: "text", text: content },
       // ... other properties
     });
   }
@@ -467,8 +465,8 @@ export class SecurityManager {
 
   async storeSecureData(key: string, data: string): Promise<void> {
     // Check device security first
-    if (!await this.deviceSecurity.isSecure()) {
-      throw new SecurityError('Device is not secure');
+    if (!(await this.deviceSecurity.isSecure())) {
+      throw new SecurityError("Device is not secure");
     }
 
     // Encrypt and store in keychain
@@ -489,15 +487,13 @@ export class SecurityManager {
 // client/src/security/sslPinningConfig.ts
 export const SSL_PINNING_CONFIG = {
   // Production certificates
-  'api.chatapp.com': [
-    'sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
-    'sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB='
+  "api.chatapp.com": [
+    "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+    "sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=",
   ],
-  
+
   // Development certificates
-  'dev-api.chatapp.com': [
-    'sha256/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC='
-  ]
+  "dev-api.chatapp.com": ["sha256/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC="],
 };
 
 export class SSLPinningService {
@@ -583,21 +579,21 @@ export const SmoothMessageAnimation: React.FC<{ children: React.ReactNode }> = (
 
 ```typescript
 // client/src/bundle/lazyLoading.ts
-export const LazyChatScreen = lazy(() => 
-  import('../screens/ChatScreen').then(module => ({
-    default: module.ChatScreen
+export const LazyChatScreen = lazy(() =>
+  import("../screens/ChatScreen").then((module) => ({
+    default: module.ChatScreen,
   }))
 );
 
 export const LazySettingsScreen = lazy(() =>
-  import('../screens/SettingsScreen').then(module => ({
-    default: module.SettingsScreen
+  import("../screens/SettingsScreen").then((module) => ({
+    default: module.SettingsScreen,
   }))
 );
 
 // Dynamic imports for heavy dependencies
 export const loadHeavyFeature = async () => {
-  const { HeavyFeature } = await import('../features/HeavyFeature');
+  const { HeavyFeature } = await import("../features/HeavyFeature");
   return HeavyFeature;
 };
 ```
@@ -623,7 +619,7 @@ export const loadHeavyFeature = async () => {
 
 ```typescript
 // client/src/domain/__tests__/SendMessageUseCase.test.ts
-describe('SendMessageUseCase', () => {
+describe("SendMessageUseCase", () => {
   let useCase: SendMessageUseCase;
   let mockMessageRepository: jest.Mocked<MessageRepository>;
   let mockSyncEngine: jest.Mocked<SyncEngine>;
@@ -634,7 +630,7 @@ describe('SendMessageUseCase', () => {
     useCase = new SendMessageUseCase(mockMessageRepository, mockSyncEngine);
   });
 
-  it('should send message immediately when online', async () => {
+  it("should send message immediately when online", async () => {
     // Arrange
     const messageData = createMockMessageData();
     mockSyncEngine.isOnline.mockReturnValue(true);
@@ -651,7 +647,7 @@ describe('SendMessageUseCase', () => {
     expect(mockSyncEngine.queueMessage).not.toHaveBeenCalled();
   });
 
-  it('should queue message when offline', async () => {
+  it("should queue message when offline", async () => {
     // Arrange
     const messageData = createMockMessageData();
     mockSyncEngine.isOnline.mockReturnValue(false);
@@ -663,7 +659,7 @@ describe('SendMessageUseCase', () => {
     expect(mockSyncEngine.queueMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         ...messageData,
-        status: MessageStatus.SENDING
+        status: MessageStatus.SENDING,
       })
     );
   });
@@ -695,13 +691,13 @@ describe('MessageItem', () => {
     const onPress = jest.fn();
     const message = createMockMessage();
 
-    const { getByTestId } = renderMessageItem({ 
-      message, 
-      onPress 
+    const { getByTestId } = renderMessageItem({
+      message,
+      onPress
     });
 
     fireEvent.press(getByTestId('message-item'));
-    
+
     expect(onPress).toHaveBeenCalledWith(message.id);
   });
 
@@ -725,33 +721,31 @@ describe('MessageItem', () => {
 
 ```typescript
 // client/src/i18n/index.ts
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
-import { getLocales } from 'expo-localization';
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
+import { getLocales } from "expo-localization";
 
 const resources = {
   en: {
-    translation: require('./locales/en.json'),
+    translation: require("./locales/en.json"),
   },
   es: {
-    translation: require('./locales/es.json'),
+    translation: require("./locales/es.json"),
   },
   // ... other languages
 };
 
-i18n
-  .use(initReactI18next)
-  .init({
-    resources,
-    lng: getLocales()[0]?.languageCode || 'en',
-    fallbackLng: 'en',
-    interpolation: {
-      escapeValue: false,
-    },
-    react: {
-      useSuspense: false,
-    },
-  });
+i18n.use(initReactI18next).init({
+  resources,
+  lng: getLocales()[0]?.languageCode || "en",
+  fallbackLng: "en",
+  interpolation: {
+    escapeValue: false,
+  },
+  react: {
+    useSuspense: false,
+  },
+});
 
 export default i18n;
 ```
@@ -766,7 +760,7 @@ export const rtlStyles = {
     marginLeft: isRTL ? margin : 0,
     marginRight: isRTL ? 0 : margin,
   }),
-  
+
   flipPadding: (padding: number) => ({
     paddingLeft: isRTL ? padding : 0,
     paddingRight: isRTL ? 0 : padding,
@@ -776,8 +770,8 @@ export const rtlStyles = {
 // Usage in components
 const MessageBubble = styled.View`
   ${rtlStyles.flipMargin(16)};
-  background-color: ${({ isOwn }) => isOwn ? '#007AFF' : '#E5E5EA'};
-  align-self: ${({ isOwn }) => isOwn ? 'flex-end' : 'flex-start'};
+  background-color: ${({ isOwn }) => (isOwn ? "#007AFF" : "#E5E5EA")};
+  align-self: ${({ isOwn }) => (isOwn ? "flex-end" : "flex-start")};
 `;
 ```
 
@@ -793,7 +787,7 @@ interface FeatureFlag {
   description: string;
   defaultValue: boolean;
   rolloutPercentage?: number;
-  category: 'ui' | 'functionality' | 'experimental' | 'performance';
+  category: "ui" | "functionality" | "experimental" | "performance";
 }
 
 interface FeatureFlagsState {
@@ -812,7 +806,7 @@ export const useFeatureFlagsStore = create<FeatureFlagsState & FeatureFlagAction
 
         isFlagEnabled: (key: string) => {
           const { flags, overrides } = get();
-          
+
           // Check for developer override first
           if (overrides[key] !== undefined) {
             return overrides[key];
@@ -829,18 +823,18 @@ export const useFeatureFlagsStore = create<FeatureFlagsState & FeatureFlagAction
 
         setFlag: (key: string, value: boolean) => {
           set((state) => ({
-            flags: { ...state.flags, [key]: value }
+            flags: { ...state.flags, [key]: value },
           }));
         },
 
         setOverride: (key: string, value: boolean) => {
           set((state) => ({
-            overrides: { ...state.overrides, [key]: value }
+            overrides: { ...state.overrides, [key]: value },
           }));
-        }
+        },
       }),
       {
-        name: 'feature-flags',
+        name: "feature-flags",
         storage: createJSONStorage(() => MMKV),
       }
     )
@@ -863,7 +857,7 @@ const createHash = (input: string): number => {
   let hash = 0;
   for (let i = 0; i < input.length; i++) {
     const char = input.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash; // Convert to 32-bit integer
   }
   return Math.abs(hash);
@@ -876,12 +870,12 @@ const createHash = (input: string): number => {
 
 ```typescript
 // client/src/monitoring/sentry.ts
-import * as Sentry from '@sentry/react-native';
+import * as Sentry from "@sentry/react-native";
 
 export const initializeSentry = () => {
   Sentry.init({
     dsn: Config.SENTRY_DSN,
-    environment: __DEV__ ? 'development' : 'production',
+    environment: __DEV__ ? "development" : "production",
     enableAutoSessionTracking: true,
     tracesSampleRate: 0.1,
     beforeSend: (event) => {
@@ -891,9 +885,9 @@ export const initializeSentry = () => {
           exception.stacktrace?.frames?.forEach((frame) => {
             // Remove sensitive data from stack traces
             frame.vars = Object.fromEntries(
-              Object.entries(frame.vars || {}).filter(([key]) => 
-                !key.toLowerCase().includes('password') &&
-                !key.toLowerCase().includes('token')
+              Object.entries(frame.vars || {}).filter(
+                ([key]) =>
+                  !key.toLowerCase().includes("password") && !key.toLowerCase().includes("token")
               )
             );
           });
@@ -907,7 +901,7 @@ export const initializeSentry = () => {
 export const addBreadcrumb = (
   message: string,
   category: string,
-  level: Sentry.Severity = 'info'
+  level: Sentry.Severity = "info"
 ) => {
   Sentry.addBreadcrumb({
     message,
@@ -993,14 +987,14 @@ quality_gates:
   coverage:
     minimum: 85
     critical_files: 90
-    
+
   bundle_size:
     maximum: 1536 # 1.5MB in KB
-    
+
   security:
     audit_level: high
     ssl_pinning: required
-    
+
   performance:
     max_load_time: 3000ms
     memory_limit: 150MB
@@ -1011,7 +1005,7 @@ quality_gates:
 ```typescript
 // client/src/scripts/deployment.ts
 export interface DeploymentConfig {
-  environment: 'staging' | 'production';
+  environment: "staging" | "production";
   version: string;
   buildNumber: string;
   sentryRelease: string;
@@ -1020,22 +1014,18 @@ export interface DeploymentConfig {
 export const createDeployment = async (config: DeploymentConfig) => {
   // Create Sentry release
   await createSentryRelease(config.sentryRelease);
-  
+
   // Build applications
-  const builds = await Promise.all([
-    buildIOS(config),
-    buildAndroid(config),
-    buildWeb(config)
-  ]);
-  
+  const builds = await Promise.all([buildIOS(config), buildAndroid(config), buildWeb(config)]);
+
   // Upload source maps
   await uploadSourceMaps(config.sentryRelease);
-  
+
   // Deploy to stores (production only)
-  if (config.environment === 'production') {
+  if (config.environment === "production") {
     await deployToStores(builds);
   }
-  
+
   // Finalize release
   await finalizeSentryRelease(config.sentryRelease);
 };
