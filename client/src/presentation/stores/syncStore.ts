@@ -26,7 +26,7 @@ const initialState: SyncState = {
 export const useSyncStore = create<SyncStore>()(
   immer(
     persist(
-      (set, get) => ({
+      (set, _get) => ({
         ...initialState,
 
         setStatus: (status: SyncStatus) => {
