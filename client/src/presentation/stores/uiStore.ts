@@ -69,7 +69,7 @@ export const useUIStore = create<UIStore>()(
 
     setTypingIndicators: (
       chatId: string,
-      indicators: { users: any[]; text: string; isAnyoneTyping: boolean }
+      indicators: { users: unknown[]; text: string; isAnyoneTyping: boolean }
     ) => {
       set((state) => {
         if (!state.typingIndicators) {
