@@ -302,6 +302,7 @@ npm update
    - Android: Roll back to previous version
 
 2. **Web Deployment**:
+
    ```bash
    # Rollback to previous version
    firebase deploy --only hosting:prod --version previous
@@ -365,12 +366,14 @@ npx expo start --dev-client
 ## Support
 
 ### Documentation
+
 - **[README.md](README.md)**: Getting started guide
 - **[ARCHITECTURE.md](ARCHITECTURE.md)**: System architecture
 - **[CONTRIBUTING.md](CONTRIBUTING.md)**: Development guidelines
 - **[SECURITY.md](SECURITY.md)**: Security implementation
 
 ### Contact
+
 - **Development Team**: dev-team@chatapp.com
 - **DevOps Team**: devops@chatapp.com
 - **Security**: security@chatapp.com
