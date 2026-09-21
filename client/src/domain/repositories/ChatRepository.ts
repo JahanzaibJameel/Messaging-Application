@@ -3,7 +3,7 @@
  * Defines the contract for chat data access
  */
 
-import type { Chat, GroupChat, PrivateChat } from "../entities/Chat";
+import type { Chat, GroupChat } from "../entities/Chat";
 import type { Message } from "../entities/Message";
 
 export interface ChatRepository {
