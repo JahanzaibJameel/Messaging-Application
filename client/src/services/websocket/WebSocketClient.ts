@@ -3,9 +3,8 @@
  * Manages WebSocket connection with automatic reconnection
  */
 
-import { AppError } from "../../core/errors";
 import { logger } from "../../core/logger";
-import { useAuthStore, useUIStore } from "../../presentation/stores";
+import { useUIStore } from "../../presentation/stores";
 
 export type WebSocketStatus = "connecting" | "connected" | "disconnected" | "reconnecting";
 
@@ -213,7 +212,7 @@ export class WebSocketClient {
       this.messageHandlers.set(type, new Set());
     }
 
-    this.messageHandlers.get(type)!.add(handler);
+    this.messageHandlers.get(type)?.add(handler);
 
     // Return unsubscribe function
     return () => {
