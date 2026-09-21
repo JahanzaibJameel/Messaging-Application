@@ -11,7 +11,7 @@ interface ErrorReportOptions {
     action?: string;
     screen?: string;
     userId?: string;
-    additionalData?: Record<string, any>;
+    additionalData?: Record<string, unknown>;
   };
   level?: "fatal" | "error" | "warning" | "info" | "debug";
   tags?: Record<string, string>;
@@ -35,7 +35,11 @@ export const useSentryErrorReport = () => {
   }, []);
 
   const reportMessage = useCallback(
-    (message: string, level: ErrorReportOptions["level"] = "info", data?: Record<string, any>) => {
+    (
+      message: string,
+      level: ErrorReportOptions["level"] = "info",
+      data?: Record<string, unknown>
+    ) => {
       captureMessage(message, level, data);
 
       addUserActionBreadcrumb("manual_message_report", {
