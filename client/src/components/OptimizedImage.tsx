@@ -1,11 +1,11 @@
 import React, { useState, useCallback } from "react";
-import { View, StyleSheet, ActivityIndicator } from "react-native";
+import { View, StyleSheet, ActivityIndicator, StyleProp, ViewStyle } from "react-native";
 import { Image as ExpoImage } from "expo-image";
 
 interface OptimizedImageProps {
   source: { uri: string } | number;
   placeholder?: { uri: string } | number;
-  style?: any;
+  style?: StyleProp<ViewStyle>;
   width?: number;
   height?: number;
   resizeMode?: "cover" | "contain" | "none" | "scale-down";
@@ -18,7 +18,6 @@ interface OptimizedImageProps {
 
 const OptimizedImage: React.FC<OptimizedImageProps> = ({
   source,
-  placeholder,
   style,
   width = 100,
   height = 100,
