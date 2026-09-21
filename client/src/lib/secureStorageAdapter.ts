@@ -95,6 +95,7 @@ export function createSecureStorageAdapter(storageName: string): StorageAdapter 
       if (cached !== undefined) return cached;
 
       // Fire-and-forget load for next access
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       ensureLoaded(name).catch(() => {});
 
       return null;
@@ -176,6 +177,7 @@ export function createSecureStorageAdapterWithKeys(
 
       // Try to load on-demand if not initialized
       if (!initialized) {
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         initialize().catch(() => {});
       }
 
@@ -198,7 +200,7 @@ export function createSecureStorageAdapterWithKeys(
  * Clear all data from secureStorage and the cache.
  * Use this for logout/reset scenarios.
  */
-export async function clearSecureStorageAdapter(adapter: StorageAdapter): Promise<void> {
+export async function clearSecureStorageAdapter(_adapter: StorageAdapter): Promise<void> {
   // We can't easily clear the cache since it's a Map in closure
   // But we can clear secureStorage
   await secureClear();
