@@ -15,17 +15,26 @@ import {
   RefreshControl,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { DEFAULT_FEATURE_FLAGS } from "../../stores/featureFlagsStore";
+import { DEFAULT_FEATURE_FLAGS, useFeatureFlagsStore } from "../../stores/featureFlagsStore";
 import {
   useFeatureFlags,
   useFeatureFlagActions,
   useFeatureFlagsLoading,
 } from "../../hooks/useFeatureFlag";
 
+interface FlagItem {
+  key: string;
+  name: string;
+  description: string;
+  defaultValue: boolean;
+  rolloutPercentage?: number;
+  category: string;
+}
+
 const DeveloperMenu: React.FC = () => {
   const navigation = useNavigation();
   const flags = useFeatureFlags();
-  const { setFlag, setOverride, resetOverrides, resetToDefaults } = useFeatureFlagActions();
+  const { setOverride, resetOverrides, resetToDefaults } = useFeatureFlagActions();
   const isLoading = useFeatureFlagsLoading();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -45,24 +54,13 @@ const DeveloperMenu: React.FC = () => {
       });
       return acc;
     },
-    {} as Record<
-      string,
-      {
-        key: string;
-        name: string;
-        description: string;
-        defaultValue: boolean;
-        rolloutPercentage?: number;
-        category: string;
-      }[]
-    >
+    {} as Record<string, FlagItem[]>
   );
 
   useEffect(() => {
     // Initialize flags on mount
     const initializeStore = async () => {
-      const { initializeFlags } =
-        require("../../stores/featureFlagsStore").useFeatureFlagsStore.getState();
+      const { initializeFlags } = useFeatureFlagsStore.getState();
       await initializeFlags();
     };
 
@@ -103,8 +101,7 @@ const DeveloperMenu: React.FC = () => {
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      const { initializeFlags } =
-        require("../../stores/featureFlagsStore").useFeatureFlagsStore.getState();
+      const { initializeFlags } = useFeatureFlagsStore.getState();
       await initializeFlags();
     } catch (error) {
       console.error("Failed to refresh flags:", error);
@@ -128,7 +125,13 @@ const DeveloperMenu: React.FC = () => {
     }
   };
 
-  const renderFlagItem = ({ key, name, description, defaultValue, rolloutPercentage }: any) => {
+  const renderFlagItem = ({
+    key,
+    name,
+    description,
+    defaultValue,
+    rolloutPercentage,
+  }: FlagItem) => {
     const isEnabled = flags[key];
     const hasOverride = true; // In dev mode, all values are overrides
 
