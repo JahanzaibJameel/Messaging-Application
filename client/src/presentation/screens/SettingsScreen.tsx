@@ -4,8 +4,7 @@
  */
 
 import React from "react";
-import { View, StyleSheet, Alert, ScrollView, useColorScheme } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { View, StyleSheet, Alert, ScrollView } from "react-native";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import * as Haptics from "expo-haptics";
@@ -26,10 +25,9 @@ interface Props {
 }
 
 export default function SettingsScreen({ navigation }: Props) {
-  const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
   const { currentUser, logout } = useAuthStore();
   const appLock = useAppLock(false);
 
