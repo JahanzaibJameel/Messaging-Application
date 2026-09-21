@@ -92,7 +92,7 @@ export const setToken = async (accessToken: string, refreshToken?: string): Prom
       service: ACCESS_TOKEN_KEY,
     });
 
-    let refreshResult: any = true;
+    let refreshResult: unknown = true;
     if (refreshToken) {
       refreshResult = await Keychain.setGenericPassword(REFRESH_TOKEN_KEY, refreshToken, {
         service: REFRESH_TOKEN_KEY,
