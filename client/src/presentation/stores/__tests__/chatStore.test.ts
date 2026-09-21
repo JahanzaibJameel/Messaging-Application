@@ -1,4 +1,5 @@
 import { useChatStore } from "../chatStore";
+import { useAuthStore } from "../authStore";
 import { ChatEntity } from "@/domain/entities/Chat";
 import { MessageEntity } from "@/domain/entities/Message";
 import { createSecureStorageAdapterWithKeys } from "@/lib/secureStorageAdapter";
@@ -12,7 +13,7 @@ jest.mock("@/lib/secureStorageAdapter", () => {
         cache.set(name, value);
       },
       removeItem: (name: string) => {
-        cache.remove(name);
+        cache.delete(name);
       },
     })),
   };
@@ -79,18 +80,19 @@ describe("chatStore", () => {
   });
 
   it("uses the authenticated user ID for group creation", () => {
-    const chatId = "group-test";
     const participantIds = ["user-1", "user-2"];
     const name = "Test Group";
 
-    // Mock auth store
-    const authStore = useChatStore.getState();
-    const currentUserId = authStore.currentUser?.id ?? "currentUser";
+    // Get current user from auth store
+    const currentUserId = useAuthStore.getState().currentUser?.id ?? "currentUser";
     const groupChat = useChatStore.getState().createGroup(name, participantIds);
 
-    expect(groupChat.id).toBe(chatId);
-    expect(groupChat.participantIds).toEqual(participantIds);
+    expect(groupChat.id).toMatch(/^group_/);
+    expect(groupChat.participantIds).toContain(currentUserId);
+    expect(groupChat.participantIds).toContain("user-1");
+    expect(groupChat.participantIds).toContain("user-2");
     expect(groupChat.createdBy).toBe(currentUserId);
+    expect(groupChat.name).toBe(name);
   });
 
   it("setChats dedupes duplicate IDs", () => {
@@ -118,14 +120,6 @@ describe("chatStore", () => {
   });
 
   it("persistence round-trip: save chats, rehydrate, verify entities are present", async () => {
-    // Mock auth store to have a logged-in user
-    const authStore = useChatStore.getState();
-    authStore.setState({
-      currentUser: { id: "authUser", isAuthenticated: true, isLoading: false, error: null },
-      isLoading: false,
-      error: null,
-    });
-
     const chat1 = ChatEntity.createPrivate("user-1", "user-1");
     const chat2 = ChatEntity.createPrivate("user-2", "user-3");
     useChatStore.getState().addChat(chat1);
@@ -133,8 +127,12 @@ describe("chatStore", () => {
 
     // Simulate persistence
     const storageKey = "chat-storage_chats";
-    const adapter = useChatStore.getState().persistItem;
-    adapter.setItem(storageKey, JSON.stringify(useChatStore.getState().chats));
+    const persistApi = (
+      useChatStore as unknown as {
+        persist: { persistItem?: { setItem: (key: string, value: string) => void } };
+      }
+    ).persist;
+    persistApi?.persistItem?.setItem(storageKey, JSON.stringify(useChatStore.getState().chats));
 
     // Rehydrate
     const newState = useChatStore.getState();
@@ -147,7 +145,8 @@ describe("chatStore", () => {
     const chat1 = ChatEntity.createPrivate("user-1", "user-2");
     const chat2 = ChatEntity.createPrivate("user-3", "user-1");
     const chat3 = ChatEntity.createPrivate("user-4", "user-1");
-    const chat5 = ChatEntity.createPrivate("user-5", "user-1");
+    const chat4 = ChatEntity.createPrivate("user-5", "user-1");
+    const chat5 = ChatEntity.createPrivate("user-6", "user-1");
 
     // Set up chat order
     useChatStore.getState().addChat(chat1);
@@ -161,3 +160,4 @@ describe("chatStore", () => {
     expect(sorted[0]).toBe(chat1); // pinned first
     expect(sorted[1]).toBe(chat2); // next by timestamp
   });
+});
