@@ -127,7 +127,7 @@ export interface UIState {
   typingIndicators?: Record<
     string,
     {
-      users: any[];
+      users: unknown[];
       text: string;
       isAnyoneTyping: boolean;
     }
@@ -143,7 +143,7 @@ export interface UIActions {
   setShowSearch: (value: boolean) => void;
   setTypingIndicators: (
     chatId: string,
-    indicators: { users: any[]; text: string; isAnyoneTyping: boolean }
+    indicators: { users: unknown[]; text: string; isAnyoneTyping: boolean }
   ) => void;
 }
 
