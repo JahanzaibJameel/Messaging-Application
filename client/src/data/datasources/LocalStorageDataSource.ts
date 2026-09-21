@@ -6,14 +6,7 @@
 
 import { AppError } from "@/core/errors";
 import type { ChatModel, MessageModel, UserModel } from "../models/MessageModel";
-import {
-  secureGetJSON,
-  secureSetJSON,
-  secureDelete,
-  secureClear,
-  secureGet,
-  secureSet,
-} from "@/security/secureStorage";
+import { secureGetJSON, secureSetJSON, secureDelete, secureClear } from "@/security/secureStorage";
 
 const STORAGE_KEYS = {
   CHATS: "chats",
