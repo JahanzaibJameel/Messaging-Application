@@ -1,5 +1,3 @@
-/* global jest */
-
 const mockMMKV = {
   set: () => {},
   getString: () => null,
