@@ -18,7 +18,7 @@ interface Props {
 
 export default function SplashScreen({ navigation }: Props) {
   const { theme } = useTheme();
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
   const logoScale = useSharedValue(0.8);
   const logoOpacity = useSharedValue(0);
@@ -28,7 +28,7 @@ export default function SplashScreen({ navigation }: Props) {
     logoScale.value = withSpring(1, { damping: 12, stiffness: 100 });
     logoOpacity.value = withTiming(1, { duration: 600 });
     textOpacity.value = withDelay(300, withTiming(1, { duration: 400 }));
-  }, []);
+  }, [logoScale, logoOpacity, textOpacity]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
