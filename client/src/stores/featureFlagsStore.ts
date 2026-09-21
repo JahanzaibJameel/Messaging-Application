@@ -5,9 +5,8 @@
 
 import { create } from "zustand";
 import { MMKV } from "react-native-mmkv";
-import { Platform } from "react-native";
 import DeviceInfo from "react-native-device-info";
-import { warn, error } from "../utils/logger";
+import { warn } from "../utils/logger";
 
 // Feature flag definitions
 export interface FeatureFlag {
@@ -142,7 +141,7 @@ const generateUserHash = async (): Promise<string> => {
     }
 
     return Math.abs(hash).toString();
-  } catch (error) {
+  } catch (_error) {
     // Fallback to random number if device ID fails
     return Math.floor(Math.random() * 1000000).toString();
   }
