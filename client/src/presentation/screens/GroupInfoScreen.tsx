@@ -5,10 +5,9 @@
  */
 
 import React from "react";
-import { View, StyleSheet, ScrollView, Alert, Pressable } from "react-native";
+import { View, StyleSheet, ScrollView, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
-import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 
 import { Avatar } from "@/components/Avatar";
@@ -31,7 +30,7 @@ export default function GroupInfoScreen({ navigation, route }: Props) {
   const headerHeight = useHeaderHeight();
   const { theme } = useTheme();
   const { currentUser } = useAuthStore();
-  const { getChatById, muteChat, unmuteChat, pinChat, unpinChat, removeChat } = useChatStore();
+  const { getChatById, muteChat, unmuteChat, removeChat } = useChatStore();
 
   const chat = getChatById(groupId);
 
@@ -39,8 +38,6 @@ export default function GroupInfoScreen({ navigation, route }: Props) {
 
   const group = chat as GroupChat;
   const currentUserId = currentUser?.id ?? "currentUser";
-  const isAdmin = group.adminIds.includes(currentUserId);
-
   const handleMuteToggle = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (group.isMuted) {
