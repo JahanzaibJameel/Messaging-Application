@@ -49,8 +49,8 @@ export function useChat(options: UseChatOptions = {}) {
         if (chatData) {
           updateChat(chatId, chatData);
         }
-      } catch (error) {
-        logger.error("Failed to load chat", error as Error, "useChat");
+      } catch (_error) {
+        logger.error("Failed to load chat", _error as Error, "useChat");
       } finally {
         setIsLoading(false);
       }
@@ -64,7 +64,8 @@ export function useChat(options: UseChatOptions = {}) {
     if (chatId && autoMarkAsRead && chat && chat.unreadCount > 0) {
       markAsRead();
     }
-  }, [chatId, chat?.unreadCount, autoMarkAsRead]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatId, chat, autoMarkAsRead]);
 
   // Send text message
   const sendMessage = useCallback(
@@ -90,7 +91,7 @@ export function useChat(options: UseChatOptions = {}) {
         updateLastMessage(chatId, message);
 
         return message;
-      } catch (error) {
+      } catch (_error) {
         showToast({
           type: "error",
           message: "Failed to send message",
@@ -99,7 +100,7 @@ export function useChat(options: UseChatOptions = {}) {
         return null;
       }
     },
-    [chatId, currentUser, addMessage, updateChat, getChatById, showToast]
+    [chatId, currentUser, addMessage, updateLastMessage, showToast]
   );
 
   // Send media message
@@ -138,7 +139,7 @@ export function useChat(options: UseChatOptions = {}) {
         await chatRepository.saveMessage(message);
 
         return message;
-      } catch (error) {
+      } catch (_error) {
         showToast({
           type: "error",
           message: "Failed to send media",
@@ -162,7 +163,7 @@ export function useChat(options: UseChatOptions = {}) {
           message: "Message deleted",
           duration: 2000,
         });
-      } catch (error) {
+      } catch (_error) {
         showToast({
           type: "error",
           message: "Failed to delete message",
@@ -170,7 +171,7 @@ export function useChat(options: UseChatOptions = {}) {
         });
       }
     },
-    [deleteMessage, showToast]
+    [deleteMessage, showToast, chatId]
   );
 
   // Mark as read
@@ -180,10 +181,10 @@ export function useChat(options: UseChatOptions = {}) {
     try {
       await chatRepository.markAsRead(chatId);
       markChatAsRead(chatId);
-    } catch (error) {
-      logger.error("Failed to mark as read", error as Error, "useChat");
+    } catch (_error) {
+      logger.error("Failed to mark as read", _error as Error, "useChat");
     }
-  }, [chatId, updateChat, getChatById]);
+  }, [chatId, markChatAsRead]);
 
   // Pin/Unpin chat
   const togglePin = useCallback(async () => {
@@ -202,14 +203,14 @@ export function useChat(options: UseChatOptions = {}) {
       if (updated) {
         await chatRepository.save(updated);
       }
-    } catch (error) {
+    } catch (_error) {
       showToast({
         type: "error",
         message: "Failed to update chat",
         duration: 3000,
       });
     }
-  }, [chatId, updateChat, getChatById, showToast]);
+  }, [chatId, showToast, getChatById, pinChat, unpinChat]);
 
   // Mute/Unmute chat
   const toggleMute = useCallback(async () => {
@@ -228,14 +229,14 @@ export function useChat(options: UseChatOptions = {}) {
       if (updated) {
         await chatRepository.save(updated);
       }
-    } catch (error) {
+    } catch (_error) {
       showToast({
         type: "error",
         message: "Failed to update chat",
         duration: 3000,
       });
     }
-  }, [chatId, updateChat, getChatById, showToast]);
+  }, [chatId, showToast, getChatById, muteChat, unmuteChat]);
 
   // Archive/Unarchive chat
   const toggleArchive = useCallback(async () => {
@@ -254,14 +255,14 @@ export function useChat(options: UseChatOptions = {}) {
       if (updated) {
         await chatRepository.save(updated);
       }
-    } catch (error) {
+    } catch (_error) {
       showToast({
         type: "error",
         message: "Failed to update chat",
         duration: 3000,
       });
     }
-  }, [chatId, updateChat, getChatById, showToast]);
+  }, [chatId, showToast, getChatById, archiveChat, unarchiveChat]);
 
   // Delete chat
   const deleteChatById = useCallback(async () => {
@@ -275,7 +276,7 @@ export function useChat(options: UseChatOptions = {}) {
         message: "Chat deleted",
         duration: 2000,
       });
-    } catch (error) {
+    } catch (_error) {
       showToast({
         type: "error",
         message: "Failed to delete chat",
@@ -295,7 +296,7 @@ export function useChat(options: UseChatOptions = {}) {
         message: "History cleared",
         duration: 2000,
       });
-    } catch (error) {
+    } catch (_error) {
       showToast({
         type: "error",
         message: "Failed to clear history",
@@ -340,7 +341,7 @@ export function useGroupChat(chatId: string) {
         await chatRepository.addParticipant(chatId, userId);
         groupChat.participantIds.push(userId);
         updateChat(chatId, groupChat);
-      } catch (error) {
+      } catch (_error) {
         showToast({
           type: "error",
           message: "Failed to add participant",
@@ -360,7 +361,7 @@ export function useGroupChat(chatId: string) {
         groupChat.participantIds = groupChat.participantIds.filter((id) => id !== userId);
         groupChat.adminIds = groupChat.adminIds.filter((id) => id !== userId);
         updateChat(chatId, groupChat);
-      } catch (error) {
+      } catch (_error) {
         showToast({
           type: "error",
           message: "Failed to remove participant",
@@ -381,7 +382,7 @@ export function useGroupChat(chatId: string) {
           groupChat.adminIds.push(userId);
           updateChat(chatId, groupChat);
         }
-      } catch (error) {
+      } catch (_error) {
         showToast({
           type: "error",
           message: "Failed to make admin",
@@ -400,7 +401,7 @@ export function useGroupChat(chatId: string) {
         await chatRepository.removeAdmin(chatId, userId);
         groupChat.adminIds = groupChat.adminIds.filter((id) => id !== userId);
         updateChat(chatId, groupChat);
-      } catch (error) {
+      } catch (_error) {
         showToast({
           type: "error",
           message: "Failed to remove admin",
@@ -419,7 +420,7 @@ export function useGroupChat(chatId: string) {
         await chatRepository.updateGroupInfo(chatId, updates);
         Object.assign(groupChat, updates);
         updateChat(chatId, groupChat);
-      } catch (error) {
+      } catch (_error) {
         showToast({
           type: "error",
           message: "Failed to update group info",
