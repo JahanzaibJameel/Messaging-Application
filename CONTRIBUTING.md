@@ -36,6 +36,7 @@ We are committed to providing a welcoming and inclusive environment for all cont
 ### Setup Steps
 
 1. **Fork the Repository**
+
    ```bash
    # Fork the repository on GitHub
    git clone https://github.com/YOUR_USERNAME/chatapp.git
@@ -43,28 +44,33 @@ We are committed to providing a welcoming and inclusive environment for all cont
    ```
 
 2. **Add Upstream Remote**
+
    ```bash
    git remote add upstream https://github.com/original-org/chatapp.git
    git fetch upstream
    ```
 
 3. **Install Dependencies**
+
    ```bash
    npm install
    ```
 
 4. **Install iOS Dependencies** (Mac only)
+
    ```bash
    cd ios && pod install && cd ..
    ```
 
 5. **Setup Environment Variables**
+
    ```bash
    cp .env.example .env
    # Edit .env with your configuration
    ```
 
 6. **Start Development Server**
+
    ```bash
    npm run dev
    ```
@@ -213,14 +219,14 @@ Performance improvement: ~30% faster initial load
 
 ```typescript
 // Example: client/src/domain/__tests__/MessageEntity.test.ts
-describe('MessageEntity', () => {
-  describe('create', () => {
-    it('should create a valid message with required fields', () => {
+describe("MessageEntity", () => {
+  describe("create", () => {
+    it("should create a valid message with required fields", () => {
       // Arrange
       const messageData = {
-        chatId: 'chat-123',
-        senderId: 'user-123',
-        content: { type: 'text', text: 'Hello' }
+        chatId: "chat-123",
+        senderId: "user-123",
+        content: { type: "text", text: "Hello" },
       };
 
       // Act
@@ -232,18 +238,16 @@ describe('MessageEntity', () => {
       expect(message.status).toBe(MessageStatus.SENDING);
     });
 
-    it('should throw error for invalid content type', () => {
+    it("should throw error for invalid content type", () => {
       // Arrange
       const messageData = {
-        chatId: 'chat-123',
-        senderId: 'user-123',
-        content: { type: 'invalid', text: 'Hello' }
+        chatId: "chat-123",
+        senderId: "user-123",
+        content: { type: "invalid", text: "Hello" },
       };
 
       // Act & Assert
-      expect(() => MessageEntity.create(messageData)).toThrow(
-        'Invalid content type'
-      );
+      expect(() => MessageEntity.create(messageData)).toThrow("Invalid content type");
     });
   });
 });
@@ -271,22 +275,22 @@ describe('MessageItem', () => {
 
   it('should render message content correctly', () => {
     render(<MessageItem {...defaultProps} />);
-    
+
     expect(screen.getByText('Hello World')).toBeTruthy();
   });
 
   it('should call onPress when tapped', () => {
     const { onPress } = defaultProps;
-    
+
     render(<MessageItem {...defaultProps} />);
     fireEvent.press(screen.getByRole('button'));
-    
+
     expect(onPress).toHaveBeenCalledWith(defaultProps.message.id);
   });
 
   it('should be accessible', () => {
     render(<MessageItem {...defaultProps} />);
-    
+
     const messageElement = screen.getByRole('button');
     expect(messageElement).toHaveAccessibleLabel(
       'Message from John Doe: Hello World'
@@ -338,18 +342,18 @@ All new components must meet WCAG 2.1 AA accessibility standards.
 // Example: Accessible color palette
 export const colors = {
   text: {
-    primary: '#000000',    // 21:1 contrast on white
-    secondary: '#666666',  // 7:1 contrast on white
-    disabled: '#999999',   // 4.9:1 contrast on white
+    primary: "#000000", // 21:1 contrast on white
+    secondary: "#666666", // 7:1 contrast on white
+    disabled: "#999999", // 4.9:1 contrast on white
   },
   background: {
-    primary: '#FFFFFF',
-    secondary: '#F5F5F5',
+    primary: "#FFFFFF",
+    secondary: "#F5F5F5",
   },
   interactive: {
-    primary: '#007AFF',    // 4.5:1 contrast on white
-    disabled: '#CCCCCC',   // 3:1 contrast on white
-  }
+    primary: "#007AFF", // 4.5:1 contrast on white
+    disabled: "#CCCCCC", // 3:1 contrast on white
+  },
 };
 ```
 
@@ -378,11 +382,11 @@ const AccessibleButton = styled.TouchableOpacity`
 
 ```typescript
 // Example: Accessible custom component
-const CustomButton = ({ 
-  children, 
-  onPress, 
+const CustomButton = ({
+  children,
+  onPress,
   accessibilityLabel,
-  accessibilityHint 
+  accessibilityHint
 }) => (
   <TouchableOpacity
     onPress={onPress}
@@ -417,6 +421,7 @@ npm test -- --testPathPattern="accessibility"
 ### Adding New Strings
 
 1. **Add to English Locale**
+
    ```json
    // client/src/i18n/locales/en.json
    {
@@ -428,6 +433,7 @@ npm test -- --testPathPattern="accessibility"
    ```
 
 2. **Add to Other Locales**
+
    ```json
    // client/src/i18n/locales/es.json
    {
@@ -441,10 +447,10 @@ npm test -- --testPathPattern="accessibility"
 3. **Use in Components**
    ```typescript
    import { useTranslation } from 'react-i18next';
-   
+
    const SendButton = () => {
      const { t } = useTranslation();
-     
+
      return (
        <Button title={t('chat.sendButton')} />
      );
@@ -463,15 +469,13 @@ npm test -- --testPathPattern="accessibility"
 
 ```typescript
 // Example: RTL-aware styling
-import { I18nManager } from 'react-native';
+import { I18nManager } from "react-native";
 
 const MessageBubble = styled.View`
   margin-horizontal: 16px;
   margin-vertical: 4px;
-  align-self: ${({ isOwn }) => 
-    isOwn ? 'flex-end' : 'flex-start'
-  };
-  flex-direction: ${I18nManager.isRTL ? 'row-reverse' : 'row'};
+  align-self: ${({ isOwn }) => (isOwn ? "flex-end" : "flex-start")};
+  flex-direction: ${I18nManager.isRTL ? "row-reverse" : "row"};
 `;
 ```
 
@@ -480,27 +484,29 @@ const MessageBubble = styled.View`
 ### Adding New Feature Flags
 
 1. **Define in Feature Flags Store**
+
    ```typescript
    // client/src/stores/featureFlagsStore.ts
    export const DEFAULT_FEATURE_FLAGS: Record<string, FeatureFlag> = {
      // ... existing flags
      enableNewFeature: {
-       key: 'enableNewFeature',
-       name: 'New Feature',
-       description: 'Enable the new feature for testing',
+       key: "enableNewFeature",
+       name: "New Feature",
+       description: "Enable the new feature for testing",
        defaultValue: false,
        rolloutPercentage: 0,
-       category: 'experimental'
-     }
+       category: "experimental",
+     },
    };
    ```
 
 2. **Use FeatureGate Component**
+
    ```typescript
    import { FeatureGate } from '../components/FeatureGate';
-   
+
    const NewFeatureComponent = () => (
-     <FeatureGate 
+     <FeatureGate
        flag="enableNewFeature"
        fallback={<LegacyComponent />}
      >
@@ -511,10 +517,10 @@ const MessageBubble = styled.View`
 
 3. **Use in Hooks**
    ```typescript
-   import { useFeatureFlag } from '../hooks/useFeatureFlag';
-   
+   import { useFeatureFlag } from "../hooks/useFeatureFlag";
+
    const useNewFeature = () => {
-     const isEnabled = useFeatureFlag('enableNewFeature');
+     const isEnabled = useFeatureFlag("enableNewFeature");
      return { isEnabled };
    };
    ```
@@ -525,13 +531,13 @@ const MessageBubble = styled.View`
 // Example: A/B test with 50% rollout
 export const DEFAULT_FEATURE_FLAGS = {
   newAlgorithm: {
-    key: 'newAlgorithm',
-    name: 'New Message Algorithm',
-    description: 'Test new message sorting algorithm',
+    key: "newAlgorithm",
+    name: "New Message Algorithm",
+    description: "Test new message sorting algorithm",
     defaultValue: false,
     rolloutPercentage: 50,
-    category: 'performance'
-  }
+    category: "performance",
+  },
 };
 ```
 
@@ -542,17 +548,17 @@ export const DEFAULT_FEATURE_FLAGS = {
 describe('NewFeatureComponent', () => {
   it('should show new component when flag is enabled', () => {
     mockUseFeatureFlag('enableNewFeature', true);
-    
+
     render(<NewFeatureComponent />);
-    
+
     expect(screen.getByTestId('new-component')).toBeTruthy();
   });
 
   it('should show fallback when flag is disabled', () => {
     mockUseFeatureFlag('enableNewFeature', false);
-    
+
     render(<NewFeatureComponent />);
-    
+
     expect(screen.getByTestId('legacy-component')).toBeTruthy();
   });
 });
@@ -671,9 +677,9 @@ interface MessageItemProps {
   onPress: (id: string) => void;
 }
 
-const MessageItem = React.memo<MessageItemProps>(({ 
-  message, 
-  onPress 
+const MessageItem = React.memo<MessageItemProps>(({
+  message,
+  onPress
 }) => {
   const handlePress = useCallback(() => {
     onPress(message.id);
@@ -711,10 +717,10 @@ const sendMessage = async (content: string): Promise<Result<Message>> => {
     return Result.ok(message);
   } catch (error) {
     Sentry.captureException(error, {
-      tags: { action: 'sendMessage' },
-      extra: { content: content.substring(0, 100) }
+      tags: { action: "sendMessage" },
+      extra: { content: content.substring(0, 100) },
     });
-    return Result.error('Failed to send message');
+    return Result.error("Failed to send message");
   }
 };
 
@@ -740,10 +746,10 @@ const sendMessage = async (content: string) => {
 
 ```typescript
 // Good: Lazy loading
-const LazyChatScreen = lazy(() => import('./ChatScreen'));
+const LazyChatScreen = lazy(() => import("./ChatScreen"));
 
 // Bad: Eager loading
-import ChatScreen from './ChatScreen';
+import ChatScreen from "./ChatScreen";
 ```
 
 ### Rendering Performance
@@ -756,7 +762,7 @@ import ChatScreen from './ChatScreen';
 ```typescript
 // Good
 const MessageList = React.memo(({ messages }) => {
-  const memoizedMessages = useMemo(() => 
+  const memoizedMessages = useMemo(() =>
     messages.sort(byDate), [messages]
   );
 
@@ -794,7 +800,7 @@ const MessageList = ({ messages }) => {
 // Good
 useEffect(() => {
   const subscription = api.subscribe(handleUpdate);
-  
+
   return () => {
     subscription.unsubscribe();
   };
@@ -821,11 +827,11 @@ const validateMessage = (data: unknown): Message => {
   const schema = z.object({
     id: z.string(),
     content: z.object({
-      type: z.enum(['text', 'image']),
-      text: z.string().optional()
-    })
+      type: z.enum(["text", "image"]),
+      text: z.string().optional(),
+    }),
   });
-  
+
   return schema.parse(data);
 };
 
@@ -845,21 +851,21 @@ const message = data as Message; // No validation
 const apiClient = {
   async request(url: string) {
     if (!validateCertificate(url)) {
-      throw new SecurityError('Invalid certificate');
+      throw new SecurityError("Invalid certificate");
     }
-    
+
     return fetch(url, {
       timeout: 10000,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { "Content-Type": "application/json" },
     });
-  }
+  },
 };
 
 // Bad
 const apiClient = {
   async request(url: string) {
     return fetch(url); // No SSL validation
-  }
+  },
 };
 ```
 
@@ -874,16 +880,16 @@ const apiClient = {
 // Good
 const getToken = async (): Promise<string> => {
   try {
-    return await keychain.getItem('auth-token');
+    return await keychain.getItem("auth-token");
   } catch (error) {
     Sentry.captureException(error);
-    throw new AuthError('Failed to retrieve token');
+    throw new AuthError("Failed to retrieve token");
   }
 };
 
 // Bad
 const getToken = (): string => {
-  return localStorage.getItem('token'); // Insecure storage
+  return localStorage.getItem("token"); // Insecure storage
 };
 ```
 
