@@ -13,7 +13,7 @@ interface SecureHttpClientOptions {
   enablePinning?: boolean;
 }
 
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
   status: number;
@@ -69,7 +69,7 @@ class SecureHttpClient {
   /**
    * Make secure HTTP request with certificate pinning
    */
-  private async makeRequest<T = any>(
+  private async makeRequest<T = unknown>(
     endpoint: string,
     options: RequestInit = {},
     customHeaders: Record<string, string> = {}
@@ -103,7 +103,7 @@ class SecureHttpClient {
           timeoutInterval: this.defaultOptions.timeout,
           sslPinning: { certs: config.certificateHashes },
         });
-        status = (response as any).status || 200;
+        status = (response as { status: number }).status || 200;
       } else {
         // Fallback to regular fetch for development/testing
         response = await fetch(url, {
@@ -123,7 +123,7 @@ class SecureHttpClient {
             data = JSON.parse(responseText);
           } catch {
             // If not JSON, return as text
-            data = responseText as any;
+            data = responseText as T;
           }
         }
       } catch (_parseError) {
@@ -159,7 +159,7 @@ class SecureHttpClient {
     requestFn: () => Promise<ApiResponse<T>>,
     retries: number = this.defaultOptions.retries ?? 3
   ): Promise<ApiResponse<T>> {
-    let lastError: ApiResponse<T>;
+    let lastError: ApiResponse<T> = { error: "Request failed", status: 0 };
 
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
@@ -185,13 +185,13 @@ class SecureHttpClient {
       }
     }
 
-    return lastError!;
+    return lastError ?? { error: "Request failed", status: 0 };
   }
 
   /**
    * GET request
    */
-  async get<T = any>(
+  async get<T = unknown>(
     endpoint: string,
     params?: Record<string, string>,
     customHeaders?: Record<string, string>
@@ -209,9 +209,9 @@ class SecureHttpClient {
   /**
    * POST request
    */
-  async post<T = any>(
+  async post<T = unknown>(
     endpoint: string,
-    data?: any,
+    data?: unknown,
     customHeaders?: Record<string, string>
   ): Promise<ApiResponse<T>> {
     return this.retryRequest(() =>
@@ -229,9 +229,9 @@ class SecureHttpClient {
   /**
    * PUT request
    */
-  async put<T = any>(
+  async put<T = unknown>(
     endpoint: string,
-    data?: any,
+    data?: unknown,
     customHeaders?: Record<string, string>
   ): Promise<ApiResponse<T>> {
     return this.retryRequest(() =>
@@ -249,7 +249,7 @@ class SecureHttpClient {
   /**
    * DELETE request
    */
-  async delete<T = any>(
+  async delete<T = unknown>(
     endpoint: string,
     customHeaders?: Record<string, string>
   ): Promise<ApiResponse<T>> {
@@ -261,9 +261,9 @@ class SecureHttpClient {
   /**
    * PATCH request
    */
-  async patch<T = any>(
+  async patch<T = unknown>(
     endpoint: string,
-    data?: any,
+    data?: unknown,
     customHeaders?: Record<string, string>
   ): Promise<ApiResponse<T>> {
     return this.retryRequest(() =>
@@ -281,14 +281,14 @@ class SecureHttpClient {
   /**
    * Upload file with progress tracking
    */
-  async upload<T = any>(
+  async upload<T = unknown>(
     endpoint: string,
-    file: any,
+    file: unknown,
     onProgress?: (progress: number) => void,
     customHeaders?: Record<string, string>
   ): Promise<ApiResponse<T>> {
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", file as string | Blob);
 
     const headers = {
       ...this.buildHeaders(customHeaders),
