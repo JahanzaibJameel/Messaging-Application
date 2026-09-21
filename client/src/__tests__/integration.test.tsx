@@ -315,7 +315,7 @@ describe("Data Persistence", () => {
 
     const chatStorage = getInstance("chat-storage");
     expect(chatStorage.set).toHaveBeenCalledWith(
-      "chat-storage",
+      "chat-storage_chats",
       expect.stringContaining("persisted-chat-1")
     );
   });
@@ -340,7 +340,7 @@ describe("Data Persistence", () => {
     const persistedChats = [makeChat({ id: "persisted-chat-2" })];
     getInstance("chat-storage").getString.mockReturnValue(JSON.stringify(persistedChats));
 
-    const raw = getInstance("chat-storage").getString("chat-storage");
+    const raw = getInstance("chat-storage").getString("chat-storage_chats");
     expect(raw).toBeDefined();
 
     // Simulate hydration into the live store
