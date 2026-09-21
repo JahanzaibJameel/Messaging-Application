@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet, TextInput, Image, Pressable } from "react-native";
+import { StyleSheet, TextInput, Image, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, {
   useAnimatedStyle,
@@ -26,7 +26,7 @@ export default function LoginScreen({ navigation }: Props) {
   const { theme } = useTheme();
   const { login } = useAuthStore();
 
-  const [countryCode, setCountryCode] = useState("+1");
+  const [countryCode] = useState("+1");
   const [phoneNumber, setPhoneNumber] = useState("");
 
   const inputScale = useSharedValue(1);
@@ -72,7 +72,7 @@ export default function LoginScreen({ navigation }: Props) {
         />
         <ThemedText style={styles.title}>Enter your phone number</ThemedText>
         <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
-          We'll send you a verification code to confirm your number
+          We{"'"}ll send you a verification code to confirm your number
         </ThemedText>
       </Animated.View>
 
