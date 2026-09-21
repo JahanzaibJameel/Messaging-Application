@@ -48,7 +48,7 @@ function setupBodyParsing(app: express.Application) {
   app.use(
     express.json({
       verify: (req, _res, buf) => {
-        req.rawBody = buf;
+        (req as Request & { rawBody?: Buffer }).rawBody = buf;
       },
     })
   );
