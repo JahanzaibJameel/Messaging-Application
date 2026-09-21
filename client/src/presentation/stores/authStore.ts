@@ -9,12 +9,11 @@ import { immer } from "zustand/middleware/immer";
 
 import type { User } from "../../domain/entities/User";
 import { UserEntity } from "../../domain/entities/User";
-import type { UserModel } from "../../data/models/MessageModel";
-import type { AuthState, AuthActions } from "./types";
 import { logger } from "../../core/logger";
 import { remoteApiDataSource } from "../../data/datasources/RemoteApiDataSource";
 import { setToken, resetToken } from "../../security/keychain";
 import { createSecureStorageAdapterWithKeys } from "../../lib/secureStorageAdapter";
+import type { AuthState, AuthActions } from "./types";
 
 const STORAGE_KEYS = ["auth-storage_currentUser", "auth-storage_isAuthenticated"];
 
