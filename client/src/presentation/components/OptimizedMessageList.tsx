@@ -28,6 +28,13 @@ interface OptimizedMessageListProps {
 
 const MESSAGE_HEIGHT = 80; // Fixed height for getItemLayout
 
+interface FlashListItem {
+  type: string;
+  id: string;
+  message: MessageEntity;
+  index: number;
+}
+
 /**
  * getItemLayout for FlashList optimization
  * Provides fixed dimensions for performance boost
@@ -48,7 +55,7 @@ export const OptimizedMessageList: React.FC<OptimizedMessageListProps> = React.m
     const { screenReader } = useAccessibility();
 
     // getItemLayout for FlashList optimization
-    const _getItemLayout = (_data: any, _index: number) => ({
+    const _getItemLayout = (_data: FlashListItem[], _index: number) => ({
       length: MESSAGE_HEIGHT,
       offset: MESSAGE_HEIGHT * _index,
       index: _index,
@@ -67,11 +74,11 @@ export const OptimizedMessageList: React.FC<OptimizedMessageListProps> = React.m
     );
 
     // Memoize key extractor
-    const keyExtractor = useCallback((item: any) => item.id, []);
+    const keyExtractor = useCallback((item: FlashListItem) => item.id, []);
 
     // Render individual message with accessibility
     const renderItem = useCallback(
-      ({ item, index: _index }: ListRenderItemInfo<any>) => {
+      ({ item, index: _index }: ListRenderItemInfo<FlashListItem>) => {
         const message = item.message as MessageEntity;
 
         return (
@@ -114,8 +121,8 @@ export const OptimizedMessageList: React.FC<OptimizedMessageListProps> = React.m
     );
 
     // Optimized FlashList configuration
-    const flashListProps: FlashListPropsType<any> = useMemo(() => {
-      const baseProps: FlashListPropsType<any> = {
+    const flashListProps: FlashListPropsType<FlashListItem> = useMemo(() => {
+      const baseProps: FlashListPropsType<FlashListItem> = {
         data: flashListData,
         renderItem,
         keyExtractor,
