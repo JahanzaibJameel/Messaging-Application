@@ -3,8 +3,6 @@
  * Mocks for React Native components and modules for testing
  */
 
-import { Text } from "react-native";
-
 // Mock react-native modules
 jest.mock("react-native", () => {
   const RN = jest.requireActual("react-native");
