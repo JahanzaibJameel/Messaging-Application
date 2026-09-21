@@ -34,11 +34,12 @@ export const initSentry = () => {
   });
 };
 
-export const captureException = (error: Error, context?: Record<string, any>) => {
+export const captureException = (error: Error, context?: Record<string, unknown>) => {
   if (context) {
     Sentry.withScope((scope) => {
       Object.keys(context).forEach((key) => {
-        scope.setContext(key, context[key]);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        scope.setContext(key, context[key] as any);
       });
       Sentry.captureException(error);
     });
@@ -50,12 +51,13 @@ export const captureException = (error: Error, context?: Record<string, any>) =>
 export const captureMessage = (
   message: string,
   level: Sentry.SeverityLevel = "info",
-  context?: Record<string, any>
+  context?: Record<string, unknown>
 ) => {
   if (context) {
     Sentry.withScope((scope) => {
       Object.keys(context).forEach((key) => {
-        scope.setContext(key, context[key]);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        scope.setContext(key, context[key] as any);
       });
       Sentry.captureMessage(message, level);
     });
