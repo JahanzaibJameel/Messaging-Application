@@ -9,6 +9,8 @@ import type { UserRepository } from "../../domain/repositories/UserRepository";
 import { LocalStorageDataSource } from "../datasources/LocalStorageDataSource";
 import { RemoteApiDataSource } from "../datasources/RemoteApiDataSource";
 import { UserMapper } from "../mappers";
+import { setToken } from "../../security/keychain";
+import { StorageService } from "../../lib/storage";
 
 export class UserRepositoryImpl implements UserRepository {
   private localDataSource: LocalStorageDataSource;
@@ -117,31 +119,54 @@ export class UserRepositoryImpl implements UserRepository {
   // Auth
   async login(phone: string): Promise<void> {
     await this.remoteDataSource.login(phone);
+    StorageService.setItem("pending_phone", phone);
   }
 
-  async verifyOtp(otp: string): Promise<boolean> {
-    // In a real implementation, this would verify with the server
-    // For now, simulate successful verification
-    if (otp.length === 6) {
-      const user = new UserEntity({
-        id: `user_${Date.now()}`,
-        name: "You",
-        phone: "",
-        isOnline: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+  async verifyOtp(otp: string, phone?: string): Promise<boolean> {
+    const phoneToUse = phone ?? this.getByPhoneFromPendingState();
 
-      await this.saveCurrentUser(user);
+    if (!phoneToUse) {
+      return false;
+    }
+
+    const result = await this.remoteDataSource.verifyOtp(phoneToUse, otp);
+
+    if (result?.token && result?.user) {
+      await this.saveCurrentUser(
+        new UserEntity({
+          id: result.user.id,
+          name: result.user.name,
+          phone: result.user.phone,
+          avatar: result.user.avatar,
+          isOnline: result.user.isOnline,
+          lastSeen: result.user.lastSeen ? new Date(result.user.lastSeen) : undefined,
+          status: result.user.status,
+          createdAt: result.user.createdAt ? new Date(result.user.createdAt) : new Date(),
+          updatedAt: result.user.updatedAt ? new Date(result.user.updatedAt) : new Date(),
+        })
+      );
+
+      await setToken(result.token);
+      StorageService.removeItem("pending_phone");
       return true;
     }
 
     return false;
   }
 
+  private getByPhoneFromPendingState(): string | null {
+    try {
+      const value = StorageService.getItem("pending_phone");
+      return typeof value === "string" ? value : null;
+    } catch {
+      return null;
+    }
+  }
+
   async logout(): Promise<void> {
     await this.remoteDataSource.logout();
     await this.localDataSource.saveCurrentUser(null);
+    StorageService.removeItem("pending_phone");
   }
 
   async isAuthenticated(): Promise<boolean> {
