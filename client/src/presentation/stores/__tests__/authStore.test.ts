@@ -34,8 +34,8 @@ jest.mock("../../../data/datasources/RemoteApiDataSource", () => {
 });
 
 jest.mock("../../../security/keychain", () => ({
-  setToken: jest.fn(),
-  resetToken: jest.fn(),
+  setToken: jest.fn().mockResolvedValue(true),
+  resetToken: jest.fn().mockResolvedValue(true),
 }));
 
 // Mock the secureStorageAdapter
@@ -139,7 +139,7 @@ describe("authStore", () => {
         },
       });
 
-      const result = await useAuthStore.getState().verifyOtp("123456");
+      const result = await useAuthStore.getState().verifyOtp("123456", "+1234567890");
 
       expect(result).toBe(true);
       const { isAuthenticated, currentUser, isLoading } = useAuthStore.getState();
@@ -152,7 +152,7 @@ describe("authStore", () => {
     it("rejects OTPs that are not exactly 6 digits", async () => {
       for (const otp of ["12345", "1234567", "abcdef", ""]) {
         useAuthStore.setState({ isLoading: false, error: null });
-        const result = await useAuthStore.getState().verifyOtp(otp);
+        const result = await useAuthStore.getState().verifyOtp(otp, "+1234567890");
         expect(result).toBe(false);
         expect(useAuthStore.getState().isAuthenticated).toBe(false);
         expect(useAuthStore.getState().error).toBe("Invalid OTP format");
@@ -177,7 +177,7 @@ describe("authStore", () => {
       });
 
       useAuthStore.setState({ error: "stale error" });
-      await useAuthStore.getState().verifyOtp("123456");
+      await useAuthStore.getState().verifyOtp("123456", "+1234567890");
       expect(useAuthStore.getState().error).toBeNull();
     });
 
