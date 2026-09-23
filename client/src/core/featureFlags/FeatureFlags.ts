@@ -6,9 +6,11 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { MMKV } from "react-native-mmkv";
+import { Platform } from "react-native";
 import { logger } from "../logger";
 
-// Feature flag definitions with enterprise metadata
+const isWeb = Platform.OS === "web";
+
 export interface FeatureFlag {
   id: string;
   name: string;
@@ -47,32 +49,52 @@ export interface UserContext {
   };
 }
 
-// MMKV storage for persistence
-const mmkv = new MMKV({
-  id: "feature-flags",
-  encryptionKey: __DEV__ ? undefined : process.env.FEATURE_FLAGS_ENCRYPTION_KEY,
-});
+interface WebStorage {
+  getItem: (name: string) => string | null;
+  setItem: (name: string, value: string) => void;
+  removeItem: (name: string) => void;
+}
+
+const webStorage: WebStorage = {
+  getItem: (name: string) => localStorage.getItem(name),
+  setItem: (name: string, value: string) => localStorage.setItem(name, value),
+  removeItem: (name: string) => localStorage.removeItem(name),
+};
+
+const mmkv = !isWeb ? new MMKV({ id: "feature-flags" }) : null;
 
 const customStorage = {
   getItem: (name: string) => {
-    try {
-      const value = mmkv.getString(name);
+    if (isWeb) {
+      const value = webStorage.getItem(name);
       return value ? JSON.parse(value) : null;
+    }
+    try {
+      const val = mmkv!.getString(name);
+      return val ? JSON.parse(val) : null;
     } catch (error) {
       logger.error("Error getting feature flags from storage:", error);
       return null;
     }
   },
   setItem: (name: string, value: string) => {
+    if (isWeb) {
+      webStorage.setItem(name, value);
+      return;
+    }
     try {
-      mmkv.set(name, value);
+      mmkv!.set(name, value);
     } catch (error) {
       logger.error("Error setting feature flags in storage:", error);
     }
   },
   removeItem: (name: string) => {
+    if (isWeb) {
+      webStorage.removeItem(name);
+      return;
+    }
     try {
-      mmkv.delete(name);
+      mmkv!.delete(name);
     } catch (error) {
       logger.error("Error removing feature flags from storage:", error);
     }
