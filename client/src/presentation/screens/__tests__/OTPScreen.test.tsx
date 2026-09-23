@@ -198,7 +198,7 @@ describe("OTPScreen", () => {
       fireEvent.changeText(input0, "123456");
 
       await waitFor(() => {
-        expect(mockVerifyOtp).toHaveBeenCalledWith("123456");
+        expect(mockVerifyOtp).toHaveBeenCalledWith("123456", "+1 1234567890");
       });
     });
 
@@ -211,7 +211,7 @@ describe("OTPScreen", () => {
       fireEvent.changeText(input0, "123456789");
 
       await waitFor(() => {
-        expect(mockVerifyOtp).toHaveBeenCalledWith("123456");
+        expect(mockVerifyOtp).toHaveBeenCalledWith("123456", "+1 1234567890");
       });
     });
   });
@@ -232,7 +232,7 @@ describe("OTPScreen", () => {
       fireEvent.changeText(inputs[5], "6");
 
       await waitFor(() => {
-        expect(mockVerifyOtp).toHaveBeenCalledWith("123456");
+        expect(mockVerifyOtp).toHaveBeenCalledWith("123456", "+1 1234567890");
       });
     });
 
@@ -270,7 +270,7 @@ describe("OTPScreen", () => {
       fireEvent.changeText(inputs[5], "6");
 
       await waitFor(() => {
-        expect(mockVerifyOtp).toHaveBeenCalledWith("123456");
+        expect(mockVerifyOtp).toHaveBeenCalledWith("123456", "+1 1234567890");
       });
 
       expect(mockNavigationReplace).not.toHaveBeenCalled();
