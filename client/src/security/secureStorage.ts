@@ -15,6 +15,7 @@
  *   Subsequent calls reuse the same instance without re-reading the keychain.
  */
 
+import { Platform } from "react-native";
 import { MMKV } from "react-native-mmkv";
 import * as Keychain from "react-native-keychain";
 import { captureException, addUserActionBreadcrumb } from "../monitoring/sentry";
@@ -25,12 +26,13 @@ const KEYCHAIN_ACCOUNT = "mmkv-encryption-key";
 
 const _storages = new Map<string, MMKV>();
 
-/**
- * Returns a cryptographically random hex string of `byteLength` bytes.
- * Uses Math.random as a fallback because crypto.getRandomValues is not
- * available in all RN JS environments; for production replace with
- * expo-crypto or react-native-get-random-values.
- */
+if (Platform.OS === "web") {
+  throw new Error(
+    "Secure storage is not supported on web. " +
+      "The app requires native keychain/keyguard APIs for secure storage."
+  );
+}
+
 function generateKey(byteLength = 32): string {
   return Array.from({ length: byteLength }, () =>
     Math.floor(Math.random() * 256)
@@ -39,13 +41,6 @@ function generateKey(byteLength = 32): string {
   ).join("");
 }
 
-/**
- * Retrieves the MMKV encryption key from the OS keychain, creating and
- * persisting a new one if none exists yet.
- *
- * @throws {Error} if the keychain is unavailable. Never falls back to a
- *   static value — that would silently degrade security.
- */
 async function getOrCreateEncryptionKey(): Promise<string> {
   addUserActionBreadcrumb("secure_storage_key_attempt");
 
@@ -65,13 +60,14 @@ async function getOrCreateEncryptionKey(): Promise<string> {
     return existing.password;
   }
 
-  // First use — generate and persist a new key
   const newKey = generateKey(32);
   try {
     await Keychain.setGenericPassword(KEYCHAIN_ACCOUNT, newKey, {
       service: KEYCHAIN_SERVICE,
       accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
     });
+    addUserActionBreadcrumb("secure_storage_key_created");
+    return newKey;
   } catch (err) {
     captureException(err as Error, { action: "keychain_write", screen: "security_module" });
     throw new Error(
@@ -79,15 +75,8 @@ async function getOrCreateEncryptionKey(): Promise<string> {
         "The app cannot safely store sensitive data on this device."
     );
   }
-
-  addUserActionBreadcrumb("secure_storage_key_created");
-  return newKey;
 }
 
-/**
- * Returns the memoised encrypted MMKV instance for the given storage ID,
- * initialising it on first call.
- */
 async function getStorage(storageId?: string): Promise<MMKV> {
   const id = storageId ?? STORAGE_ID;
   const existing = _storages.get(id);
@@ -109,10 +98,6 @@ async function getStorage(storageId?: string): Promise<MMKV> {
 // Public API
 // ---------------------------------------------------------------------------
 
-/**
- * Stores a string value under `key` in encrypted storage.
- * @throws if the keychain or MMKV is unavailable.
- */
 export async function secureSet(key: string, value: string, storageId?: string): Promise<void> {
   try {
     addUserActionBreadcrumb("secure_set_attempt", { key });
@@ -129,10 +114,6 @@ export async function secureSet(key: string, value: string, storageId?: string):
   }
 }
 
-/**
- * Retrieves the string stored under `key`, or `undefined` if not found.
- * @throws if the keychain or MMKV is unavailable.
- */
 export async function secureGet(key: string, storageId?: string): Promise<string | undefined> {
   try {
     addUserActionBreadcrumb("secure_get_attempt", { key });
@@ -150,10 +131,6 @@ export async function secureGet(key: string, storageId?: string): Promise<string
   }
 }
 
-/**
- * Removes the value stored under `key`.
- * @throws if the keychain or MMKV is unavailable.
- */
 export async function secureDelete(key: string, storageId?: string): Promise<void> {
   try {
     addUserActionBreadcrumb("secure_delete_attempt", { key });
@@ -170,11 +147,6 @@ export async function secureDelete(key: string, storageId?: string): Promise<voi
   }
 }
 
-/**
- * Clears all data from encrypted storage AND resets the keychain entry so a
- * fresh key is generated on next use.
- * @throws if the keychain or MMKV is unavailable.
- */
 export async function secureClear(): Promise<void> {
   try {
     addUserActionBreadcrumb("secure_clear_attempt");
@@ -192,20 +164,10 @@ export async function secureClear(): Promise<void> {
   }
 }
 
-/**
- * Serialises `data` to JSON and stores it under `key`.
- * @throws if serialisation, keychain, or MMKV fails.
- */
 export async function secureSetJSON<T>(key: string, data: T, storageId?: string): Promise<void> {
   await secureSet(key, JSON.stringify(data), storageId);
 }
 
-/**
- * Retrieves and parses the JSON value stored under `key`.
- * Returns `undefined` if the key does not exist.
- * @throws if the keychain or MMKV is unavailable, or if the stored value
- *   is not valid JSON.
- */
 export async function secureGetJSON<T>(key: string, storageId?: string): Promise<T | undefined> {
   const raw = await secureGet(key, storageId);
   if (raw === undefined) return undefined;
