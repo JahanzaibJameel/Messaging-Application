@@ -5,7 +5,9 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["client/src/*"]
+      "@/*": [
+        "client/src/*"
+      ]
     },
     "strict": true,
     "esModuleInterop": true,
@@ -16,5 +18,10 @@
     "isolatedModules": true,
     "noEmit": true
   },
-  "include": ["**/*.ts", "**/*.tsx", "**/__tests__/**/*.ts"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/__tests__/**/*.ts"
+  ],
+  "extends": "expo/tsconfig.base"
 }
