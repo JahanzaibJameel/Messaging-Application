@@ -1,33 +1,46 @@
-/**
- * Storage service using MMKV for high-performance local storage
- * MMKV is significantly faster than AsyncStorage for React Native apps
- * @module lib/storage
- */
-
 import { MMKV } from "react-native-mmkv";
+import { Platform } from "react-native";
 import { error as logError } from "@/utils/logger";
 
-const storage = new MMKV();
+interface WebStorage {
+  getItem: (key: string) => string | null;
+  setItem: (key: string, value: string) => void;
+  removeItem: (key: string) => void;
+  clear: () => void;
+  hasKey: (key: string) => boolean;
+  getAllKeys: () => string[];
+}
+
+const webStorage: WebStorage = {
+  getItem: (key: string) => localStorage.getItem(key),
+  setItem: (key: string, value: string) => localStorage.setItem(key, value),
+  removeItem: (key: string) => localStorage.removeItem(key),
+  clear: () => localStorage.clear(),
+  hasKey: (key: string) => localStorage.getItem(key) !== null,
+  getAllKeys: () => Object.keys(localStorage),
+};
+
+const isWeb = Platform.OS === "web";
+
+const mmkv = isWeb ? null : new MMKV();
 
 export const StorageService = {
-  /**
-   * Set a value in storage
-   */
   setItem: (key: string, value: unknown): void => {
     try {
       const jsonString = JSON.stringify(value);
-      storage.set(key, jsonString);
+      if (isWeb) {
+        webStorage.setItem(key, jsonString);
+      } else {
+        mmkv!.set(key, jsonString);
+      }
     } catch (error: unknown) {
       logError(`Storage: Failed to set item ${key}`, error, "storage");
     }
   },
 
-  /**
-   * Get a value from storage
-   */
   getItem: (key: string): unknown => {
     try {
-      const value = storage.getString(key);
+      const value = isWeb ? webStorage.getItem(key) : mmkv!.getString(key);
       if (!value) return null;
 
       try {
@@ -41,58 +54,58 @@ export const StorageService = {
     }
   },
 
-  /**
-   * Get a string value from storage
-   */
   getString: (key: string): string | undefined => {
     try {
-      return storage.getString(key);
+      const value = isWeb ? webStorage.getItem(key) : mmkv!.getString(key);
+      return value ?? undefined;
     } catch (error: unknown) {
       logError(`Storage: Failed to get string ${key}`, error, "storage");
       return undefined;
     }
   },
 
-  /**
-   * Remove a value from storage
-   */
   removeItem: (key: string): void => {
     try {
-      storage.delete(key);
+      if (isWeb) {
+        webStorage.removeItem(key);
+      } else {
+        mmkv!.delete(key);
+      }
     } catch (error: unknown) {
       logError(`Storage: Failed to remove item ${key}`, error, "storage");
     }
   },
 
-  /**
-   * Clear all storage
-   */
   clear: (): void => {
     try {
-      storage.clearAll();
+      if (isWeb) {
+        webStorage.clear();
+      } else {
+        mmkv!.clearAll();
+      }
     } catch (error: unknown) {
       logError("Storage: Failed to clear all", error, "storage");
     }
   },
 
-  /**
-   * Get all keys in storage
-   */
   getAllKeys: (): string[] => {
     try {
-      return storage.getAllKeys();
+      if (isWeb) {
+        return webStorage.getAllKeys();
+      }
+      return mmkv!.getAllKeys();
     } catch (error: unknown) {
       logError("Storage: Failed to get all keys", error, "storage");
       return [];
     }
   },
 
-  /**
-   * Check if a key exists
-   */
   hasKey: (key: string): boolean => {
     try {
-      return storage.contains(key);
+      if (isWeb) {
+        return webStorage.hasKey(key);
+      }
+      return mmkv!.contains(key);
     } catch (error: unknown) {
       logError(`Storage: Failed to check key ${key}`, error, "storage");
       return false;
