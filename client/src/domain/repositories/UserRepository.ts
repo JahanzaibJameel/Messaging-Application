@@ -22,7 +22,7 @@ export interface UserRepository {
 
   // Auth
   login(phone: string): Promise<void>;
-  verifyOtp(otp: string): Promise<boolean>;
+  verifyOtp(otp: string, phone?: string): Promise<boolean>;
   logout(): Promise<void>;
   isAuthenticated(): Promise<boolean>;
 
