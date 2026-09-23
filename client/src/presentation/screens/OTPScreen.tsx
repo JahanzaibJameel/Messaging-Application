@@ -79,7 +79,7 @@ export default function OTPScreen({ navigation, route }: Props) {
     setIsVerifying(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    const success = await verifyOtp(code);
+    const success = await verifyOtp(code, phone);
 
     if (success) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
