@@ -12,6 +12,7 @@ interface LoginState {
   isLoading: boolean;
   error: string | null;
   step: "phone" | "otp" | "complete";
+  pendingPhone: string | null;
 }
 
 export function useAuth() {
@@ -19,9 +20,15 @@ export function useAuth() {
     isLoading: false,
     error: null,
     step: "phone",
+    pendingPhone: null,
   });
 
-  const { currentUser, setUser, logout: storeLogout } = useAuthStore();
+  const {
+    currentUser,
+    setUser,
+    logout: storeLogout,
+    pendingPhone: storePendingPhone,
+  } = useAuthStore();
   const { showToast } = useUIStore();
 
   const setLoading = useCallback((isLoading: boolean) => {
@@ -51,6 +58,7 @@ export function useAuth() {
         }
 
         await userRepository.login(cleanedPhone);
+        setLoginState((prev) => ({ ...prev, pendingPhone: cleanedPhone }));
         setStep("otp");
 
         showToast({
@@ -73,7 +81,7 @@ export function useAuth() {
 
   // Verify OTP
   const verifyOtp = useCallback(
-    async (otp: string): Promise<boolean> => {
+    async (otp: string, phone?: string): Promise<boolean> => {
       setLoading(true);
       setError(null);
 
@@ -83,7 +91,10 @@ export function useAuth() {
           return false;
         }
 
-        const success = await userRepository.verifyOtp(otp);
+        // Use provided phone, or fall back to pendingPhone from store/local state
+        const phoneToUse = phone ?? loginState.pendingPhone ?? storePendingPhone;
+
+        const success = await userRepository.verifyOtp(otp, phoneToUse);
 
         if (success) {
           // Get current user from repository
@@ -111,7 +122,7 @@ export function useAuth() {
         setLoading(false);
       }
     },
-    [setLoading, setError, setStep, setUser, showToast]
+    [setLoading, setError, setStep, setUser, showToast, loginState.pendingPhone, storePendingPhone]
   );
 
   // Resend OTP
@@ -121,7 +132,8 @@ export function useAuth() {
       setError(null);
 
       try {
-        await userRepository.login(phone);
+        const cleanedPhone = phone.replace(/\s+/g, "").replace(/[^\d+]/g, "");
+        await userRepository.login(cleanedPhone);
 
         showToast({
           type: "success",
@@ -227,6 +239,7 @@ export function useAuth() {
       isLoading: false,
       error: null,
       step: "phone",
+      pendingPhone: null,
     });
   }, []);
 
