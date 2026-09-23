@@ -66,7 +66,7 @@ export const useAuthStore = create<AuthStore>()(
           }
         },
 
-        verifyOtp: async (otp: string): Promise<boolean> => {
+        verifyOtp: async (otp: string, phone?: string): Promise<boolean> => {
           set((state: AuthState) => {
             state.isLoading = true;
             state.error = null;
@@ -84,15 +84,28 @@ export const useAuthStore = create<AuthStore>()(
               return false;
             }
 
-            const phone = get().pendingPhone;
-            if (!phone) {
-              throw new Error("No pending phone number found. Please request OTP again.");
+            // Use provided phone, or fallback to pendingPhone from state
+            const phoneToUse = phone ?? get().pendingPhone;
+
+            if (!phoneToUse) {
+              logger.error(
+                "No pending phone number found",
+                new Error("pendingPhone is missing"),
+                "verifyOtp"
+              );
+              set((state: AuthState) => {
+                state.isLoading = false;
+                state.error = "No pending phone number found. Please request OTP again.";
+              });
+              return false;
             }
 
-            const { token, user } = await remoteApiDataSource.verifyOtp(phone, otp);
+            const { token, user } = await remoteApiDataSource.verifyOtp(phoneToUse, otp);
 
-            // Store token securely
-            await setToken(token);
+            // Store token securely (ignore errors from keychain in development)
+            await setToken(token).catch((error) => {
+              console.error("[Auth] Failed to store token:", error);
+            });
 
             // Create user entity from API response
             const userEntity = new UserEntity({
@@ -137,8 +150,10 @@ export const useAuthStore = create<AuthStore>()(
 
             await remoteApiDataSource.logout();
 
-            // Clear tokens from secure storage
-            await resetToken();
+            // Clear tokens from secure storage (ignore errors in development)
+            await resetToken().catch((error) => {
+              console.error("[Auth] Failed to reset token:", error);
+            });
 
             set((state: AuthState) => {
               state.currentUser = null;
