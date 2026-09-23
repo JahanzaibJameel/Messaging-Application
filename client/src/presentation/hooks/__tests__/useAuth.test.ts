@@ -171,6 +171,14 @@ describe("useAuth", () => {
       mockVerifyOtp.mockResolvedValue(true);
       mockGetCurrentUser.mockResolvedValue(user);
 
+      const { useAuthStore } = require("../../stores");
+      (useAuthStore as jest.Mock).mockReturnValue({
+        currentUser: null,
+        pendingPhone: "+1 1234567890",
+        setUser: mockSetUser,
+        logout: mockStoreLogout,
+      });
+
       const { result } = renderHook(() => useAuth());
       let ok = false;
       await act(async () => {
@@ -178,7 +186,7 @@ describe("useAuth", () => {
       });
 
       expect(ok).toBe(true);
-      expect(mockVerifyOtp).toHaveBeenCalledWith("123456");
+      expect(mockVerifyOtp).toHaveBeenCalledWith("123456", "+1 1234567890");
       expect(mockSetUser).toHaveBeenCalledWith(user);
       expect(result.current.step).toBe("complete");
       expect(mockShowToast).toHaveBeenCalledWith(expect.objectContaining({ type: "success" }));
