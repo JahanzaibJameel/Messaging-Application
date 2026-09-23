@@ -1,6 +1,9 @@
 import * as Keychain from "react-native-keychain";
+import { Platform } from "react-native";
 import { secureGetJSON, secureSetJSON } from "./secureStorage";
 import { captureException, addUserActionBreadcrumb } from "@/monitoring/sentry";
+
+const isWeb = Platform.OS === "web";
 
 const APP_LOCK_SERVICE = "com.chatapp.app-lock";
 const APP_LOCK_ACCOUNT = "app-lock";
@@ -37,6 +40,7 @@ async function createLockCredential(): Promise<boolean> {
 }
 
 export async function isAppLockAvailable(): Promise<boolean> {
+  if (isWeb) return false;
   try {
     if (typeof Keychain.canImplyAuthentication === "function") {
       return await Keychain.canImplyAuthentication({
@@ -61,11 +65,12 @@ export async function isAppLockAvailable(): Promise<boolean> {
 }
 
 export async function getAppLockType(): Promise<Keychain.BIOMETRY_TYPE | "DEVICE_PASSCODE" | null> {
+  if (isWeb) return null;
   try {
     return (
       (await Keychain.getSupportedBiometryType()) ??
       (typeof Keychain.isPasscodeAuthAvailable === "function" &&
-      (await Keychain.isPasscodeAuthAvailable())
+        (await Keychain.isPasscodeAuthAvailable())
         ? "DEVICE_PASSCODE"
         : null)
     );
@@ -79,6 +84,7 @@ export async function getAppLockType(): Promise<Keychain.BIOMETRY_TYPE | "DEVICE
 }
 
 export async function authenticateAppLock(): Promise<boolean> {
+  if (isWeb) return false;
   try {
     addUserActionBreadcrumb("app_lock_authentication_attempt");
 
@@ -116,6 +122,7 @@ export async function getAppLockEnabled(): Promise<boolean> {
 }
 
 export async function enableAppLock(): Promise<boolean> {
+  if (isWeb) return false;
   if (!(await isAppLockAvailable())) {
     return false;
   }
@@ -138,6 +145,7 @@ export async function enableAppLock(): Promise<boolean> {
 }
 
 export async function disableAppLock(): Promise<boolean> {
+  if (isWeb) return true;
   try {
     const hasCredential =
       typeof Keychain.hasGenericPassword === "function"
