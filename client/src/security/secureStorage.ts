@@ -25,12 +25,46 @@ const KEYCHAIN_SERVICE = "com.chatapp.securestorage";
 const KEYCHAIN_ACCOUNT = "mmkv-encryption-key";
 
 const _storages = new Map<string, MMKV>();
+const _webStorages = new Map<string, StorageAdapter>();
 
-if (Platform.OS === "web") {
-  throw new Error(
-    "Secure storage is not supported on web. " +
-      "The app requires native keychain/keyguard APIs for secure storage."
-  );
+interface StorageAdapter {
+  getItem: (name: string) => string | null;
+  setItem: (name: string, value: string) => void;
+  removeItem: (name: string) => void;
+}
+
+function getWebStorage(keyPrefix: string): StorageAdapter {
+  if (!_webStorages.has(keyPrefix)) {
+    const storageKey = (name: string) => `${keyPrefix}_${name}`;
+    _webStorages.set(keyPrefix, {
+      getItem: (name: string) => {
+        try {
+          return localStorage.getItem(storageKey(name));
+        } catch {
+          return null;
+        }
+      },
+      setItem: (name: string, value: string) => {
+        try {
+          localStorage.setItem(storageKey(name), value);
+        } catch {
+          // Storage unavailable
+        }
+      },
+      removeItem: (name: string) => {
+        try {
+          localStorage.removeItem(storageKey(name));
+        } catch {
+          // Storage unavailable
+        }
+      },
+    });
+  }
+  const existing = _webStorages.get(keyPrefix);
+  if (!existing) {
+    throw new Error(`Failed to create web storage for ${keyPrefix}`);
+  }
+  return existing;
 }
 
 function generateKey(byteLength = 32): string {
@@ -43,6 +77,20 @@ function generateKey(byteLength = 32): string {
 
 async function getOrCreateEncryptionKey(): Promise<string> {
   addUserActionBreadcrumb("secure_storage_key_attempt");
+
+  const storageKey = "secure_storage_encryption_key";
+
+  if (Platform.OS === "web") {
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      addUserActionBreadcrumb("secure_storage_key_found");
+      return stored;
+    }
+    const newKey = generateKey(32);
+    localStorage.setItem(storageKey, newKey);
+    addUserActionBreadcrumb("secure_storage_key_created");
+    return newKey;
+  }
 
   let existing: Keychain.UserCredentials | false;
   try {
@@ -94,11 +142,32 @@ async function getStorage(storageId?: string): Promise<MMKV> {
   return storage;
 }
 
+function isWebStorage(): boolean {
+  return Platform.OS === "web";
+}
+
+function getWebStorageAdapter(storageId?: string): StorageAdapter {
+  const id = storageId ?? STORAGE_ID;
+  if (!_webStorages.has(id)) {
+    _webStorages.set(id, getWebStorage(id));
+  }
+  const existing = _webStorages.get(id);
+  if (!existing) {
+    throw new Error(`Failed to get web storage adapter for ${id}`);
+  }
+  return existing;
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
 export async function secureSet(key: string, value: string, storageId?: string): Promise<void> {
+  if (isWebStorage()) {
+    const adapter = getWebStorageAdapter(storageId);
+    adapter.setItem(key, value);
+    return;
+  }
   try {
     addUserActionBreadcrumb("secure_set_attempt", { key });
     const instance = await getStorage(storageId);
@@ -115,6 +184,11 @@ export async function secureSet(key: string, value: string, storageId?: string):
 }
 
 export async function secureGet(key: string, storageId?: string): Promise<string | undefined> {
+  if (isWebStorage()) {
+    const adapter = getWebStorageAdapter(storageId);
+    const value = adapter.getItem(key);
+    return value ?? undefined;
+  }
   try {
     addUserActionBreadcrumb("secure_get_attempt", { key });
     const instance = await getStorage(storageId);
@@ -132,6 +206,11 @@ export async function secureGet(key: string, storageId?: string): Promise<string
 }
 
 export async function secureDelete(key: string, storageId?: string): Promise<void> {
+  if (isWebStorage()) {
+    const adapter = getWebStorageAdapter(storageId);
+    adapter.removeItem(key);
+    return;
+  }
   try {
     addUserActionBreadcrumb("secure_delete_attempt", { key });
     const instance = await getStorage(storageId);
@@ -148,6 +227,17 @@ export async function secureDelete(key: string, storageId?: string): Promise<voi
 }
 
 export async function secureClear(): Promise<void> {
+  if (isWebStorage()) {
+    try {
+      for (const key of Object.keys(localStorage).filter((k) => k.startsWith(STORAGE_ID))) {
+        localStorage.removeItem(key);
+      }
+      localStorage.removeItem("secure_storage_encryption_key");
+    } catch {
+      // Ignore errors on web
+    }
+    return;
+  }
   try {
     addUserActionBreadcrumb("secure_clear_attempt");
     const instance = await getStorage();
