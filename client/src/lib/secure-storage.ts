@@ -4,7 +4,36 @@
  */
 
 import * as Keychain from "react-native-keychain";
+import { Platform } from "react-native";
 import { error as logError } from "@/utils/logger";
+
+const isWeb = Platform.OS === "web";
+
+interface WebSecureStorage {
+  getItem: (key: string) => string | null;
+  setItem: (key: string, value: string) => boolean;
+  removeItem: (key: string) => boolean;
+}
+
+const webSecureStorage: WebSecureStorage = {
+  getItem: (key: string) => localStorage.getItem(`secure_${key}`),
+  setItem: (key: string, value: string) => {
+    try {
+      localStorage.setItem(`secure_${key}`, value);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  removeItem: (key: string) => {
+    try {
+      localStorage.removeItem(`secure_${key}`);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+};
 
 export class SecureStorageService {
   private static instance: SecureStorageService;
@@ -20,10 +49,10 @@ export class SecureStorageService {
     return SecureStorageService.instance;
   }
 
-  /**
-   * Store sensitive data securely
-   */
   async setItem(key: string, value: string): Promise<boolean> {
+    if (isWeb) {
+      return webSecureStorage.setItem(key, value);
+    }
     try {
       const options = {
         service: "chatapp_secure",
@@ -38,10 +67,10 @@ export class SecureStorageService {
     }
   }
 
-  /**
-   * Retrieve sensitive data securely
-   */
   async getItem(key: string): Promise<string | null> {
+    if (isWeb) {
+      return webSecureStorage.getItem(key);
+    }
     try {
       const credentials = await Keychain.getInternetCredentials(key);
 
@@ -55,10 +84,10 @@ export class SecureStorageService {
     }
   }
 
-  /**
-   * Remove sensitive data securely
-   */
   async removeItem(key: string): Promise<boolean> {
+    if (isWeb) {
+      return webSecureStorage.removeItem(key);
+    }
     try {
       await Keychain.resetInternetCredentials({ server: key });
       return true;
@@ -68,10 +97,8 @@ export class SecureStorageService {
     }
   }
 
-  /**
-   * Check if biometric authentication is available
-   */
   async isBiometryAvailable(): Promise<boolean> {
+    if (isWeb) return false;
     try {
       const biometryType = await Keychain.getSupportedBiometryType();
       return biometryType !== null;
@@ -81,10 +108,8 @@ export class SecureStorageService {
     }
   }
 
-  /**
-   * Get the type of biometric authentication available
-   */
   async getBiometryType(): Promise<Keychain.BIOMETRY_TYPE | null> {
+    if (isWeb) return null;
     try {
       return await Keychain.getSupportedBiometryType();
     } catch (error: unknown) {
