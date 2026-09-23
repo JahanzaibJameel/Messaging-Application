@@ -4,13 +4,29 @@
  */
 
 import * as Keychain from "react-native-keychain";
+import { Platform } from "react-native";
 import { captureException, addUserActionBreadcrumb } from "../monitoring/sentry";
 
-// Keychain service configuration
 const KEYCHAIN_SERVICE = "com.chatapp.auth";
 const ACCESS_TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
 const USER_CREDENTIALS_KEY = "user_credentials";
+
+interface KeyValueStorage {
+  get: (key: string) => string | null;
+  set: (key: string, value: string) => void;
+  remove: (key: string) => void;
+}
+
+const webStorage: KeyValueStorage = {
+  get: (key: string) => localStorage.getItem(`keychain_${key}`),
+  set: (key: string, value: string) => localStorage.setItem(`keychain_${key}`, value),
+  remove: (key: string) => localStorage.removeItem(`keychain_${key}`),
+};
+
+function isWeb(): boolean {
+  return Platform.OS === "web";
+}
 
 /**
  * Secure token storage interface
@@ -34,6 +50,14 @@ export interface UserCredentials {
  * Returns both accessToken and refreshToken in a single keychain operation
  */
 export const getToken = async (): Promise<TokenStorage> => {
+  if (isWeb()) {
+    const accessToken = webStorage.get(ACCESS_TOKEN_KEY);
+    const refreshToken = webStorage.get(REFRESH_TOKEN_KEY);
+    return {
+      accessToken: accessToken || null,
+      refreshToken: refreshToken || null,
+    };
+  }
   try {
     addUserActionBreadcrumb("keychain_get_token_attempt");
 
@@ -82,6 +106,18 @@ export const getToken = async (): Promise<TokenStorage> => {
  * Set authentication tokens in secure storage
  */
 export const setToken = async (accessToken: string, refreshToken?: string): Promise<boolean> => {
+  if (isWeb()) {
+    try {
+      webStorage.set(ACCESS_TOKEN_KEY, accessToken);
+      if (refreshToken) {
+        webStorage.set(REFRESH_TOKEN_KEY, refreshToken);
+      }
+      return true;
+    } catch (error) {
+      console.error("[Keychain Web] Failed to set token:", error);
+      return false;
+    }
+  }
   try {
     addUserActionBreadcrumb("keychain_set_token_attempt", {
       hasAccessToken: !!accessToken,
@@ -130,6 +166,16 @@ export const setToken = async (accessToken: string, refreshToken?: string): Prom
  * Reset/remove all authentication tokens from secure storage
  */
 export const resetToken = async (): Promise<boolean> => {
+  if (isWeb()) {
+    try {
+      webStorage.remove(ACCESS_TOKEN_KEY);
+      webStorage.remove(REFRESH_TOKEN_KEY);
+      return true;
+    } catch (error) {
+      console.error("[Keychain Web] Failed to reset token:", error);
+      return false;
+    }
+  }
   try {
     addUserActionBreadcrumb("keychain_reset_token_attempt");
 
@@ -169,6 +215,15 @@ export const resetToken = async (): Promise<boolean> => {
  * Store user credentials securely
  */
 export const setUserCredentials = async (credentials: UserCredentials): Promise<boolean> => {
+  if (isWeb()) {
+    try {
+      webStorage.set(USER_CREDENTIALS_KEY, JSON.stringify(credentials));
+      return true;
+    } catch (error) {
+      console.error("[Keychain Web] Failed to set credentials:", error);
+      return false;
+    }
+  }
   try {
     addUserActionBreadcrumb("keychain_set_credentials_attempt", {
       userId: credentials.userId,
@@ -210,6 +265,15 @@ export const setUserCredentials = async (credentials: UserCredentials): Promise<
  * Get user credentials from secure storage
  */
 export const getUserCredentials = async (): Promise<UserCredentials | null> => {
+  if (isWeb()) {
+    try {
+      const stored = webStorage.get(USER_CREDENTIALS_KEY);
+      if (!stored) return null;
+      return JSON.parse(stored) as UserCredentials;
+    } catch {
+      return null;
+    }
+  }
   try {
     addUserActionBreadcrumb("keychain_get_credentials_attempt");
 
@@ -252,6 +316,15 @@ export const getUserCredentials = async (): Promise<UserCredentials | null> => {
  * Reset user credentials from secure storage
  */
 export const resetUserCredentials = async (): Promise<boolean> => {
+  if (isWeb()) {
+    try {
+      webStorage.remove(USER_CREDENTIALS_KEY);
+      return true;
+    } catch (error) {
+      console.error("[Keychain Web] Failed to reset credentials:", error);
+      return false;
+    }
+  }
   try {
     addUserActionBreadcrumb("keychain_reset_credentials_attempt");
 
