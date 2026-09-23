@@ -23,7 +23,7 @@ export interface AuthState {
 
 export interface AuthActions {
   login: (phone: string) => Promise<void>;
-  verifyOtp: (otp: string) => Promise<boolean>;
+  verifyOtp: (otp: string, phone?: string) => Promise<boolean>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
   setAuthenticated: (value: boolean) => void;
