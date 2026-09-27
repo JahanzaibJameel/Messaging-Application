@@ -70,7 +70,7 @@ export async function getAppLockType(): Promise<Keychain.BIOMETRY_TYPE | "DEVICE
     return (
       (await Keychain.getSupportedBiometryType()) ??
       (typeof Keychain.isPasscodeAuthAvailable === "function" &&
-        (await Keychain.isPasscodeAuthAvailable())
+      (await Keychain.isPasscodeAuthAvailable())
         ? "DEVICE_PASSCODE"
         : null)
     );
