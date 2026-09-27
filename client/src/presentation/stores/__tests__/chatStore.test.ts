@@ -141,23 +141,45 @@ describe("chatStore", () => {
     expect(newState.chats.entities[chat2.id]).toBeDefined();
   });
 
-  it("sorting works after rehydration", () => {
+  it("sorts chats with pinned first, then by timestamp descending", () => {
+    const baseTime = new Date("2024-01-01T10:00:00Z");
     const chat1 = ChatEntity.createPrivate("user-1", "user-2");
-    const chat2 = ChatEntity.createPrivate("user-3", "user-1");
-    const chat3 = ChatEntity.createPrivate("user-4", "user-1");
-    const chat4 = ChatEntity.createPrivate("user-5", "user-1");
-    const chat5 = ChatEntity.createPrivate("user-6", "user-1");
+    chat1.createdAt = new Date(baseTime.getTime() + 1000);
+    chat1.updatedAt = new Date(baseTime.getTime() + 1000);
+    chat1.lastActivity = new Date(baseTime.getTime() + 1000);
+    chat1.isPinned = true;
 
-    // Set up chat order
+    const chat2 = ChatEntity.createPrivate("user-3", "user-1");
+    chat2.createdAt = new Date(baseTime.getTime() + 2000);
+    chat2.updatedAt = new Date(baseTime.getTime() + 2000);
+    chat2.lastActivity = new Date(baseTime.getTime() + 2000);
+
+    const chat3 = ChatEntity.createPrivate("user-4", "user-1");
+    chat3.createdAt = new Date(baseTime.getTime() + 3000);
+    chat3.updatedAt = new Date(baseTime.getTime() + 3000);
+    chat3.lastActivity = new Date(baseTime.getTime() + 3000);
+
+    const chat4 = ChatEntity.createPrivate("user-5", "user-1");
+    chat4.createdAt = new Date(baseTime.getTime() + 4000);
+    chat4.updatedAt = new Date(baseTime.getTime() + 4000);
+    chat4.lastActivity = new Date(baseTime.getTime() + 4000);
+
+    const chat5 = ChatEntity.createPrivate("user-6", "user-1");
+    chat5.createdAt = new Date(baseTime.getTime() + 5000);
+    chat5.updatedAt = new Date(baseTime.getTime() + 5000);
+    chat5.lastActivity = new Date(baseTime.getTime() + 5000);
+
     useChatStore.getState().addChat(chat1);
     useChatStore.getState().addChat(chat2);
     useChatStore.getState().addChat(chat3);
     useChatStore.getState().addChat(chat4);
     useChatStore.getState().addChat(chat5);
 
-    // Verify sorting after rehydration
     const sorted = useChatStore.getState().getSortedChats();
     expect(sorted[0]).toBe(chat1); // pinned first
-    expect(sorted[1]).toBe(chat2); // next by timestamp
+    expect(sorted[1]).toBe(chat5); // newest timestamp (chat5 has latest time)
+    expect(sorted[2]).toBe(chat4);
+    expect(sorted[3]).toBe(chat3);
+    expect(sorted[4]).toBe(chat2); // oldest timestamp
   });
 });
