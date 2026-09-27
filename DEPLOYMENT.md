@@ -1,730 +1,681 @@
-# ChatApp 2026 - Production Deployment Guide
+# Deployment Guide
+
+> **Version**: 3.0.0  
+> **Last Updated**: 2026-09-27  
+> **Status**: Production Ready ✅
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Prerequisites](#prerequisites)
+- [Environment Configuration](#environment-configuration)
+- [Production Readiness Checklist](#production-readiness-checklist)
+- [Build Process](#build-process)
+- [Deployment Pipelines](#deployment-pipelines)
+- [Platform-Specific Deployment](#platform-specific-deployment)
+- [Monitoring & Observability](#monitoring--observability)
+- [Rollback Procedures](#rollback-procedures)
+- [Troubleshooting](#troubleshooting)
+- [Maintenance](#maintenance)
+
+---
 
 ## Overview
 
-This is a **production-ready**, **TypeScript-strict**, **zero-ESLint-warnings** React Native WhatsApp-style chat application built with modern 2026 standards.
+This guide covers the complete deployment process for ChatApp 2026 across **iOS**, **Android**, and **Web** platforms. The deployment pipeline uses **GitHub Actions** for CI/CD and **EAS Build** for mobile app builds.
 
-### Tech Stack
+### Deployment Architecture
 
-- **React Native** 0.82+ (Latest)
-- **Expo** 55+ with Hermes JS Engine
-- **TypeScript** 5.9+ Strict Mode
-- **React Navigation** v7
-- **Zustand** + **MMKV** (State Management + Fast Storage)
-- **React Query** v5 (Server State)
-- **React Hook Form** + **Zod** (Form Validation)
-- **Reanimated** v4 (Smooth Animations)
-- **FlashList** (High-Performance Lists)
-- **Prettier** + **ESLint** (Code Quality)
+```mermaid
+graph LR
+    A[Git Push] --> B[GitHub Actions CI]
+    B --> C{Lint & Test}
+    C -->|Pass| D[Build]
+    C -->|Fail| E[Notify Team]
+    D --> F[Security Audit]
+    F --> G{Pass?}
+    G -->|Yes| H[Deploy]
+    G -->|No| E
+    H --> I[iOS App Store]
+    H --> J[Google Play Store]
+    H --> K[Web / Netlify]
+```
+
+### Deployment Environments
+
+| Environment     | Purpose                | URL                   | Branch        |
+| --------------- | ---------------------- | --------------------- | ------------- |
+| **Development** | Local development      | `localhost:8081`      | `main`        |
+| **Staging**     | Pre-production testing | `staging.chatapp.com` | `staging`     |
+| **Production**  | Live app               | `chatapp.com`         | `main` (tags) |
+
+---
 
 ## Prerequisites
 
-### Development Environment
+### Required Accounts
 
-- **Node.js** >= 18.0.0
-- **npm** >= 9.0.0
-- **Expo CLI** latest version
-- **Git** for version control
+| Service                 | Purpose                | Sign Up                                                    |
+| ----------------------- | ---------------------- | ---------------------------------------------------------- |
+| **Expo**                | EAS Build, OTA updates | [expo.dev](https://expo.dev)                               |
+| **Apple Developer**     | iOS app signing        | [developer.apple.com](https://developer.apple.com)         |
+| **Google Play Console** | Android app signing    | [play.google.com/console](https://play.google.com/console) |
+| **Sentry**              | Error tracking         | [sentry.io](https://sentry.io)                             |
+| **Netlify/Vercel**      | Web hosting            | [netlify.com](https://netlify.com)                         |
+| **GitHub**              | CI/CD, repository      | [github.com](https://github.com)                           |
 
-### Platform Requirements
+### Required Secrets
 
-- **iOS**: Xcode 14+, iOS 12+ target
-- **Android**: Android Studio, API Level 21+ (Android 5.0+)
-- **Web**: Modern browsers with ES2020 support
-
-## Environment Variables
-
-### Required Environment Variables
-
-Create a `.env` file in the root directory:
-
-```env
-# API Configuration
-EXPO_PUBLIC_API_URL=https://api.chatapp.com
-EXPO_PUBLIC_WS_URL=wss://api.chatapp.com/ws
-EXPO_PUBLIC_APP_VERSION=3.0.0
-EXPO_PUBLIC_BUILD_NUMBER=1
-
-# Sentry Configuration
-EXPO_PUBLIC_SENTRY_DSN=https://your-sentry-dsn@sentry.io/project-id
-
-# Feature Flags
-EXPO_PUBLIC_ENABLE_FEATURE_FLAGS=true
-
-# Development Only
-EXPO_PUBLIC_DEV_MODE=false
-```
-
-### GitHub Repository Secrets
-
-Set these in your GitHub repository settings:
+Set these in **GitHub Repository Secrets** (`Settings → Secrets and variables → Actions`):
 
 ```bash
+# Expo / EAS
+EXPO_TOKEN=your-expo-token-here
+
 # Sentry
 SENTRY_AUTH_TOKEN=your-sentry-auth-token
 SENTRY_ORG=your-sentry-org
 SENTRY_PROJECT=your-sentry-project
 
-# Expo
-EXPO_TOKEN=your-expo-token
+# Apple (for iOS signing)
+APPLE_ID=your-apple-id@example.com
+APPLE_ID_PASSWORD=your-app-specific-password
+APPLE_TEAM_ID=your-team-id
 
-# Firebase
-FIREBASE_SERVICE_ACCOUNT_STAGING=your-firebase-staging-key
-FIREBASE_SERVICE_ACCOUNT_PROD=your-firebase-prod-key
+# Google (for Android signing)
+GOOGLE_PLAY_SERVICE_ACCOUNT_JSON=your-service-account-json
 
-# Slack (optional)
-SLACK_WEBHOOK_URL=your-slack-webhook-url
+# Web Deployment
+NETLIFY_AUTH_TOKEN=your-netlify-token
+NETLIFY_SITE_ID=your-site-id
 
 # API Keys
 API_BASE_URL=https://api.chatapp.com
-APP_VERSION=3.0.0
-BUILD_NUMBER=1
+SENTRY_DSN=https://your-sentry-dsn@sentry.io/project-id
 ```
+
+---
+
+## Environment Configuration
+
+### Environment Files
+
+```env
+# .env.example (commit this)
+EXPO_PUBLIC_API_URL=https://api.chatapp.com
+EXPO_PUBLIC_WS_URL=wss://api.chatapp.com/ws
+EXPO_PUBLIC_APP_NAME=ChatApp
+EXPO_PUBLIC_VERSION=3.0.0
+EXPO_PUBLIC_BUILD_NUMBER=1
+EXPO_PUBLIC_SENTRY_DSN=https://your-sentry-dsn@sentry.io/project-id
+EXPO_PUBLIC_ENABLE_FEATURE_FLAGS=true
+EXPO_PUBLIC_DEV_MODE=false
+```
+
+### Environment Validation
+
+```bash
+# Validate environment variables
+npm run validate:env
+
+# This checks:
+# - All required variables are set
+# - No placeholder values remain
+# - URLs are valid
+# - Version numbers follow semver
+```
+
+---
 
 ## Production Readiness Checklist
 
 ### ✅ Code Quality
 
-- [ ] **TypeScript**: No type errors, strict mode enabled
-- [ ] **ESLint**: Zero warnings, all rules passing
-- [ ] **Prettier**: Code formatted consistently
-- [ ] **Tests**: 85%+ coverage across all metrics
-- [ ] **Bundle Size**: Under 1.5MB limit
-- [ ] **Console Logs**: No console.log in production code
-- [ ] **Dead Code**: No commented-out code blocks
+- [ ] **TypeScript**: Zero type errors (`npm run type-check`)
+- [ ] **ESLint**: Zero warnings (`npm run lint`)
+- [ ] **Prettier**: Code formatted (`npm run format:check`)
+- [ ] **Tests**: 85%+ coverage (`npm run test:coverage`)
+- [ ] **Console Logs**: No `console.log` in production code (`npm run check:console`)
+- [ ] **Bundle Size**: < 2MB (`npm run bundle:analyze`)
 
 ### ✅ Security
 
-- [ ] **SSL Pinning**: Certificates configured and validated
-- [ ] **Keychain/Keystore**: Sensitive data stored securely
-- [ ] **Device Security**: Jailbreak/root detection enabled
+- [ ] **Dependencies**: No high/critical vulnerabilities (`npm audit`)
+- [ ] **SSL Pinning**: Certificates configured and tested
+- [ ] **Keychain**: Sensitive data stored securely
 - [ ] **Input Validation**: All inputs validated with Zod
-- [ ] **Dependency Audit**: No high/critical vulnerabilities
-- [ ] **Environment Variables**: No secrets in bundle
-- [ ] **Network Security**: HTTPS-only connections
+- [ ] **Environment**: No secrets in bundle or source control
 
 ### ✅ Performance
 
-- [ ] **Bundle Analysis**: Optimized imports and code splitting
-- [ ] **Image Optimization**: Compressed and lazy-loaded
-- [ ] **List Performance**: FlashList implemented for large lists
-- [ ] **Animation Performance**: 60fps animations with Reanimated
-- [ ] **Memory Management**: No memory leaks, proper cleanup
-- [ ] **Startup Time**: App launches within 3 seconds
+- [ ] **Startup Time**: < 3 seconds cold start
+- [ ] **Memory**: < 150MB peak usage
+- [ ] **List Rendering**: FlashList implemented for long lists
+- [ ] **Animations**: 60fps on mid-range devices
+- [ ] **Network**: Efficient retry logic, no memory leaks
 
 ### ✅ Accessibility
 
-- [ ] **WCAG 2.1 AA**: All components accessible
-- [ ] **Screen Reader**: VoiceOver/TalkBack support
-- [ ] **Color Contrast**: Minimum 4.5:1 for normal text
-- [ ] **Touch Targets**: Minimum 44x44 points
-- [ ] **Keyboard Navigation**: All interactive elements accessible
-- [ ] **RTL Support**: Right-to-left languages supported
+- [ ] **WCAG 2.1 AA**: All components tested
+- [ ] **Screen Reader**: VoiceOver/TalkBack verified
+- [ ] **Touch Targets**: Minimum 44×44pt / 48×48dp
+- [ ] **Color Contrast**: 4.5:1 minimum verified
+- [ ] **RTL**: Arabic/Hebrew layouts tested
 
-### ✅ Internationalization
+### ✅ Platform Compliance
 
-- [ ] **String Externalization**: All user-facing strings externalized
-- [ ] **Translation Files**: Complete translations for target languages
-- [ ] **RTL Layout**: Proper layout for RTL languages
-- [ ] **Date/Time Formatting**: Locale-appropriate formatting
-- [ ] **Number Formatting**: Locale-appropriate formatting
-- [ ] **Testing**: Tested with different locales
+- [ ] **iOS**: App Store guidelines met, no private APIs
+- [ ] **Android**: Play Store policies met, target SDK 34+
+- [ ] **Web**: PWA manifest, SEO meta tags, Lighthouse 90+
 
-### ✅ Testing
+---
 
-- [ ] **Unit Tests**: All business logic tested
-- [ ] **Component Tests**: UI components tested with React Testing Library
-- [ ] **Integration Tests**: Store interactions tested
-- [ ] **E2E Tests**: Critical user journeys tested
-- [ ] **Accessibility Tests**: Screen reader testing completed
-- [ ] **Performance Tests**: Bundle size and load time tested
+## Build Process
 
-## Deployment Process
+### EAS Build Configuration
 
-### 1. Pre-deployment Checks
-
-```bash
-# Run all quality checks
-npm run validate
-
-# Run tests with coverage
-npm run test:coverage
-
-# Check bundle size
-npm run bundle:analyze
-
-# Security audit
-npm run security:check
-
-# Console log check
-npm run check:console
+```json
+// eas.json
+{
+  "cli": {
+    "version": ">= 3.0.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": false
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "ios": {
+        "autoIncrement": "build-number",
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "app-bundle",
+        "autoIncrement": "buildNumber"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "your-apple-id@example.com",
+        "appleTeamId": "your-team-id",
+        "ascAppId": "1234567890"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-play-service-account.json",
+        "track": "production"
+      }
+    }
+  }
+}
 ```
 
-### 2. Build Applications
-
-#### iOS Build
+### Build Commands
 
 ```bash
-# Build for iOS using EAS
+# Development build (simulator/emulator)
+eas build --platform ios --profile development
+eas build --platform android --profile development
+
+# Preview build (internal testing)
+eas build --platform ios --profile preview
+eas build --platform android --profile preview
+
+# Production build (App Store / Play Store)
+eas build --platform ios --profile production
+eas build --platform android --profile production
+```
+
+---
+
+## Deployment Pipelines
+
+### GitHub Actions Workflow
+
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: "npm"
+      - run: npm install
+      - run: npm run validate
+      - run: npm run type-check
+      - run: npm run lint
+      - run: npm test -- --coverage
+
+  build:
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: "npm"
+      - run: npm install
+      - run: npm run build:web
+
+  deploy-web:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: netlify/actions/cli@master
+        with:
+          args: deploy --dir=dist --prod
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+  build-ios:
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+
+  submit-ios:
+    needs: build-ios
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+
+  build-android:
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+  submit-android:
+    needs: build-android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+```
+
+---
+
+## Platform-Specific Deployment
+
+### iOS App Store
+
+#### Requirements
+
+- Apple Developer Account ($99/year)
+- App Store Connect access
+- Valid signing certificates
+- Provisioning profiles
+
+#### Submission Checklist
+
+- [ ] **App Metadata**:
+  - [ ] App name: "ChatApp 2026"
+  - [ ] Category: Social Networking
+  - [ ] Age rating: 12+ (messaging app)
+  - [ ] Privacy Policy URL
+  - [ ] Support URL
+  - [ ] Marketing URL (optional)
+
+- [ ] **Assets**:
+  - [ ] App icon (1024×1024 PNG)
+  - [ ] Screenshots (all device sizes)
+  - [ ] App preview videos (optional)
+
+- [ ] **Build Settings**:
+  - [ ] Bundle identifier: `com.chatapp.app`
+  - [ ] Version: `3.0.0`
+  - [ ] Build number: Auto-incremented
+  - [ ] Minimum iOS version: 13.0
+
+#### Submit to App Store
+
+```bash
+# 1. Build production IPA
 eas build --platform ios --profile production
 
-# Or manual build
-npx expo export --platform ios
+# 2. Submit to App Store Connect
+eas submit --platform ios --profile production
+
+# Or via App Store Connect web UI:
+# 1. Download IPA from EAS
+# 2. Upload via Transporter app
+# 3. Submit for review
 ```
 
-#### Android Build
+### Google Play Store
+
+#### Requirements
+
+- Google Play Console access
+- Service account JSON key
+- App signing enabled
+
+#### Submission Checklist
+
+- [ ] **Store Listing**:
+  - [ ] App name: "ChatApp 2026"
+  - [ ] Short description (80 chars)
+  - [ ] Full description (4000 chars)
+  - [ ] Category: Communication
+  - [ ] Content rating: Everyone
+  - [ ] Privacy Policy URL
+  - [ ] Support email
+
+- [ ] **Assets**:
+  - [ ] App icon (512×512 PNG)
+  - [ ] Feature graphic (1024×500 PNG)
+  - [ ] Screenshots (phone, tablet, foldable)
+  - [ ] Promo video (optional)
+
+- [ ] **Build Settings**:
+  - [ ] Application ID: `com.chatapp.app`
+  - [ ] Version code: Auto-incremented
+  - [ ] Minimum SDK: 21 (Android 5.0)
+  - [ ] Target SDK: 34 (Android 14)
+
+#### Submit to Play Store
 
 ```bash
-# Build for Android using EAS
+# 1. Build production AAB
 eas build --platform android --profile production
 
-# Or manual build
-npx expo export --platform android
+# 2. Submit to Google Play
+eas submit --platform android --profile production
+
+# Or via Play Console web UI:
+# 1. Download AAB from EAS
+# 2. Upload to Play Console
+# 3. Roll out to production
 ```
 
-#### Web Build
+### Web Deployment
+
+#### Build
 
 ```bash
 # Build for web
 npm run build:web
 
-# Deploy to Firebase (staging)
-firebase deploy --only hosting:staging
-
-# Deploy to Firebase (production)
-firebase deploy --only hosting:prod
+# Output: ./dist/
 ```
 
-### 3. Sentry Release Management
+#### Deploy to Netlify
 
 ```bash
-# Create Sentry release
-npx sentry-cli releases new --version $APP_VERSION
+# Option 1: Netlify CLI
+npm install -g netlify-cli
+npm run build:web
+netlify deploy --prod --dir=dist
 
-# Upload source maps
-npx sentry-cli releases files $APP_VERSION \
+# Option 2: Git push (recommended)
+# Connect GitHub repo to Netlify
+# Netlify auto-deploys on push to main
+```
+
+#### Deploy to Vercel
+
+```bash
+# Install Vercel CLI
+npm install -g vercel
+
+# Deploy
+npm run build:web
+vercel --prod
+```
+
+---
+
+## Monitoring & Observability
+
+### Sentry Integration
+
+```typescript
+// Sentry release management
+Sentry.init({
+  dsn: Config.SENTRY_DSN,
+  environment: __DEV__ ? "development" : "production",
+  release: `${Config.APP_NAME}@${Config.VERSION}`,
+  tracesSampleRate: 0.1,
+  beforeSend: (event) => {
+    // Scrub sensitive data
+    return event;
+  },
+});
+```
+
+### Release Process
+
+```bash
+# 1. Create Sentry release
+npx sentry-cli releases new --version 3.0.0
+
+# 2. Upload source maps
+npx sentry-cli releases files 3.0.0 upload-sourcemaps \
   --dist dist \
   --url-prefix ~/ \
   dist/main.jsbundle dist/main.jsbundle.map
 
-# Finalize release
-npx sentry-cli releases finalize $APP_VERSION
+# 3. Finalize release
+npx sentry-cli releases finalize 3.0.0
 
-# Associate commits
-npx sentry-cli releases set-commits --auto $APP_VERSION
+# 4. Associate commits
+npx sentry-cli releases set-commits --auto 3.0.0
 ```
 
-### 4. App Store Submission
+### Health Monitoring
 
-#### iOS App Store
+| Metric                | Tool               | Alert Threshold |
+| --------------------- | ------------------ | --------------- |
+| **Crash-free users**  | Sentry             | < 99.5%         |
+| **App startup time**  | Sentry Performance | > 3s            |
+| **API latency**       | Sentry Performance | > 500ms         |
+| **WebSocket latency** | Custom             | > 100ms         |
+| **Error rate**        | Sentry             | > 1%            |
+| **Bundle size**       | GitHub Actions     | > 2MB           |
 
-1. **Prepare Assets**:
-   - App icon: 1024x1024 PNG
-   - Screenshots: All device sizes (iPhone, iPad)
-   - Privacy Policy URL
-   - Support URL
-   - Marketing URL
-
-2. **App Store Connect**:
-   - Create new app version
-   - Upload build from EAS
-   - Fill metadata: description, keywords, categories
-   - Set pricing and availability
-   - Submit for review
-
-3. **Required Information**:
-   ```
-   App Name: ChatApp 2026
-   Category: Social Networking
-   Content Rating: 12+ (messaging app)
-   Privacy Policy: https://chatapp.com/privacy
-   Support: https://chatapp.com/support
-   ```
-
-#### Google Play Store
-
-1. **Prepare Assets**:
-   - App icon: 512x512 PNG
-   - Feature graphic: 1024x500 PNG
-   - Screenshots: Phone and tablet sizes
-   - Privacy Policy URL
-   - Support URL
-
-2. **Google Play Console**:
-   - Create new release
-   - Upload AAB from EAS build
-   - Fill store listing: description, changelog
-   - Set content rating and target audience
-   - Roll out to production
-
-3. **Required Information**:
-   ```
-   App Name: ChatApp 2026
-   Category: Communication
-   Content Rating: Everyone (messaging app)
-   Privacy Policy: https://chatapp.com/privacy
-   Support: https://chatapp.com/support
-   ```
-
-## Monitoring and Maintenance
-
-### Production Monitoring
-
-1. **Sentry**: Error tracking and performance monitoring
-2. **Firebase Analytics**: User behavior and crash analytics
-3. **App Store Analytics**: Downloads, ratings, and reviews
-4. **Custom Analytics**: Feature usage and business metrics
-5. **Performance Monitoring**: Bundle size, load times, memory usage
-
-### Health Checks
-
-```bash
-# Monitor app health
-npm run health:check
-
-# Check bundle size
-npm run bundle:size
-
-# Security audit
-npm run security:audit
-
-# Dependency updates
-npm audit fix
-npm update
-```
+---
 
 ## Rollback Procedures
 
 ### Immediate Rollback
 
-1. **App Stores**:
-   - iOS: Remove from sale or issue urgent update
-   - Android: Roll back to previous version
+#### Mobile Apps
 
-2. **Web Deployment**:
+```bash
+# iOS: Remove from sale or expedited update
+# Via App Store Connect:
+1. Go to My Apps → ChatApp
+2. Select current version
+3. Remove from sale OR submit urgent update
 
-   ```bash
-   # Rollback to previous version
-   firebase deploy --only hosting:prod --version previous
-   ```
+# Android: Halt rollout or upload hotfix
+# Via Play Console:
+1. Go to Release > Production
+2. Halt rollout
+3. Upload fixed APK/AAB with incremented version code
+```
 
-3. **API Issues**:
-   - Enable maintenance mode
-   - Switch to backup API endpoints
-   - Monitor error rates
+#### Web
 
-### Communication
+```bash
+# Netlify: Rollback to previous deploy
+netlify rollback --site-id=your-site-id
 
-1. **Internal Team**: Slack notifications for all deployments
-2. **Users**: In-app notifications for maintenance
-3. **Stakeholders**: Email summary of incident and resolution
+# Or via Netlify UI:
+# Deploys → Select previous deploy → Publish
+```
+
+### Database Rollback
+
+```bash
+# If migration causes issues:
+# 1. Stop app traffic
+# 2. Restore database backup
+# 3. Re-run previous migration
+# 4. Verify data integrity
+# 5. Resume traffic
+```
+
+### Communication Plan
+
+1. **Internal**: Slack notification to #incidents
+2. **Users**: In-app notification for maintenance
+3. **Status Page**: Update status.chatapp.com
+4. **Post-mortem**: Document within 24 hours
+
+---
 
 ## Troubleshooting
 
-### Common Issues
-
-#### Build Failures
+### Build Failures
 
 ```bash
-# Clear Expo cache
+# Clear all caches
+rm -rf node_modules
+rm -rf .expo
+rm -rf dist
+npm install
 npx expo start --clear
 
-# Reset node modules
-rm -rf node_modules
-npm install
+# For iOS
+cd client/ios
+rm -rf build
+pod install --repo-update
+cd ..
 
-# Clear watchman cache
-watchman watch-del-all
+# For Android
+cd client/android
+./gradlew clean
+cd ..
 ```
 
-#### Deployment Issues
+### Deployment Failures
 
 ```bash
 # Check EAS build status
 eas build:list
-
-# View build logs
 eas build:view --build-id <id>
 
 # Check Sentry releases
 npx sentry-cli releases list
+
+# Verify environment variables
+npm run validate:env
 ```
 
-#### Performance Issues
+### Performance Issues
 
 ```bash
 # Analyze bundle size
 npm run bundle:analyze
 
-# Check memory usage
+# Profile performance
 npx react-native-bundle-visualizer
 
-# Profile performance
+# Check memory usage
 npx expo start --dev-client
+# Use Flipper or React DevTools
 ```
+
+---
+
+## Maintenance
+
+### Weekly Tasks
+
+- [ ] Review Sentry error reports
+- [ ] Check GitHub Actions status
+- [ ] Review dependency updates (Dependabot)
+- [ ] Monitor app store reviews
+
+### Monthly Tasks
+
+- [ ] Update dependencies (`npm update`)
+- [ ] Review and rotate API keys
+- [ ] Security audit (`npm audit`)
+- [ ] Performance review (bundle size, startup time)
+- [ ] Review and close stale issues
+
+### Quarterly Tasks
+
+- [ ] Major dependency upgrades
+- [ ] Security penetration testing
+- [ ] Accessibility audit
+- [ ] Performance benchmarking
+- [ ] Architecture review
+
+---
 
 ## Support
 
 ### Documentation
 
-- **[README.md](README.md)**: Getting started guide
-- **[ARCHITECTURE.md](ARCHITECTURE.md)**: System architecture
-- **[CONTRIBUTING.md](CONTRIBUTING.md)**: Development guidelines
-- **[SECURITY.md](SECURITY.md)**: Security implementation
+- [README.md](README.md) — Getting started
+- [ARCHITECTURE.md](ARCHITECTURE.md) — System architecture
+- [CONTRIBUTING.md](CONTRIBUTING.md) — Development guide
+- [SECURITY.md](SECURITY.md) — Security practices
 
-### Contact
+### Contacts
 
-- **Development Team**: dev-team@chatapp.com
-- **DevOps Team**: devops@chatapp.com
-- **Security**: security@chatapp.com
-
----
-
-## Deployment Checklist Summary
-
-- [ ] **Environment**: All variables configured
-- [ ] **Code Quality**: All checks passing
-- [ ] **Security**: Audit completed
-- [ ] **Testing**: Coverage requirements met
-- [ ] **Build**: All platforms built successfully
-- [ ] **Sentry**: Release created and source maps uploaded
-- [ ] **Documentation**: Updated with version info
-- [ ] **Monitoring**: Alerts configured
-- [ ] **Rollback Plan**: Prepared and tested
-
-## Version History
-
-- **v3.0.0**: Initial production release with full feature set
-- **v2.x.x**: Legacy versions (deprecated)
-- **v1.x.x**: Initial development versions (deprecated)
+| Team         | Contact              | Purpose                  |
+| ------------ | -------------------- | ------------------------ |
+| **DevOps**   | devops@chatapp.com   | Deployment issues        |
+| **Security** | security@chatapp.com | Security concerns        |
+| **Mobile**   | mobile@chatapp.com   | Platform-specific issues |
+| **Backend**  | backend@chatapp.com  | API/WebSocket issues     |
 
 ---
 
-**This deployment guide ensures ChatApp meets enterprise-grade standards for production deployment.**
-
-- **Node.js** >= 18.0.0
-- **npm** >= 9.0.0
-- **Expo CLI** (installed globally)
-- **Netlify Account** (for web deployment)
-
-## Installation
-
-### 1. Install Dependencies
-
-```bash
-npm install
-```
-
-### 2. Verify Installation
-
-```bash
-npm run type-check
-npm run lint
-```
-
-## Development
-
-### Run on Web (Recommended for testing)
-
-```bash
-npm run web
-```
-
-This will start the web version at `http://localhost:19006`
-
-### Run on iOS
-
-```bash
-npm run ios
-```
-
-### Run on Android
-
-```bash
-npm run android
-```
-
-### Run with Dev Server
-
-```bash
-npm run dev
-```
-
-## Code Quality
-
-### Type Checking (TypeScript Strict Mode)
-
-```bash
-npm run type-check
-```
-
-All files are in strict mode. Zero type errors required.
-
-### Linting
-
-```bash
-npm run lint
-```
-
-All ESLint rules are enforced. Zero warnings allowed.
-
-### Fix & Format
-
-```bash
-npm run lint:fix
-npm run format
-```
-
-## Building for Production
-
-### Web Build (Netlify)
-
-```bash
-npm run build:web
-```
-
-Output: `./dist/` directory
-
-This creates a Single Page Application (SPA) optimized for static hosting.
-
-## Deployment
-
-### Deploy to Netlify
-
-#### Option 1: Netlify CLI
-
-```bash
-npm install -g netlify-cli
-npm run build:web
-netlify deploy --prod --dir=dist
-```
-
-#### Option 2: Git Push (Recommended)
-
-1. Connect your GitHub repository to Netlify
-2. Netlify automatically detects `netlify.toml`
-3. Push to main branch, Netlify builds & deploys automatically
-
-```bash
-git add .
-git commit -m "Production deployment"
-git push origin main
-```
-
-#### Option 3: Netlify Web UI
-
-1. Go to [netlify.com](https://netlify.com)
-2. Click "New site from Git"
-3. Connect your repository
-4. Build command: `npm run build:web`
-5. Publish directory: `dist`
-6. Deploy
-
-### Deploy to Vercel (Alternative)
-
-```bash
-npm install -g vercel
-npm run build:web
-vercel --prod
-```
-
-### Build Optimization
-
-To preview the production build locally:
-
-```bash
-npm run build:web
-npm run preview:web
-```
-
-Then open `http://localhost:3000`
-
-## Project Structure
-
-```
-chatapp-project/
-├── client/
-│   ├── App.tsx                     # Main app entry
-│   ├── index.js                    # Registration point
-│   ├── components/
-│   │   ├── ui/                    # Reusable UI components
-│   │   └── chat/                  # Chat-specific components
-│   ├── features/
-│   │   ├── auth/                  # Authentication feature
-│   │   └── chat/                  # Chat feature
-│   ├── screens/                   # Navigation screens
-│   ├── navigation/                # React Navigation setup
-│   ├── hooks/                     # Custom React hooks
-│   ├── store/                     # Zustand stores
-│   ├── services/                  # API & business logic
-│   ├── types/                     # TypeScript types
-│   ├── utils/                     # Utilities
-│   ├── constants/                 # Constants
-│   ├── theme/                     # Theme & styling
-│   └── lib/
-│       ├── query-client.ts       # React Query config
-│       └── storage/              # MMKV storage service
-├── shared/                        # Shared types & schemas
-├── server/                        # Backend (optional)
-├── assets/                        # Images, fonts, etc.
-├── scripts/                       # Build scripts
-├── package.json
-├── tsconfig.json
-├── eslint.config.js
-├── babel.config.js
-├── app.json
-├── netlify.toml
-└── README.md
-```
-
-## Environment Variables
-
-Create `.env.local` (not committed to git):
-
-```env
-# Optional: API endpoints
-EXPO_PUBLIC_API_URL=https://api.example.com
-EXPO_PUBLIC_WS_URL=wss://ws.example.com
-
-# Analytics (optional)
-EXPO_PUBLIC_ANALYTICS_ID=your_id
-```
-
-## Performance Optimization
-
-✅ **Enabled by Default:**
-
-- Hermes JS Engine
-- FlashList instead of FlatList
-- React Compiler (React 19)
-- Memoized components
-- Image optimization with Expo Image
-- Code splitting & lazy loading
-- Reanimated 60FPS animations
-
-## Architecture Highlights
-
-### State Management
-
-Uses Zustand with MMKV for:
-
-- Ultra-fast local storage
-- Zero-boilerplate state
-- Automatic persistence
-- Reactive updates
-
-```typescript
-const store = useChatStore();
-store.sendMessage(chatId, text);
-```
-
-### Type Safety
-
-100% TypeScript strict mode:
-
-- No `any` types
-- All functions typed
-- Exhaustive checks
-- Runtime validation with Zod
-
-### Error Handling
-
-- **ErrorBoundary** for React errors
-- **Try-catch** for async operations
-- Graceful degradation
-- User-friendly error messages
-
-## Testing
-
-```bash
-# No test suite included yet (add with Jest/Testing Library)
-npm test
-```
-
-## Troubleshooting
-
-### Port Already in Use
-
-```bash
-# Kill process on port 19006
-lsof -i :19006
-kill -9 <PID>
-```
-
-### Cache Issues
-
-```bash
-npm run clean
-npm install
-```
-
-### TypeScript Errors
-
-```bash
-# Clear TypeScript cache
-rm -rf node_modules/.cache
-npm run type-check
-```
-
-### Build Fails on Netlify
-
-1. Check Node version: `node --version` (should be 18+)
-2. Check `netlify.toml` configuration
-3. View Netlify deploy logs for details
-4. Ensure all dependencies are in `package.json`
-
-## Security Best Practices
-
-✅ **Implemented:**
-
-- HTTPS only (Netlify enforces)
-- CSP headers in netlify.toml
-- XSS protection headers
-- No sensitive data in localStorage
-- MMKV uses native encryption
-- Type-safe API calls
-- Input validation with Zod
-
-## Performance Benchmarks
-
-- **Initial Load**: < 3s (web)
-- **FCP**: < 1.5s
-- **TTI**: < 2.5s
-- **Lighthouse Score**: 90+
-- **Memory**: ~40MB (app only)
-- **Bundle Size**: ~250KB (gzipped)
-
-## Maintenance
-
-### Update Dependencies
-
-```bash
-npm update
-npm audit fix
-npm run type-check && npm run lint
-```
-
-### Monitor Errors (Optional)
-
-Integrate error tracking:
-
-- Sentry
-- LogRocket
-- Bugsnag
-
-## Support & Resources
-
-- [Expo Docs](https://docs.expo.dev)
-- [React Navigation](https://reactnavigation.org)
-- [Zustand](https://github.com/pmndrs/zustand)
-- [React Hook Form](https://react-hook-form.com)
-
-## License
-
-MIT
-
----
-
-**Version**: 2.0.0  
-**Last Updated**: February 2026  
-**Status**: ✅ Production Ready
+**Maintained by**: DevOps Team  
+**Review Cycle**: Monthly  
+**Next Review**: October 2026

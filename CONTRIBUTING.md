@@ -1,158 +1,186 @@
-# Contributing to ChatApp
+# Contributing to ChatApp 2026
 
-Thank you for your interest in contributing to ChatApp! This document provides comprehensive guidelines for contributing to our enterprise-grade messaging platform.
+> **Version**: 3.0.0  
+> **Last Updated**: 2026-09-27  
+> **Status**: Active Development ✅
+
+Thank you for your interest in contributing to ChatApp! This guide will help you get started with our development workflow, coding standards, and review process.
 
 ## Table of Contents
 
 - [Code of Conduct](#code-of-conduct)
-- [Development Environment Setup](#development-environment-setup)
-- [Branch Naming Convention](#branch-naming-convention)
-- [Commit Message Format](#commit-message-format)
+- [Quick Start](#quick-start)
+- [Development Environment](#development-environment)
+- [Branching Strategy](#branching-strategy)
+- [Commit Convention](#commit-convention)
+- [Code Quality](#code-quality)
 - [Testing Requirements](#testing-requirements)
-- [Accessibility Guidelines](#accessibility-guidelines)
-- [Internationalization Guidelines](#internationalization-guidelines)
-- [Feature Flag Usage](#feature-flag-usage)
-- [Pull Request Process](#pull-request-process)
-- [Pre-commit Hooks](#pre-commit-hooks)
-- [Code Style Guidelines](#code-style-guidelines)
-- [Performance Guidelines](#performance-guidelines)
+- [Accessibility Requirements](#accessibility-requirements)
 - [Security Guidelines](#security-guidelines)
+- [Performance Guidelines](#performance-guidelines)
+- [Pull Request Process](#pull-request-process)
+- [Review Process](#review-process)
+- [Pre-commit Hooks](#pre-commit-hooks)
+- [Troubleshooting](#troubleshooting)
+- [Getting Help](#getting-help)
+
+---
 
 ## Code of Conduct
 
-We are committed to providing a welcoming and inclusive environment for all contributors. Please read our [Code of Conduct](CODE_OF_CONDUCT.md) and follow it in all your interactions with the project.
+This project adheres to the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to:
 
-## Development Environment Setup
+- Be respectful and inclusive
+- Welcome newcomers and help them get started
+- Focus on constructive feedback
+- Accept responsibility and apologize for mistakes
+- Prioritize the community's best interests
+
+**Report violations**: `conduct@chatapp.com`
+
+---
+
+## Quick Start
+
+```bash
+# 1. Fork and clone
+git clone https://github.com/your-username/chatapp.git
+cd messaging-application
+
+# 2. Add upstream remote
+git remote add upstream https://github.com/original-org/chatapp.git
+git fetch upstream
+
+# 3. Install dependencies
+npm install
+
+# 4. Install iOS dependencies (macOS only)
+cd client/ios && pod install && cd ../..
+
+# 5. Set up environment
+cp .env.example .env
+# Edit .env with your configuration
+
+# 6. Verify setup
+npm run validate
+npm test
+
+# 7. Start development
+npm run dev
+```
+
+---
+
+## Development Environment
 
 ### Prerequisites
 
-- **Node.js** >= 18.0.0
-- **npm** >= 9.0.0
-- **Git** latest version
-- **Expo CLI** latest version
-- **iOS**: Xcode 14+ and iOS Simulator (Mac only)
-- **Android**: Android Studio with Android SDK
+| Tool               | Version         | Purpose                 |
+| ------------------ | --------------- | ----------------------- |
+| **Node.js**        | ≥ 18.18.0 (LTS) | Runtime                 |
+| **npm**            | ≥ 9.8.0         | Package manager         |
+| **Git**            | ≥ 2.40.0        | Version control         |
+| **Expo CLI**       | Latest          | Development server      |
+| **Watchman**       | ≥ 2023.01.02    | File watching (macOS)   |
+| **Android Studio** | Latest          | Android development     |
+| **Xcode 15+**      | Latest          | iOS development (macOS) |
 
-### Setup Steps
+### Recommended Tools
 
-1. **Fork the Repository**
+| Tool                         | Purpose                     | Setup                                     |
+| ---------------------------- | --------------------------- | ----------------------------------------- |
+| **Volta**                    | Node version management     | `volta install node@18 npm@9`             |
+| **Husky**                    | Git hooks                   | `npm run prepare`                         |
+| **lint-staged**              | Run linters on staged files | Auto-configured                           |
+| **EditorConfig**             | Consistent editor settings  | `.editorconfig` in repo                   |
+| **Thunder Client / Postman** | API testing                 | Import `docs/API.postman_collection.json` |
 
-   ```bash
-   # Fork the repository on GitHub
-   git clone https://github.com/YOUR_USERNAME/chatapp.git
-   cd chatapp
-   ```
+### IDE Setup
 
-2. **Add Upstream Remote**
+#### VS Code (Recommended)
 
-   ```bash
-   git remote add upstream https://github.com/original-org/chatapp.git
-   git fetch upstream
-   ```
-
-3. **Install Dependencies**
-
-   ```bash
-   npm install
-   ```
-
-4. **Install iOS Dependencies** (Mac only)
-
-   ```bash
-   cd ios && pod install && cd ..
-   ```
-
-5. **Setup Environment Variables**
-
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-6. **Start Development Server**
-
-   ```bash
-   npm run dev
-   ```
-
-7. **Run Tests to Verify Setup**
-   ```bash
-   npm test
-   npm run type-check
-   npm run lint
-   ```
-
-### Development Scripts
-
-```bash
-# Development
-npm run dev              # Start Expo development server
-npm run android          # Run on Android
-npm run ios               # Run on iOS
-npm run web               # Run on Web
-
-# Code Quality
-npm run lint             # Run ESLint
-npm run lint:fix         # Fix ESLint issues
-npm run format           # Format with Prettier
-npm run format:check     # Check formatting
-npm run type-check       # TypeScript type checking
-npm run validate         # Run all checks
-
-# Testing
-npm test                 # Run all tests
-npm run test:coverage    # Run tests with coverage
-npm run test:watch       # Watch mode for development
-
-# Build
-npm run build:web        # Build for web
-npm run bundle:analyze    # Analyze bundle size
+```json
+// .vscode/settings.json
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true
+}
 ```
 
-## Branch Naming Convention
+**Recommended Extensions**:
 
-We follow a strict branch naming convention to maintain consistency:
+- ESLint
+- Prettier
+- TypeScript Vue/React (if using Vue/React)
+- GitLens
+- Thunder Client
+
+---
+
+## Branching Strategy
+
+We follow **Trunk-Based Development** with feature branches.
 
 ### Branch Types
 
-- `feature/` - New features
-- `fix/` - Bug fixes
-- `docs/` - Documentation changes
-- `style/` - Code style changes (formatting, missing semicolons, etc.)
-- `refactor/` - Code refactoring
-- `perf/` - Performance improvements
-- `test/` - Adding or updating tests
-- `chore/` - Maintenance tasks, dependency updates
-- `hotfix/` - Critical bug fixes for production
+| Type         | Pattern                        | Description               |
+| ------------ | ------------------------------ | ------------------------- |
+| **Feature**  | `feature/<short-description>`  | New features              |
+| **Fix**      | `fix/<short-description>`      | Bug fixes                 |
+| **Docs**     | `docs/<short-description>`     | Documentation only        |
+| **Refactor** | `refactor/<short-description>` | Code refactoring          |
+| **Perf**     | `perf/<short-description>`     | Performance improvements  |
+| **Test**     | `test/<short-description>`     | Test additions/updates    |
+| **Chore**    | `chore/<short-description>`    | Maintenance tasks         |
+| **Hotfix**   | `hotfix/<short-description>`   | Critical production fixes |
 
-### Branch Name Format
+### Branch Naming Rules
 
-```
-<branch-type>/<brief-description>
-```
+- Use kebab-case: `feature/add-message-reactions`
+- Keep it short: < 50 characters
+- Be descriptive: `fix/offline-sync-crash` not `fix/bug`
+- No issue numbers in branch name (use PR description)
 
-### Examples
+### Workflow
 
 ```bash
-feature/message-reactions
-fix/offline-sync-crash
-docs/api-documentation
-style/eslint-rules-update
-refactor/state-management
-perf/image-loading-optimization
-test/chat-screen-tests
-chore/dependency-updates
-hotfix/security-vulnerability
+# 1. Sync with upstream
+git checkout main
+git pull upstream main
+
+# 2. Create feature branch
+git checkout -b feature/your-feature
+
+# 3. Make changes, commit often
+git add .
+git commit -m "feat(chat): add message reactions"
+
+# 4. Keep branch updated
+git fetch upstream
+git rebase upstream/main
+
+# 5. Push and create PR
+git push origin feature/your-feature
+# Create PR via GitHub UI
 ```
 
-## Commit Message Format
+---
 
-We use [Conventional Commits](https://www.conventionalcommits.org/) specification:
+## Commit Convention
+
+We use [Conventional Commits](https://www.conventionalcommits.org/).
 
 ### Format
 
 ```
-<type>[optional scope]: <description>
+<type>(<scope>): <description>
 
 [optional body]
 
@@ -161,525 +189,113 @@ We use [Conventional Commits](https://www.conventionalcommits.org/) specificatio
 
 ### Types
 
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation only changes
-- `style`: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc.)
-- `refactor`: Code refactoring
-- `perf`: Performance improvements
-- `test`: Adding or updating tests
-- `chore`: Maintenance tasks, dependency updates
-- `ci`: CI/CD changes
-- `build`: Build system or dependency changes
+| Type       | Description                    | Example                                           |
+| ---------- | ------------------------------ | ------------------------------------------------- |
+| `feat`     | New feature                    | `feat(chat): add message reactions`               |
+| `fix`      | Bug fix                        | `fix(auth): resolve token refresh race condition` |
+| `docs`     | Documentation                  | `docs(readme): update installation steps`         |
+| `style`    | Formatting, missing semicolons | `style: fix indentation in ChatStore`             |
+| `refactor` | Code refactoring               | `refactor(sync): simplify conflict resolution`    |
+| `perf`     | Performance improvement        | `perf(list): implement FlashList optimization`    |
+| `test`     | Adding/updating tests          | `test(chat): add ChatStore unit tests`            |
+| `chore`    | Maintenance                    | `chore(deps): upgrade zustand to v5`              |
+| `ci`       | CI/CD changes                  | `ci: add bundle size check to pipeline`           |
+| `revert`   | Revert commit                  | `revert: revert feat(chat): add reactions`        |
+
+### Scopes
+
+| Scope      | Description                    |
+| ---------- | ------------------------------ |
+| `chat`     | Chat-related features          |
+| `auth`     | Authentication & authorization |
+| `sync`     | Offline sync engine            |
+| `store`    | Zustand stores                 |
+| `ui`       | UI components & screens        |
+| `theme`    | Design system & tokens         |
+| `security` | Security features              |
+| `i18n`     | Internationalization           |
+| `perf`     | Performance                    |
+| `test`     | Testing infrastructure         |
 
 ### Examples
 
 ```bash
-feat(chat): add message reactions feature
+# Feature with scope
+feat(chat): add message reactions
 
-Add emoji reactions to messages with:
-- Reaction picker component
-- Reaction storage in MMKV
-- Real-time sync via WebSocket
+- Add reaction picker component
+- Store reactions in MMKV
+- Sync reactions via WebSocket
+- Closes #123
 
-Closes #123
+# Bug fix
+fix(auth): resolve token expiration edge case
 
-fix(auth): resolve token expiration issue
+When the refresh token expires before the access token,
+the app crashes. This fix adds proper error handling.
 
-Update token refresh logic to handle edge cases where
-the refresh token expires before the access token.
+# Breaking change
+feat(api)!: migrate to new API endpoint structure
 
-fixes #456
+BREAKING CHANGE: API base URL changed from /api/v1 to /v2.
+Update your environment configuration.
 
-perf(images): implement lazy loading for chat images
+# Performance
+perf(list): implement FlashList for chat messages
 
-Add intersection observer to load images only when
-they enter the viewport, reducing initial bundle size.
+Replaced FlatList with FlashList, reducing initial render
+time by 40% and memory usage by 30%.
 
-Performance improvement: ~30% faster initial load
+Refs #456
 ```
 
-## Testing Requirements
+---
 
-### Coverage Requirements
+## Code Quality
 
-- **Overall Coverage**: Minimum 85% across lines, branches, functions, and statements
-- **Critical Files**: 90%+ coverage for domain entities and repositories
-- **UI Components**: 80%+ coverage for presentation components
-- **New Features**: 90%+ coverage for all new functionality
-
-### Test Types
-
-#### Unit Tests
-
-- Test business logic in isolation
-- Mock external dependencies
-- Focus on domain entities, use cases, and utilities
-- Use descriptive test names
+### TypeScript Rules
 
 ```typescript
-// Example: client/src/domain/__tests__/MessageEntity.test.ts
-describe("MessageEntity", () => {
-  describe("create", () => {
-    it("should create a valid message with required fields", () => {
-      // Arrange
-      const messageData = {
-        chatId: "chat-123",
-        senderId: "user-123",
-        content: { type: "text", text: "Hello" },
-      };
-
-      // Act
-      const message = MessageEntity.create(messageData);
-
-      // Assert
-      expect(message.id).toBeDefined();
-      expect(message.chatId).toBe(messageData.chatId);
-      expect(message.status).toBe(MessageStatus.SENDING);
-    });
-
-    it("should throw error for invalid content type", () => {
-      // Arrange
-      const messageData = {
-        chatId: "chat-123",
-        senderId: "user-123",
-        content: { type: "invalid", text: "Hello" },
-      };
-
-      // Act & Assert
-      expect(() => MessageEntity.create(messageData)).toThrow("Invalid content type");
-    });
-  });
-});
-```
-
-#### Component Tests
-
-- Test React components with React Testing Library
-- Focus on user behavior, not implementation details
-- Test accessibility attributes
-- Mock child components when necessary
-
-```typescript
-// Example: client/src/components/__tests__/MessageItem.test.tsx
-describe('MessageItem', () => {
-  const defaultProps = {
-    message: createMockMessage(),
-    onPress: jest.fn(),
-    onLongPress: jest.fn()
-  };
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should render message content correctly', () => {
-    render(<MessageItem {...defaultProps} />);
-
-    expect(screen.getByText('Hello World')).toBeTruthy();
-  });
-
-  it('should call onPress when tapped', () => {
-    const { onPress } = defaultProps;
-
-    render(<MessageItem {...defaultProps} />);
-    fireEvent.press(screen.getByRole('button'));
-
-    expect(onPress).toHaveBeenCalledWith(defaultProps.message.id);
-  });
-
-  it('should be accessible', () => {
-    render(<MessageItem {...defaultProps} />);
-
-    const messageElement = screen.getByRole('button');
-    expect(messageElement).toHaveAccessibleLabel(
-      'Message from John Doe: Hello World'
-    );
-  });
-});
-```
-
-#### Integration Tests
-
-- Test interactions between components and stores
-- Test API calls and data flow
-- Use real implementations where possible
-
-### Running Tests
-
-```bash
-# Run all tests
-npm test
-
-# Run tests with coverage
-npm run test:coverage
-
-# Run specific test file
-npm test -- MessageEntity.test.ts
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run tests for specific pattern
-npm test -- --testPathPattern="domain"
-```
-
-## Accessibility Guidelines
-
-### WCAG 2.1 AA Compliance
-
-All new components must meet WCAG 2.1 AA accessibility standards.
-
-### Checklist for New Components
-
-#### Color Contrast
-
-- Text contrast ratio: Minimum 4.5:1 for normal text, 3:1 for large text
-- Interactive elements: Minimum 3:1 contrast ratio
-- Use tools like WebAIM Contrast Checker
-
-```typescript
-// Example: Accessible color palette
-export const colors = {
-  text: {
-    primary: "#000000", // 21:1 contrast on white
-    secondary: "#666666", // 7:1 contrast on white
-    disabled: "#999999", // 4.9:1 contrast on white
-  },
-  background: {
-    primary: "#FFFFFF",
-    secondary: "#F5F5F5",
-  },
-  interactive: {
-    primary: "#007AFF", // 4.5:1 contrast on white
-    disabled: "#CCCCCC", // 3:1 contrast on white
-  },
-};
-```
-
-#### Touch Targets
-
-- Minimum touch target size: 44x44 points (iOS) / 48x48dp (Android)
-- Ensure adequate spacing between interactive elements
-
-```typescript
-// Example: Accessible button
-const AccessibleButton = styled.TouchableOpacity`
-  min-height: 44px;
-  min-width: 44px;
-  padding: 12px 16px;
-  justify-content: center;
-  align-items: center;
-`;
-```
-
-#### Screen Reader Support
-
-- Use semantic elements (Button, TextInput, etc.)
-- Provide accessibility labels and hints
-- Use accessibilityRole for custom components
-- Test with VoiceOver (iOS) and TalkBack (Android)
-
-```typescript
-// Example: Accessible custom component
-const CustomButton = ({
-  children,
-  onPress,
-  accessibilityLabel,
-  accessibilityHint
-}) => (
-  <TouchableOpacity
-    onPress={onPress}
-    accessibilityRole="button"
-    accessibilityLabel={accessibilityLabel}
-    accessibilityHint={accessibilityHint}
-    accessible={true}
-  >
-    <Text>{children}</Text>
-  </TouchableOpacity>
-);
-```
-
-#### Keyboard Navigation
-
-- Ensure all interactive elements are keyboard accessible
-- Provide focus indicators
-- Test with external keyboards
-
-### Testing Accessibility
-
-```bash
-# Install accessibility testing tools
-npm install --save-dev @testing-library/jest-native
-
-# Run accessibility tests
-npm test -- --testPathPattern="accessibility"
-```
-
-## Internationalization Guidelines
-
-### Adding New Strings
-
-1. **Add to English Locale**
-
-   ```json
-   // client/src/i18n/locales/en.json
-   {
-     "chat": {
-       "sendButton": "Send",
-       "typingIndicator": "{{user}} is typing..."
-     }
-   }
-   ```
-
-2. **Add to Other Locales**
-
-   ```json
-   // client/src/i18n/locales/es.json
-   {
-     "chat": {
-       "sendButton": "Enviar",
-       "typingIndicator": "{{user}} está escribiendo..."
-     }
-   }
-   ```
-
-3. **Use in Components**
-   ```typescript
-   import { useTranslation } from 'react-i18next';
-
-   const SendButton = () => {
-     const { t } = useTranslation();
-
-     return (
-       <Button title={t('chat.sendButton')} />
-     );
-   };
-   ```
-
-### Guidelines
-
-- **Externalize all user-facing strings**
-- **Use interpolation for dynamic content**: `{{variable}}`
-- **Provide context for translators**: Add comments for ambiguous strings
-- **Test with different languages**: Verify layout works with different text lengths
-- **RTL Support**: Test with Arabic/Hebrew locales
-
-### RTL Support
-
-```typescript
-// Example: RTL-aware styling
-import { I18nManager } from "react-native";
-
-const MessageBubble = styled.View`
-  margin-horizontal: 16px;
-  margin-vertical: 4px;
-  align-self: ${({ isOwn }) => (isOwn ? "flex-end" : "flex-start")};
-  flex-direction: ${I18nManager.isRTL ? "row-reverse" : "row"};
-`;
-```
-
-## Feature Flag Usage
-
-### Adding New Feature Flags
-
-1. **Define in Feature Flags Store**
-
-   ```typescript
-   // client/src/stores/featureFlagsStore.ts
-   export const DEFAULT_FEATURE_FLAGS: Record<string, FeatureFlag> = {
-     // ... existing flags
-     enableNewFeature: {
-       key: "enableNewFeature",
-       name: "New Feature",
-       description: "Enable the new feature for testing",
-       defaultValue: false,
-       rolloutPercentage: 0,
-       category: "experimental",
-     },
-   };
-   ```
-
-2. **Use FeatureGate Component**
-
-   ```typescript
-   import { FeatureGate } from '../components/FeatureGate';
-
-   const NewFeatureComponent = () => (
-     <FeatureGate
-       flag="enableNewFeature"
-       fallback={<LegacyComponent />}
-     >
-       <NewComponent />
-     </FeatureGate>
-   );
-   ```
-
-3. **Use in Hooks**
-   ```typescript
-   import { useFeatureFlag } from "../hooks/useFeatureFlag";
-
-   const useNewFeature = () => {
-     const isEnabled = useFeatureFlag("enableNewFeature");
-     return { isEnabled };
-   };
-   ```
-
-### A/B Testing
-
-```typescript
-// Example: A/B test with 50% rollout
-export const DEFAULT_FEATURE_FLAGS = {
-  newAlgorithm: {
-    key: "newAlgorithm",
-    name: "New Message Algorithm",
-    description: "Test new message sorting algorithm",
-    defaultValue: false,
-    rolloutPercentage: 50,
-    category: "performance",
-  },
-};
-```
-
-### Testing Feature Flags
-
-```typescript
-// Example: Test with different flag states
-describe('NewFeatureComponent', () => {
-  it('should show new component when flag is enabled', () => {
-    mockUseFeatureFlag('enableNewFeature', true);
-
-    render(<NewFeatureComponent />);
-
-    expect(screen.getByTestId('new-component')).toBeTruthy();
-  });
-
-  it('should show fallback when flag is disabled', () => {
-    mockUseFeatureFlag('enableNewFeature', false);
-
-    render(<NewFeatureComponent />);
-
-    expect(screen.getByTestId('legacy-component')).toBeTruthy();
-  });
-});
-```
-
-## Pull Request Process
-
-### Before Creating a PR
-
-1. **Create a feature branch** from the latest `main` branch
-2. **Write tests** for your changes
-3. **Ensure all tests pass** with 85%+ coverage
-4. **Run code quality checks**: `npm run validate`
-5. **Update documentation** if needed
-6. **Test on multiple platforms** (iOS, Android, Web)
-
-### Creating a Pull Request
-
-1. **Use the PR template** and fill out all sections
-2. **Link to relevant issues** using "Closes #123"
-3. **Add screenshots/videos** for UI changes
-4. **Describe testing approach**
-5. **List any breaking changes**
-
-### PR Review Process
-
-1. **Automated Checks**: CI/CD pipeline runs automatically
-2. **Code Review**: At least one team member must review
-3. **Testing Review**: Verify test coverage and quality
-4. **Accessibility Review**: Verify WCAG compliance
-5. **Security Review**: Verify no security vulnerabilities
-6. **Performance Review**: Verify no performance regressions
-
-### Merge Requirements
-
-- All automated checks must pass
-- At least one approval from a code reviewer
-- No conflicts with main branch
-- All discussions resolved
-- Documentation updated (if needed)
-
-## Pre-commit Hooks
-
-### Setup
-
-```bash
-# Install pre-commit hooks
-npm run prepare
-
-# This installs husky and creates the .husky/pre-commit hook
-```
-
-### What Hooks Do
-
-Pre-commit hooks automatically run on staged files:
-
-- **ESLint**: Fix and check code style
-- **Prettier**: Format code consistently
-- **TypeScript**: Check for type errors
-
-### Running Hooks Manually
-
-```bash
-# Run pre-commit hooks manually
-npm run pre-commit
-
-# Skip hooks (not recommended)
-git commit --no-verify
-```
-
-### Troubleshooting
-
-If hooks fail:
-
-1. **Fix the errors** reported by the tools
-2. **Stage the fixes**: `git add .`
-3. **Try again**: `git commit`
-
-## Code Style Guidelines
-
-### TypeScript
-
-- **Use strict mode**: No implicit any
-- **Prefer interfaces** over types for objects
-- **Use explicit return types** for public functions
-- **Avoid type assertions** unless necessary
-
-```typescript
-// Good
+// ✅ Good
 interface User {
   id: string;
   name: string;
+  email: string;
 }
 
-const getUser = (id: string): Promise<User> => {
-  return api.getUser(id);
+const getUser = async (id: string): Promise<User> => {
+  const user = await api.getUser(id);
+  return user;
 };
 
-// Bad
-const getUser = (id: any) => {
-  return api.getUser(id) as any;
+// ❌ Bad
+const getUser = async (id: any): Promise<any> => {
+  return await api.getUser(id);
 };
 ```
 
-### React Components
+**Rules**:
 
-- **Use functional components** with hooks
-- **Prefer custom hooks** for complex logic
-- **Use React.memo** for performance optimization
-- **Avoid inline functions** in render
+- **Strict mode**: No implicit `any`
+- **Explicit returns**: Public functions must have return types
+- **No type assertions**: Avoid `as` unless absolutely necessary
+- **Interfaces over types**: Use `interface` for objects
+- **Readonly**: Use `readonly` for immutable properties
+
+### React Component Rules
 
 ```typescript
-// Good
+// ✅ Good
 interface MessageItemProps {
   message: Message;
   onPress: (id: string) => void;
+  onLongPress?: (id: string) => void;
 }
 
 const MessageItem = React.memo<MessageItemProps>(({
   message,
-  onPress
+  onPress,
+  onLongPress,
 }) => {
   const handlePress = useCallback(() => {
     onPress(message.id);
@@ -692,8 +308,8 @@ const MessageItem = React.memo<MessageItemProps>(({
   );
 });
 
-// Bad
-const MessageItem = ({ message, onPress }) => {
+// ❌ Bad
+const MessageItem = ({ message, onPress }: any) => {
   return (
     <TouchableOpacity onPress={() => onPress(message.id)}>
       <Text>{message.content.text}</Text>
@@ -702,15 +318,18 @@ const MessageItem = ({ message, onPress }) => {
 };
 ```
 
+**Rules**:
+
+- **Functional components only**: No class components
+- **React.memo**: Wrap expensive components
+- **useCallback/useMemo**: For expensive computations
+- **No inline functions**: Extract to named functions
+- **Props interface**: Always define props interface
+
 ### Error Handling
 
-- **Use Result types** for operations that can fail
-- **Log errors to Sentry** with context
-- **Provide user-friendly error messages**
-- **Don't expose sensitive information**
-
 ```typescript
-// Good
+// ✅ Good
 const sendMessage = async (content: string): Promise<Result<Message>> => {
   try {
     const message = await api.sendMessage(content);
@@ -720,11 +339,11 @@ const sendMessage = async (content: string): Promise<Result<Message>> => {
       tags: { action: "sendMessage" },
       extra: { content: content.substring(0, 100) },
     });
-    return Result.error("Failed to send message");
+    return Result.error(new AppError("Failed to send message"));
   }
 };
 
-// Bad
+// ❌ Bad
 const sendMessage = async (content: string) => {
   try {
     return await api.sendMessage(content);
@@ -735,177 +354,503 @@ const sendMessage = async (content: string) => {
 };
 ```
 
-## Performance Guidelines
+**Rules**:
 
-### Bundle Size
+- **Result types**: Use `Result<T, E>` for fallible operations
+- **Log to Sentry**: All errors with context
+- **User-friendly messages**: Never expose raw errors
+- **No sensitive data**: Don't log tokens, passwords, PII
 
-- **Keep bundle under 1.5MB**
-- **Use lazy loading** for heavy features
-- **Optimize images** and assets
-- **Remove unused dependencies**
+---
 
-```typescript
-// Good: Lazy loading
-const LazyChatScreen = lazy(() => import("./ChatScreen"));
+## Testing Requirements
 
-// Bad: Eager loading
-import ChatScreen from "./ChatScreen";
+### Coverage Targets
+
+| Layer                                | Target  | Current |
+| ------------------------------------ | ------- | ------- |
+| **Domain (entities, use cases)**     | 95%     | 90%     |
+| **Data (repositories, mappers)**     | 90%     | 85%     |
+| **Core (sync, security, errors)**    | 90%     | 85%     |
+| **Presentation (components, hooks)** | 80%     | 75%     |
+| **Overall**                          | **85%** | **82%** |
+
+### Test Structure
+
+```
+client/src/
+├── domain/
+│   └── __tests__/
+│       ├── entities/
+│       │   ├── Chat.test.ts
+│       │   └── Message.test.ts
+│       └── usecases/
+│           └── SendMessageUseCase.test.ts
+├── data/
+│   └── __tests__/
+│       ├── repositories/
+│       │   └── ChatRepositoryImpl.test.ts
+│       └── mappers/
+│           └── ChatMapper.test.ts
+├── core/
+│   └── __tests__/
+│       ├── sync/
+│       │   └── SyncEngine.test.ts
+│       └── errors/
+│           └── AppError.test.ts
+├── presentation/
+│   └── stores/
+│   │   └── __tests__/
+│   │       ├── chatStore.test.ts
+│   │       └── messageStore.test.ts
+│   ├── hooks/
+│   │   └── __tests__/
+│   │       └── useChat.test.tsx
+│   └── screens/
+│       └── __tests__/
+│           ├── ChatListScreen.test.tsx
+│           └── ChatScreen.test.tsx
+└── __tests__/
+    ├── integration.test.tsx
+    └── performance.test.ts
 ```
 
-### Rendering Performance
-
-- **Use React.memo** for expensive components
-- **Use useMemo/useCallback** for expensive computations
-- **Optimize lists** with FlashList
-- **Avoid unnecessary re-renders**
+### Writing Tests
 
 ```typescript
-// Good
-const MessageList = React.memo(({ messages }) => {
-  const memoizedMessages = useMemo(() =>
-    messages.sort(byDate), [messages]
+// Unit Test Example
+describe("ChatEntity", () => {
+  describe("createPrivate", () => {
+    it("should create a private chat with correct participants", () => {
+      const chat = ChatEntity.createPrivate("user-2", "user-1");
+
+      expect(chat.id).toBe("chat_user-2_user-1");
+      expect(chat.type).toBe("private");
+      expect(chat.participantIds).toEqual(["user-1", "user-2"]);
+      expect(chat.participantId).toBe("user-2");
+      expect(chat.isPinned).toBe(false);
+      expect(chat.unreadCount).toBe(0);
+    });
+  });
+
+  describe("pin", () => {
+    it("should mark chat as pinned and update timestamp", () => {
+      const chat = ChatEntity.createPrivate("user-2", "user-1");
+      const initialUpdatedAt = chat.updatedAt;
+
+      // Wait a bit to ensure timestamp changes
+      jest.advanceTimersByTime(10);
+
+      chat.pin();
+
+      expect(chat.isPinned).toBe(true);
+      expect(chat.updatedAt.getTime()).toBeGreaterThan(initialUpdatedAt.getTime());
+    });
+  });
+});
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run specific test file
+npm test -- ChatEntity.test.ts
+
+# Run with coverage
+npm run test:coverage
+
+# Run in watch mode (development)
+npm run test:watch
+
+# Run performance tests
+npm run test:performance
+
+# Run integration tests only
+npm test -- --testPathPattern=integration
+```
+
+---
+
+## Accessibility Requirements
+
+All new components must meet **WCAG 2.1 AA** standards.
+
+### Checklist
+
+- [ ] **Touch Targets**: Minimum 48×48dp
+- [ ] **Color Contrast**: 4.5:1 for normal text, 3:1 for large text
+- [ ] **Accessibility Labels**: All interactive elements labeled
+- [ ] **Accessibility Hints**: Context provided where needed
+- [ ] **Semantic Roles**: Correct `accessibilityRole` used
+- [ ] **Screen Reader**: Tested with VoiceOver/TalkBack
+- [ ] **Keyboard Navigation**: All elements reachable via keyboard
+- [ ] **Reduced Motion**: Animations disabled when preferred
+- [ ] **RTL Support**: Layout works in RTL languages
+- [ ] **Dynamic Type**: Text scales with system settings
+
+### Example: Accessible Button
+
+```typescript
+const AccessibleButton = ({
+  title,
+  onPress,
+  testID,
+}: {
+  title: string;
+  onPress: () => void;
+  testID?: string;
+}) => (
+  <TouchableOpacity
+    onPress={onPress}
+    accessibilityRole="button"
+    accessibilityLabel={title}
+    accessibilityHint={`Activates ${title.toLowerCase()}`}
+    accessible={true}
+    testID={testID}
+    style={{
+      minHeight: 48,
+      minWidth: 48,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      backgroundColor: tokens.color.primary,
+      borderRadius: tokens.borderRadius.md,
+    }}
+  >
+    <Text style={{ color: '#FFFFFF', ...tokens.typography.body }}>
+      {title}
+    </Text>
+  </TouchableOpacity>
+);
+```
+
+---
+
+## Security Guidelines
+
+### Before Submitting
+
+- [ ] **No secrets in code**: No API keys, tokens, passwords
+- [ ] **Input validation**: All user inputs validated with Zod
+- [ ] **Error messages**: No sensitive data leaked
+- [ ] **Network calls**: HTTPS only, SSL pinning where needed
+- [ ] **Storage**: Sensitive data in Keychain/Keystore only
+- [ ] **Dependencies**: `npm audit` shows no high/critical vulnerabilities
+
+### Secure Coding Examples
+
+```typescript
+// ✅ Good: Validate input
+const validateMessage = (data: unknown): Message => {
+  const schema = z.object({
+    id: z.string().uuid(),
+    content: z.object({
+      type: z.enum(["text", "image", "video"]),
+      text: z.string().optional(),
+    }),
+  });
+  return schema.parse(data);
+};
+
+// ❌ Bad: No validation
+const message = data as Message;
+
+// ✅ Good: Secure token storage
+const getToken = async (): Promise<string> => {
+  return await Keychain.getItemAsync("auth-token");
+};
+
+// ❌ Bad: Insecure storage
+const getToken = (): string => localStorage.getItem("token");
+```
+
+---
+
+## Performance Guidelines
+
+### Before Submitting
+
+- [ ] **Bundle size**: No significant increase (check with `npm run bundle:analyze`)
+- [ ] **Re-renders**: No unnecessary re-renders (use React.memo)
+- [ ] **List performance**: FlashList for long lists
+- [ ] **Images**: Optimized and lazy-loaded
+- [ ] **Animations**: 60fps, use Reanimated worklets
+- [ ] **Memory**: No memory leaks (cleanup subscriptions)
+
+### Performance Checklist
+
+```typescript
+// ✅ Good: Memoized component
+const MessageList = React.memo(({ messages }: { messages: Message[] }) => {
+  const memoizedMessages = useMemo(
+    () => messages.sort(byDate),
+    [messages]
   );
 
   return (
     <FlashList
       data={memoizedMessages}
       renderItem={renderItem}
-      keyExtractor={keyExtractor}
+      keyExtractor={(item) => item.id}
+      estimatedItemSize={80}
     />
   );
 });
 
-// Bad
+// ❌ Bad: Unnecessary re-renders
 const MessageList = ({ messages }) => {
-  const sortedMessages = messages.sort(byDate); // Re-computed every render
-
-  return (
-    <FlatList
-      data={sortedMessages}
-      renderItem={renderItem}
-      keyExtractor={keyExtractor}
-    />
-  );
+  const sortedMessages = messages.sort(byDate); // Mutates original!
+  return <FlatList data={sortedMessages} renderItem={renderItem} />;
 };
 ```
-
-### Memory Management
-
-- **Clean up subscriptions** in useEffect
-- **Avoid memory leaks** in event listeners
-- **Use weak references** where appropriate
-- **Monitor memory usage**
-
-```typescript
-// Good
-useEffect(() => {
-  const subscription = api.subscribe(handleUpdate);
-
-  return () => {
-    subscription.unsubscribe();
-  };
-}, []);
-
-// Bad
-useEffect(() => {
-  api.subscribe(handleUpdate); // No cleanup
-}, []);
-```
-
-## Security Guidelines
-
-### Data Protection
-
-- **Never store secrets** in the app bundle
-- **Use secure storage** for sensitive data
-- **Validate all inputs** with Zod schemas
-- **Sanitize data** before displaying
-
-```typescript
-// Good
-const validateMessage = (data: unknown): Message => {
-  const schema = z.object({
-    id: z.string(),
-    content: z.object({
-      type: z.enum(["text", "image"]),
-      text: z.string().optional(),
-    }),
-  });
-
-  return schema.parse(data);
-};
-
-// Bad
-const message = data as Message; // No validation
-```
-
-### Network Security
-
-- **Use SSL pinning** for API calls
-- **Validate certificates** manually
-- **Use HTTPS only** connections
-- **Implement timeout** for requests
-
-```typescript
-// Good
-const apiClient = {
-  async request(url: string) {
-    if (!validateCertificate(url)) {
-      throw new SecurityError("Invalid certificate");
-    }
-
-    return fetch(url, {
-      timeout: 10000,
-      headers: { "Content-Type": "application/json" },
-    });
-  },
-};
-
-// Bad
-const apiClient = {
-  async request(url: string) {
-    return fetch(url); // No SSL validation
-  },
-};
-```
-
-### Authentication
-
-- **Use secure token storage** (Keychain/Keystore)
-- **Implement token refresh** logic
-- **Handle token expiration** gracefully
-- **Never log tokens** or sensitive data
-
-```typescript
-// Good
-const getToken = async (): Promise<string> => {
-  try {
-    return await keychain.getItem("auth-token");
-  } catch (error) {
-    Sentry.captureException(error);
-    throw new AuthError("Failed to retrieve token");
-  }
-};
-
-// Bad
-const getToken = (): string => {
-  return localStorage.getItem("token"); // Insecure storage
-};
-```
-
-## Getting Help
-
-If you need help with contributing:
-
-1. **Check existing issues** and documentation
-2. **Ask in discussions** for general questions
-3. **Create an issue** for bugs or feature requests
-4. **Contact maintainers** via Slack or email
-
-## License
-
-By contributing to ChatApp, you agree that your contributions will be licensed under the MIT License.
 
 ---
 
-Thank you for contributing to ChatApp! Your contributions help make this project better for everyone.
+## Pull Request Process
+
+### Before Creating a PR
+
+1. **Sync with main**: `git pull upstream main`
+2. **Rebase your branch**: `git rebase upstream/main`
+3. **Run quality checks**: `npm run validate`
+4. **Run tests**: `npm test`
+5. **Check bundle size**: `npm run bundle:analyze` (if UI changes)
+6. **Update documentation**: If adding/changing features
+
+### PR Requirements
+
+- [ ] **Title**: Follows Conventional Commits format
+- [ ] **Description**: Clear explanation of changes
+- [ ] **Linked Issues**: Closes #123, Relates to #456
+- [ ] **Screenshots**: For UI changes (before/after)
+- [ ] **Tests**: New tests for new functionality
+- [ ] **Coverage**: Maintains or improves coverage
+- [ ] **Accessibility**: WCAG 2.1 AA compliant
+- [ ] **Performance**: No regressions
+- [ ] **Security**: No vulnerabilities introduced
+
+### PR Template
+
+```markdown
+## Summary
+
+Brief description of changes
+
+## Motivation
+
+Why is this change needed? What problem does it solve?
+
+## Changes
+
+- [ ] Change 1
+- [ ] Change 2
+- [ ] Change 3
+
+## Screenshots (if applicable)
+
+| Before     | After      |
+| ---------- | ---------- |
+| screenshot | screenshot |
+
+## Test Plan
+
+- [ ] Unit tests added/updated
+- [ ] Integration tests pass
+- [ ] Manual testing on iOS
+- [ ] Manual testing on Android
+- [ ] Accessibility testing
+
+## Checklist
+
+- [ ] Code follows style guidelines
+- [ ] Self-review completed
+- [ ] Documentation updated
+- [ ] No new warnings or errors
+- [ ] Tests pass
+- [ ] Coverage maintained
+
+Closes #123
+```
+
+---
+
+## Review Process
+
+### Review Stages
+
+1. **Automated Checks** (CI/CD)
+   - Lint, type-check, format
+   - Unit tests + coverage
+   - Security audit
+   - Bundle size check
+
+2. **Code Review** (1+ approvals required)
+   - Architecture alignment
+   - Code quality
+   - Test coverage
+   - Performance impact
+
+3. **Accessibility Review**
+   - WCAG 2.1 AA compliance
+   - Screen reader testing
+   - Touch target verification
+
+4. **Security Review**
+   - No sensitive data exposure
+   - Input validation
+   - Secure storage usage
+
+5. **Merge**
+   - Squash and merge to main
+   - Delete feature branch
+   - Update Jira/Linear ticket
+
+### Review Guidelines
+
+**For Authors**:
+
+- Keep PRs small (< 400 lines changed)
+- Write clear descriptions
+- Respond to feedback promptly
+- Mark comments as resolved when addressed
+
+**For Reviewers**:
+
+- Review within 24 hours
+- Be constructive and respectful
+- Focus on code, not person
+- Approve when satisfied, don't nitpick
+
+---
+
+## Pre-commit Hooks
+
+### Setup
+
+```bash
+# Install Husky hooks
+npm run prepare
+
+# This creates .husky/pre-commit hook that runs:
+# - lint-staged (ESLint + Prettier on staged files)
+# - TypeScript type check on changed files
+```
+
+### What Runs on Commit
+
+1. **ESLint**: Fix and check staged `.ts`/`.tsx` files
+2. **Prettier**: Format staged files
+3. **TypeScript**: Type check on staged files
+4. **Tests**: Run affected tests (optional)
+
+### Skipping Hooks (Not Recommended)
+
+```bash
+git commit --no-verify -m "emergency fix"
+```
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+#### Metro Bundler Cache Issues
+
+```bash
+# Clear Expo cache
+npx expo start --clear
+
+# Or manually
+rm -rf .expo
+rm -rf node_modules/.cache
+npm start
+```
+
+#### iOS Build Issues
+
+```bash
+# Clean and rebuild
+cd client/ios
+rm -rf build
+pod install --repo-update
+cd ..
+npx expo run:ios
+```
+
+#### Android Build Issues
+
+```bash
+# Clean and rebuild
+cd client/android
+./gradlew clean
+cd ..
+npx expo run:android
+```
+
+#### TypeScript Errors After Pull
+
+```bash
+# Restart TypeScript server in VS Code
+# Cmd/Ctrl + Shift + P → "TypeScript: Restart TS Server"
+
+# Or clear cache
+rm -rf node_modules/.cache
+npm run type-check
+```
+
+#### Test Failures
+
+```bash
+# Run specific test with verbose output
+npm test -- --verbose ChatStore.test.ts
+
+# Run with coverage to see what's missing
+npm run test:coverage -- ChatStore.test.ts
+```
+
+---
+
+## Getting Help
+
+### Resources
+
+| Resource          | Purpose                       | Link                                                                  |
+| ----------------- | ----------------------------- | --------------------------------------------------------------------- |
+| **Documentation** | Project docs                  | [README.md](README.md), [ARCHITECTURE.md](ARCHITECTURE.md)            |
+| **Discussions**   | Q&A, ideas                    | [GitHub Discussions](https://github.com/your-org/chatapp/discussions) |
+| **Issues**        | Bug reports, feature requests | [GitHub Issues](https://github.com/your-org/chatapp/issues)           |
+| **Team Chat**     | Real-time communication       | Slack / Discord                                                       |
+| **Design Files**  | Figma designs                 | [Figma](https://figma.com/...)                                        |
+
+### Mentorship
+
+New contributors are paired with a mentor for their first PR:
+
+1. **Onboarding call**: 30min intro to codebase
+2. **First PR**: Guided through process
+3. **Follow-up**: Feedback and next steps
+
+Request mentorship: `mentorship@chatapp.com`
+
+---
+
+## License
+
+By contributing to ChatApp, you agree that your contributions will be licensed under the [MIT License](LICENSE).
+
+---
+
+<div align="center">
+
+**Thank you for contributing to ChatApp!** 🚀
+
+Your contributions help make this project better for everyone.
+
+[🔝 Back to Top](#contributing-to-chatapp-2026)
+
+</div>
