@@ -589,25 +589,38 @@ const animatedStyle = useAnimatedStyle(() => ({
 
 ## Internationalization
 
-### i18n Architecture
+Localization is wired up end to end: `client/src/i18n/index.ts` initialises
+i18next with `en` and `ar` bundles, picks the device language via
+`expo-localization`, and the instance is mounted as a provider in
+`client/src/App.tsx`. `ChatListScreen` consumes it through `useTranslation()`.
 
 ```typescript
 // client/src/i18n/index.ts
+import en from "./locales/en.json";
+import ar from "./locales/ar.json";
+
 i18n.use(initReactI18next).init({
-  resources: {
-    en: { translation: require("./locales/en.json") },
-    ar: { translation: require("./locales/ar.json") },
-  },
-  lng: getLocales()[0]?.languageCode || "en",
+  resources: { en: { translation: en }, ar: { translation: ar } },
+  lng: getLocales()[0]?.languageCode ?? "en",
   fallbackLng: "en",
   interpolation: { escapeValue: false },
+  pluralSeparator: "_",
+  compatibilityJSON: "v4",
   react: { useSuspense: false },
 });
 ```
 
-### RTL Support
+### RTL Support — implemented but not wired
 
-- Automatic layout mirroring with `I18nManager`
+`client/src/i18n/rtl.ts` provides `applyRTL`, `useRTL`, `getTextAlign`, and the
+directional style/padding helpers. **None of them are currently called from
+application code** — the only caller was `components/LanguageSwitcher.tsx`,
+which has been removed as dead code. Until a language switcher is reintroduced,
+selecting `ar` renders Arabic text in an LTR layout.
+
+Planned:
+
+- Invoke `applyRTL()` when the active language changes
 - Flex direction reversal for message bubbles
 - Icon mirroring for navigation arrows
 - Date/time formatting per locale
