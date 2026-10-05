@@ -102,15 +102,41 @@ SENTRY_DSN=https://your-sentry-dsn@sentry.io/project-id
 
 ```env
 # .env.example (commit this)
+EXPO_PUBLIC_DOMAIN=api.chatapp.com      # REQUIRED — query-client.ts throws without it
 EXPO_PUBLIC_API_URL=https://api.chatapp.com
 EXPO_PUBLIC_WS_URL=wss://api.chatapp.com/ws
 EXPO_PUBLIC_APP_NAME=ChatApp
 EXPO_PUBLIC_VERSION=3.0.0
 EXPO_PUBLIC_BUILD_NUMBER=1
 EXPO_PUBLIC_SENTRY_DSN=https://your-sentry-dsn@sentry.io/project-id
-EXPO_PUBLIC_ENABLE_FEATURE_FLAGS=true
-EXPO_PUBLIC_DEV_MODE=false
+# NOT read by any code — kept here only to avoid confusion if found in old envs:
+#   EXPO_PUBLIC_ENABLE_FEATURE_FLAGS, EXPO_PUBLIC_DEV_MODE
+# Feature flags are hardcoded in client/src/stores/featureFlagsStore.ts
+# iOS/Android production builds only. Web relies on browser-enforced HTTPS.
+# Must be a real, comma-separated `sha256/<43-char base64>` pin. Leave it empty
+# in `.env.example` so an unconfigured build fails fast instead of shipping an
+# unmatchable pin that breaks every request at runtime.
+EXPO_PUBLIC_CERT_HASHES=
 ```
+
+`npm run validate:env` rejects `EXPO_PUBLIC_CERT_HASHES` that is empty, not a
+`sha256/` + 44-character base64 digest, or matches the documented placeholder, so
+a template copy cannot reach a native release.
+
+Generate the pins from the live backend certificate:
+
+```bash
+openssl s_client -connect api.chatapp.com:443 -servername api.chatapp.com </dev/null 2>/dev/null \
+  | openssl x509 -pubkey -noout \
+  | openssl pkey -pubin -outform der \
+  | openssl dgst -sha256 -binary \
+  | openssl enc -base64
+```
+
+Prepend `sha256/` and comma-separate multiple pins so a certificate rotation
+does not brick released clients. On web, `react-native-ssl-pinning` has no
+native module, so pinning is skipped and the browser validates the certificate
+chain instead.
 
 ### Environment Validation
 
