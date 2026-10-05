@@ -3,8 +3,8 @@
 > **Version**: 3.0.0  
 > **Last Updated**: 2026-09-27  
 > **Status**: Production Ready ✅  
-**Security Contact**: security@chatapp.com  
-**PGP Key**: Available on request
+> **Security Contact**: security@chatapp.com  
+> **PGP Key**: Available on request
 
 ## Table of Contents
 
@@ -59,14 +59,14 @@ ChatApp implements **defense-in-depth** security across all layers:
 
 ### Core Principles
 
-| Principle | Implementation |
-|-----------|----------------|
-| **Least Privilege** | Minimal permissions, scoped tokens |
-| **Fail Secure** | Errors default to secure state |
-| **Defense in Depth** | Multiple overlapping security controls |
-| **Secure by Default** | Safe defaults, opt-in for risky features |
-| **Observability** | Comprehensive logging and monitoring |
-| **Transparency** | Clear security policies, open communication |
+| Principle             | Implementation                              |
+| --------------------- | ------------------------------------------- |
+| **Least Privilege**   | Minimal permissions, scoped tokens          |
+| **Fail Secure**       | Errors default to secure state              |
+| **Defense in Depth**  | Multiple overlapping security controls      |
+| **Secure by Default** | Safe defaults, opt-in for risky features    |
+| **Observability**     | Comprehensive logging and monitoring        |
+| **Transparency**      | Clear security policies, open communication |
 
 ---
 
@@ -74,25 +74,25 @@ ChatApp implements **defense-in-depth** security across all layers:
 
 ### Threat Actors
 
-| Actor | Capability | Intent | Risk Level |
-|-------|-----------|--------|------------|
-| **Network Attacker** | MITM, packet sniffing | Intercept messages | High |
-| **Malicious App** | Access device storage | Steal credentials | Medium |
-| **Compromised Device** | Root/Jailbreak access | Full data access | High |
-| **Insider Threat** | Backend access | Data exfiltration | Medium |
-| **Automated Scanner** | Vulnerability scanning | Find exploits | Low |
+| Actor                  | Capability             | Intent             | Risk Level |
+| ---------------------- | ---------------------- | ------------------ | ---------- |
+| **Network Attacker**   | MITM, packet sniffing  | Intercept messages | High       |
+| **Malicious App**      | Access device storage  | Steal credentials  | Medium     |
+| **Compromised Device** | Root/Jailbreak access  | Full data access   | High       |
+| **Insider Threat**     | Backend access         | Data exfiltration  | Medium     |
+| **Automated Scanner**  | Vulnerability scanning | Find exploits      | Low        |
 
 ### Attack Vectors
 
-| Vector | Mitigation | Status |
-|--------|-----------|--------|
-| **Man-in-the-Middle** | SSL Pinning + Certificate Validation | ✅ Implemented |
-| **Data Exfiltration** | Encrypted Storage + Keychain | ✅ Implemented |
-| **Credential Theft** | Biometric Auth + Keychain | ✅ Implemented |
-| **Message Interception** | E2E Encryption (planned) | 🔄 Planned |
-| **Replay Attacks** | Timestamp + Nonce validation | ✅ Implemented |
-| **Injection Attacks** | Zod validation + Parameterized queries | ✅ Implemented |
-| **Denial of Service** | Rate limiting + Circuit breakers | ✅ Implemented |
+| Vector                   | Mitigation                             | Status         |
+| ------------------------ | -------------------------------------- | -------------- |
+| **Man-in-the-Middle**    | SSL Pinning + Certificate Validation   | ✅ Implemented |
+| **Data Exfiltration**    | Encrypted Storage + Keychain           | ✅ Implemented |
+| **Credential Theft**     | Biometric Auth + Keychain              | ✅ Implemented |
+| **Message Interception** | E2E Encryption (planned)               | 🔄 Planned     |
+| **Replay Attacks**       | Timestamp + Nonce validation           | ✅ Implemented |
+| **Injection Attacks**    | Zod validation + Parameterized queries | ✅ Implemented |
+| **Denial of Service**    | Rate limiting + Circuit breakers       | ✅ Implemented |
 
 ---
 
@@ -112,7 +112,7 @@ export class SecurityManager {
     // 1. Check device security
     const isSecure = await this.deviceSecurity.isSecure();
     if (!isSecure) {
-      throw new SecurityError('Device security check failed');
+      throw new SecurityError("Device security check failed");
     }
 
     // 2. Initialize secure storage
@@ -135,14 +135,14 @@ export class SecurityManager {
 
 ### Security Components
 
-| Component | Purpose | Implementation |
-|-----------|---------|---------------|
-| **KeychainService** | Secure credential storage | `react-native-keychain` |
-| **SSLPinningService** | Certificate validation | `react-native-ssl-pinning` |
-| **DeviceSecurity** | Jailbreak/root detection | Custom implementation |
-| **CryptoService** | Encryption/decryption | `expo-crypto` + AES-256-GCM |
-| **BiometricAuth** | FaceID/TouchID/FaceAuth | `expo-local-authentication` |
-| **SecureStorage** | Encrypted MMKV wrapper | Custom AES encryption |
+| Component             | Purpose                   | Implementation              |
+| --------------------- | ------------------------- | --------------------------- |
+| **KeychainService**   | Secure credential storage | `react-native-keychain`     |
+| **SSLPinningService** | Certificate validation    | `react-native-ssl-pinning`  |
+| **DeviceSecurity**    | Jailbreak/root detection  | Custom implementation       |
+| **CryptoService**     | Encryption/decryption     | `expo-crypto` + AES-256-GCM |
+| **BiometricAuth**     | FaceID/TouchID/FaceAuth   | `expo-local-authentication` |
+| **SecureStorage**     | Encrypted MMKV wrapper    | Custom AES encryption       |
 
 ---
 
@@ -208,20 +208,20 @@ export class TokenManager {
 ```typescript
 // Role-based access control
 export enum UserRole {
-  USER = 'user',
-  ADMIN = 'admin',
-  MODERATOR = 'moderator',
+  USER = "user",
+  ADMIN = "admin",
+  MODERATOR = "moderator",
 }
 
 export const Permissions = {
-  [UserRole.USER]: ['send_message', 'edit_own_message', 'delete_own_message'],
-  [UserRole.MODERATOR]: ['send_message', 'delete_any_message', 'ban_user'],
-  [UserRole.ADMIN]: ['*'], // All permissions
+  [UserRole.USER]: ["send_message", "edit_own_message", "delete_own_message"],
+  [UserRole.MODERATOR]: ["send_message", "delete_any_message", "ban_user"],
+  [UserRole.ADMIN]: ["*"], // All permissions
 } as const;
 
 export const hasPermission = (role: UserRole, permission: string): boolean => {
   const rolePermissions = Permissions[role];
-  return rolePermissions.includes('*') || rolePermissions.includes(permission);
+  return rolePermissions.includes("*") || rolePermissions.includes(permission);
 };
 ```
 
@@ -231,12 +231,12 @@ export const hasPermission = (role: UserRole, permission: string): boolean => {
 
 ### Encryption Strategy
 
-| Data Type | At Rest | In Transit | Notes |
-|-----------|---------|------------|-------|
-| **Messages** | AES-256-GCM | TLS 1.3 | E2E encryption (planned) |
-| **Credentials** | Keychain | TLS 1.3 | Never stored in app |
-| **Profile Data** | Encrypted MMKV | TLS 1.3 | Server-side encryption |
-| **Media Files** | AES-256-GCM | TLS 1.3 | Encrypted before upload |
+| Data Type        | At Rest        | In Transit | Notes                    |
+| ---------------- | -------------- | ---------- | ------------------------ |
+| **Messages**     | AES-256-GCM    | TLS 1.3    | E2E encryption (planned) |
+| **Credentials**  | Keychain       | TLS 1.3    | Never stored in app      |
+| **Profile Data** | Encrypted MMKV | TLS 1.3    | Server-side encryption   |
+| **Media Files**  | AES-256-GCM    | TLS 1.3    | Encrypted before upload  |
 
 ### Secure Storage
 
@@ -265,13 +265,13 @@ export class SecureMMKV {
 
 ### Data Retention
 
-| Data Type | Retention Period | Deletion Policy |
-|-----------|-----------------|-----------------|
-| **Messages** | User-controlled | Delete on request |
-| **Media** | 30 days after deletion | Auto-delete |
-| **Logs** | 90 days | Auto-delete |
-| **Backups** | 7 days | Auto-delete |
-| **Analytics** | 2 years | Anonymized |
+| Data Type     | Retention Period       | Deletion Policy   |
+| ------------- | ---------------------- | ----------------- |
+| **Messages**  | User-controlled        | Delete on request |
+| **Media**     | 30 days after deletion | Auto-delete       |
+| **Logs**      | 90 days                | Auto-delete       |
+| **Backups**   | 7 days                 | Auto-delete       |
+| **Analytics** | 2 years                | Anonymized        |
 
 ---
 
@@ -282,13 +282,13 @@ export class SecureMMKV {
 ```typescript
 // client/src/security/sslPinningConfig.ts
 export const SSL_PINNING_CONFIG = {
-  'api.chatapp.com': [
-    'sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
-    'sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=',
+  "api.chatapp.com": [
+    "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+    "sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=",
   ],
-  'ws.chatapp.com': [
-    'sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
-    'sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=',
+  "ws.chatapp.com": [
+    "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+    "sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=",
   ],
 };
 
@@ -314,14 +314,14 @@ export class ApiClient {
   async request(endpoint: string, options: RequestOptions): Promise<Response> {
     // 1. Validate URL
     if (!this.isAllowedEndpoint(endpoint)) {
-      throw new SecurityError('Endpoint not allowed');
+      throw new SecurityError("Endpoint not allowed");
     }
 
     // 2. Add security headers
     const headers = {
       ...options.headers,
-      'X-Request-Signature': await this.signRequest(options),
-      'X-Device-ID': await DeviceInfo.getUniqueId(),
+      "X-Request-Signature": await this.signRequest(options),
+      "X-Device-ID": await DeviceInfo.getUniqueId(),
     };
 
     // 3. Make request with timeout
@@ -338,14 +338,9 @@ export class ApiClient {
   }
 
   private isAllowedEndpoint(endpoint: string): boolean {
-    const allowedPatterns = [
-      '/api/v1/messages',
-      '/api/v1/chats',
-      '/api/v1/users',
-      '/ws',
-    ];
+    const allowedPatterns = ["/api/v1/messages", "/api/v1/chats", "/api/v1/users", "/ws"];
 
-    return allowedPatterns.some(pattern => endpoint.startsWith(pattern));
+    return allowedPatterns.some((pattern) => endpoint.startsWith(pattern));
   }
 }
 ```
@@ -367,19 +362,19 @@ export class DeviceSecurityService {
       this.checkEmulator(),
     ]);
 
-    return checks.every(result => result === true);
+    return checks.every((result) => result === true);
   }
 
   private async checkJailbreak(): Promise<boolean> {
     // iOS: Check for Cydia, MobileSubstrate
     // Android: Check for su, magisk, busybox
     const jailbreakIndicators = [
-      '/Applications/Cydia.app',
-      '/bin/bash',
-      '/usr/sbin/sshd',
-      '/etc/apt',
-      'su',
-      'magisk',
+      "/Applications/Cydia.app",
+      "/bin/bash",
+      "/usr/sbin/sshd",
+      "/etc/apt",
+      "su",
+      "magisk",
     ];
 
     for (const indicator of jailbreakIndicators) {
@@ -409,10 +404,10 @@ export class DeviceSecurityService {
 ```typescript
 // Verify app signature
 export async function verifyAppSignature(): Promise<boolean> {
-  if (Platform.OS === 'ios') {
+  if (Platform.OS === "ios") {
     // Verify code signature on iOS
     return await this.verifyIOSSignature();
-  } else if (Platform.OS === 'android') {
+  } else if (Platform.OS === "android") {
     // Verify APK signature on Android
     return await this.verifyAndroidSignature();
   }
@@ -426,23 +421,32 @@ export async function verifyAppSignature(): Promise<boolean> {
 
 ### Current Status
 
-| Vulnerability | Package | Severity | Status | Date |
-|---------------|---------|----------|--------|------|
-| Drizzle ORM SQL Injection | drizzle-orm@0.45.2 | High | ✅ Fixed | 2026-09-06 |
-| Esbuild Dev Server | esbuild@0.28.2 | Medium | ✅ Fixed | 2026-09-06 |
-| Qs Array Limit Bypass | qs@6.15.3 | Medium | ⚠️ Accepted | 2026-09-07 |
-| UUID Buffer Bounds | uuid@8.3.2 | Medium | ⚠️ Accepted | 2026-09-07 |
-| decode-uri-component DoS | decode-uri-component@0.2.2 | Medium | ⚠️ Accepted | 2026-09-07 |
-| PostCSS XSS/Path Traversal | postcss (transitive) | High | ⚠️ Accepted | 2026-09-07 |
-| Image-Size Infinite Loop | image-size (transitive) | High | ⚠️ Accepted | 2026-09-07 |
+Measured with `npm audit --audit-level=high` on 2026-10-04:
+**70 vulnerabilities (52 high, 18 moderate), 0 critical.**
+
+| Vulnerability                                | Package                                                                       | Severity      | Status               | Date       |
+| -------------------------------------------- | ----------------------------------------------------------------------------- | ------------- | -------------------- | ---------- |
+| Drizzle ORM SQL Injection                    | drizzle-orm@0.45.2                                                            | High          | ✅ Fixed             | 2026-09-06 |
+| Esbuild Dev Server                           | esbuild@0.28.2                                                                | Medium        | ✅ Fixed             | 2026-09-06 |
+| Qs Array Limit Bypass                        | qs@6.15.3                                                                     | Medium        | ⚠️ Accepted          | 2026-09-07 |
+| UUID Buffer Bounds                           | uuid@8.3.2                                                                    | Medium        | ⚠️ Accepted          | 2026-09-07 |
+| decode-uri-component DoS                     | decode-uri-component@0.2.2                                                    | Medium        | ⚠️ Accepted          | 2026-09-07 |
+| PostCSS XSS/Path Traversal                   | postcss (transitive)                                                          | High          | ⚠️ Accepted          | 2026-09-07 |
+| Image-Size Infinite Loop                     | image-size (transitive)                                                       | High          | ⚠️ Accepted          | 2026-09-07 |
+| Expo/Jest/Metro toolchain advisories         | expo, @expo/_, jest@29, @jest/_, metro, react-native (transitive)             | High (46)     | ⚠️ Accepted — RA-004 | 2026-10-04 |
+| lint-staged / micromatch / braces advisories | lint-staged@17, micromatch, braces (transitive)                               | High (4)      | ⚠️ Accepted — RA-004 | 2026-10-04 |
+| @sentry/react-native advisories              | @sentry/react-native@7.2.0 (**runtime** dep)                                  | High (2)      | ⚠️ Accepted — RA-005 | 2026-10-04 |
+| Remaining moderate advisories                | js-yaml, undici, node-forge, brace-expansion, @expo/code-signing-certificates | Moderate (18) | ⚠️ Accepted — RA-004 | 2026-10-04 |
 
 ### Accepted Risks
 
-| ID | Vulnerability | Severity | Rationale | Mitigation | Review Date |
-|----|---------------|----------|-----------|------------|-------------|
-| RA-001 | decode-uri-component DoS | Medium | Breaking change risk with @react-navigation | Monitor for patch | 2026-12-07 |
-| RA-002 | PostCSS XSS/Path Traversal | High | Requires expo@57 upgrade (breaking) | Plan major upgrade | 2026-12-07 |
-| RA-003 | Image-Size Infinite Loop | High | Requires expo@57 upgrade (breaking) | Plan major upgrade | 2026-12-07 |
+| ID     | Vulnerability                                                                                | Severity | Rationale                                                                                                                                                                                                                                                                                                                                                                                                             | Mitigation                                                                                                                                                                                                                                                                                                                  | Review Date |
+| ------ | -------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| RA-001 | decode-uri-component DoS                                                                     | Medium   | Breaking change risk with @react-navigation                                                                                                                                                                                                                                                                                                                                                                           | Monitor for patch                                                                                                                                                                                                                                                                                                           | 2026-12-07  |
+| RA-002 | PostCSS XSS/Path Traversal                                                                   | High     | Requires expo@57 upgrade (breaking)                                                                                                                                                                                                                                                                                                                                                                                   | Plan major upgrade                                                                                                                                                                                                                                                                                                          | 2026-12-07  |
+| RA-003 | Image-Size Infinite Loop                                                                     | High     | Requires expo@57 upgrade (breaking)                                                                                                                                                                                                                                                                                                                                                                                   | Plan major upgrade                                                                                                                                                                                                                                                                                                          | 2026-12-07  |
+| RA-004 | 50 high + 18 moderate advisories in the Expo/Jest/Metro/lint-staged build and test toolchain | High     | These packages are **not shipped in the application bundle** — they run only on developer machines and in CI during `expo export`, linting, and `jest`. Every `npm audit fix` suggestion is a semver-major bump (several are nonsensical, e.g. proposing `expo@44.0.6` for an Expo 54 project), so applying them would risk breaking the build for no runtime security benefit. Accepted 2026-10-04 by project owner. | Re-evaluate at the React Native/Expo v57 upgrade (ROADMAP). Until then: no production artifact contains these packages; `npm audit --audit-level=high` is a **non-blocking** CI signal for toolchain-only advisories and **blocking** for any advisory in a `dependencies` (non-dev) package. Track with `npm audit` in CI. | 2027-01-04  |
+| RA-005 | `@sentry/react-native@7.2.0` advisories (2 high)                                             | High     | This **is** a runtime dependency, so it ships in the app bundle. The available fix is `@sentry/react-native@5.15.2`, a major downgrade that would break the Sentry SDK integration and require re-validation of error reporting. No upgrade path exists within the supported major.                                                                                                                                   | Sentry is initialised behind `EXPO_PUBLIC_SENTRY_DSN`; when unset, no data leaves the device. Monitor `@sentry/react-native` releases for a patched 7.x and re-assess.                                                                                                                                                      | 2026-11-04  |
 
 ### Remediation Plan
 
@@ -454,11 +458,13 @@ export async function verifyAppSignature(): Promise<boolean> {
    - ⚠️ Monitor transitive dependencies for patches
    - ⚠️ Evaluate alternative packages
    - ⚠️ Implement npm overrides where possible
+   - ⚠️ Separate toolchain advisories from runtime advisories in CI (RA-004/RA-005)
 
 3. **Long-term** (Q1 2027)
-   - 🔄 Plan major React Native/Expo upgrade to v57+
+   - 🔄 Plan major React Native/Expo upgrade to v57+ (closes RA-002, RA-003, RA-004)
    - 🔄 Remove vulnerable transitive dependencies
    - 🔄 Implement automated dependency updates
+   - 🔄 Resolve the `@sentry/react-native` major-version blocker (RA-005)
 
 ---
 
@@ -468,32 +474,32 @@ export async function verifyAppSignature(): Promise<boolean> {
 
 ```typescript
 // client/src/security/__tests__/sslPinningConfig.test.ts
-describe('SSL Pinning', () => {
-  it('should validate known certificates', () => {
+describe("SSL Pinning", () => {
+  it("should validate known certificates", () => {
     const service = new SSLPinningService();
-    const validCert = generateTestCertificate('api.chatapp.com');
+    const validCert = generateTestCertificate("api.chatapp.com");
 
-    expect(service.validateCertificate('api.chatapp.com', validCert)).toBe(true);
+    expect(service.validateCertificate("api.chatapp.com", validCert)).toBe(true);
   });
 
-  it('should reject unknown certificates', () => {
+  it("should reject unknown certificates", () => {
     const service = new SSLPinningService();
-    const invalidCert = generateTestCertificate('evil.com');
+    const invalidCert = generateTestCertificate("evil.com");
 
-    expect(service.validateCertificate('api.chatapp.com', invalidCert)).toBe(false);
+    expect(service.validateCertificate("api.chatapp.com", invalidCert)).toBe(false);
   });
 });
 ```
 
 ### Security Test Coverage
 
-| Test Type | Tool | Frequency |
-|-----------|------|-----------|
-| **Dependency Audit** | `npm audit` | Every commit |
-| **SAST** | ESLint security plugins | Every commit |
-| **DAST** | OWASP ZAP | Weekly |
-| **Penetration Testing** | Internal team | Quarterly |
-| **Code Review** | Manual review | Every PR |
+| Test Type               | Tool                    | Frequency    |
+| ----------------------- | ----------------------- | ------------ |
+| **Dependency Audit**    | `npm audit`             | Every commit |
+| **SAST**                | ESLint security plugins | Every commit |
+| **DAST**                | OWASP ZAP               | Weekly       |
+| **Penetration Testing** | Internal team           | Quarterly    |
+| **Code Review**         | Manual review           | Every PR     |
 
 ---
 
@@ -501,12 +507,12 @@ describe('SSL Pinning', () => {
 
 ### Incident Severity Levels
 
-| Level | Description | Response Time | Examples |
-|-------|-------------|---------------|----------|
-| **P0 - Critical** | Active exploitation, data breach | < 15 minutes | E2E encryption failure, credential leak |
-| **P1 - High** | Potential exploitation, service down | < 1 hour | Authentication bypass, XSS |
-| **P2 - Medium** | Limited impact, no exploitation | < 4 hours | CSRF, information disclosure |
-| **P3 - Low** | Minimal impact, no exploitation | < 24 hours | Security misconfiguration |
+| Level             | Description                          | Response Time | Examples                                |
+| ----------------- | ------------------------------------ | ------------- | --------------------------------------- |
+| **P0 - Critical** | Active exploitation, data breach     | < 15 minutes  | E2E encryption failure, credential leak |
+| **P1 - High**     | Potential exploitation, service down | < 1 hour      | Authentication bypass, XSS              |
+| **P2 - Medium**   | Limited impact, no exploitation      | < 4 hours     | CSRF, information disclosure            |
+| **P3 - Low**      | Minimal impact, no exploitation      | < 24 hours    | Security misconfiguration               |
 
 ### Incident Response Process
 
@@ -535,13 +541,13 @@ graph LR
 
 ### Standards & Regulations
 
-| Standard | Scope | Status |
-|----------|-------|--------|
-| **GDPR** | EU user data | ✅ Compliant |
-| **CCPA/CPRA** | California user data | ✅ Compliant |
+| Standard          | Scope                         | Status         |
+| ----------------- | ----------------------------- | -------------- |
+| **GDPR**          | EU user data                  | ✅ Compliant   |
+| **CCPA/CPRA**     | California user data          | ✅ Compliant   |
 | **SOC 2 Type II** | Service organization controls | 🔄 In Progress |
-| **HIPAA** | Health data (optional) | 🔄 Planned |
-| **ISO 27001** | Information security | 🔄 Planned |
+| **HIPAA**         | Health data (optional)        | 🔄 Planned     |
+| **ISO 27001**     | Information security          | 🔄 Planned     |
 
 ### Data Protection
 
@@ -557,7 +563,7 @@ graph LR
 
 ### Before Every Release
 
-- [ ] **Dependencies**: `npm audit` shows no high/critical vulnerabilities
+- [ ] **Dependencies**: `npm audit` shows no high/critical vulnerabilities **in `dependencies`** (toolchain-only advisories are tracked as accepted risks RA-004/RA-005 and do not block a release)
 - [ ] **Secrets**: No secrets in code, environment variables validated
 - [ ] **Input Validation**: All inputs validated with Zod
 - [ ] **Authentication**: JWT tokens properly validated
