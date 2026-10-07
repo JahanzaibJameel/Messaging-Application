@@ -105,10 +105,21 @@ export async function authenticateAppLock(): Promise<boolean> {
     addUserActionBreadcrumb("app_lock_authentication_failed", {
       error: (error as Error).message,
     });
+    captureException(error as Error, {
+      action: "app_lock_authentication",
+      screen: "security_module",
+    });
     return false;
   }
 }
 
+/**
+ * Reads the persisted app-lock preference.
+ *
+ * Fails closed: a storage error is reported and rethrown rather than reported as
+ * `false`. Returning `false` here would tell callers the app lock is disabled
+ * when in fact the state is unknown, which unlocks the app without a prompt.
+ */
 export async function getAppLockEnabled(): Promise<boolean> {
   try {
     return (await secureGetJSON<boolean>(APP_LOCK_ENABLED_KEY)) === true;
@@ -117,7 +128,7 @@ export async function getAppLockEnabled(): Promise<boolean> {
       action: "app_lock_preference_read",
       screen: "security_module",
     });
-    return false;
+    throw error;
   }
 }
 
@@ -140,12 +151,32 @@ export async function enableAppLock(): Promise<boolean> {
       action: "app_lock_enable",
       screen: "security_module",
     });
+
+    // Roll the credential back. Without this the app lock reads as "off" while a
+    // biometric-gated keychain item survives, and a later disableAppLock() would
+    // demand authentication for a feature the app believes is disabled.
+    try {
+      await Keychain.resetGenericPassword({ service: APP_LOCK_SERVICE });
+    } catch (rollbackError) {
+      captureException(rollbackError as Error, {
+        action: "app_lock_credential_rollback",
+        screen: "security_module",
+      });
+    }
+
     return false;
   }
 }
 
+/**
+ * Clears the app-lock credential and preference.
+ *
+ * Fails closed on web: the app lock can never be enabled there, so reporting a
+ * successful disable would be a lie and would clear the persisted preference
+ * without any authentication.
+ */
 export async function disableAppLock(): Promise<boolean> {
-  if (isWeb) return true;
+  if (isWeb) return false;
   try {
     const hasCredential =
       typeof Keychain.hasGenericPassword === "function"
