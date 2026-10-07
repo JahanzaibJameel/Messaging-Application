@@ -1,6 +1,8 @@
 /**
  * Secure transport: HTTP via react-native-ssl-pinning (production) and WebSocket helpers.
- * Pinning is disabled in development via __DEV__ (plain fetch / WebSocket).
+ * Pinning is enabled only when the pinning config reports it as supported —
+ * never in development (__DEV__) and never on web, where the native module does
+ * not exist and the browser owns TLS.
  */
 
 import { fetch as sslFetch } from "react-native-ssl-pinning";
@@ -57,7 +59,8 @@ function normalizeHeaders(h: Record<string, string> | undefined): Record<string,
 }
 
 /**
- * HTTP request with SSL pinning in release builds; standard fetch in development (__DEV__).
+ * HTTP request with SSL pinning in release builds; standard fetch in development (__DEV__)
+ * and wherever pinning is unavailable (web), where the browser validates the certificate chain.
  */
 export const secureFetch = async (options: SecureRequestOptions): Promise<SecureResponse> => {
   try {
@@ -73,39 +76,45 @@ export const secureFetch = async (options: SecureRequestOptions): Promise<Secure
       ...options.headers,
     };
     const timeoutMs = options.timeout ?? getSSLPinningConfig().timeout;
+    const pinningConfig = __DEV__ ? undefined : getSSLPinningConfig();
 
-    if (__DEV__) {
-      const res = await fetch(options.url, {
-        method,
-        headers,
-        body: options.body,
-      });
-      const data = await res.text();
-      const secureResponse: SecureResponse = {
-        status: res.status,
-        statusText: res.statusText || "",
-        headers: normalizeHeaders(
-          Object.fromEntries(res.headers.entries()) as Record<string, string>
-        ),
-        data,
-      };
-      addUserActionBreadcrumb("secure_fetch_success", {
-        url: options.url,
-        status: secureResponse.status,
-        responseSize: secureResponse.data.length,
-      });
-      return secureResponse;
+    if (!pinningConfig?.enabled) {
+      // Browser/plain fetch has no native transport timeout, so abort explicitly.
+      const controller = new AbortController();
+      const abortTimer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const res = await fetch(options.url, {
+          method,
+          headers,
+          body: options.body,
+          signal: controller.signal,
+        });
+        const data = await res.text();
+        const secureResponse: SecureResponse = {
+          status: res.status,
+          statusText: res.statusText || "",
+          headers: normalizeHeaders(
+            Object.fromEntries(res.headers.entries()) as Record<string, string>
+          ),
+          data,
+        };
+        addUserActionBreadcrumb("secure_fetch_success", {
+          url: options.url,
+          status: secureResponse.status,
+          responseSize: secureResponse.data.length,
+        });
+        return secureResponse;
+      } finally {
+        clearTimeout(abortTimer);
+      }
     }
-
-    const config = getSSLPinningConfig();
-    const certs = config.certificateHashes;
 
     const sslRes = await sslFetch(options.url, {
       method,
       headers,
       body: options.body,
       timeoutInterval: timeoutMs,
-      sslPinning: { certs },
+      sslPinning: { certs: pinningConfig.certificateHashes },
     } as Parameters<typeof sslFetch>[1]);
 
     const data = await readSslResponseBody(sslRes);
