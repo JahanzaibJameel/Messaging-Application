@@ -8,15 +8,16 @@ An Architecture Decision Record captures important architectural decisions, alon
 
 ## ADR Index
 
-| ID | Title | Status | Date |
-|----|-------|--------|------|
-| [ADR-001](ADR-001-zustand-for-state-management.md) | Zustand for State Management | Accepted | 2026-09-27 |
-| [ADR-002](ADR-002-mmkv-for-persistence.md) | MMKV for Local Persistence | Accepted | 2026-09-27 |
-| [ADR-003](ADR-003-clean-architecture.md) | Clean Architecture Pattern | Accepted | 2026-09-27 |
-| [ADR-004](ADR-004-websocket-for-realtime.md) | WebSocket for Real-time Communication | Accepted | 2026-09-27 |
-| [ADR-005](ADR-005-ssl-pinning.md) | SSL Pinning for Network Security | Accepted | 2026-09-27 |
-| [ADR-006](ADR-006-immer-middleware.md) | Immer Middleware for Zustand | Accepted | 2026-09-27 |
-| [ADR-007](ADR-007-service-locator-di.md) | Service Locator for Dependency Injection | Accepted | 2026-09-27 |
+| ID                                                 | Title                                    | Status   | Date       |
+| -------------------------------------------------- | ---------------------------------------- | -------- | ---------- |
+| [ADR-001](ADR-001-zustand-for-state-management.md) | Zustand for State Management             | Accepted | 2026-09-27 |
+| [ADR-002](ADR-002-mmkv-for-persistence.md)         | MMKV for Local Persistence               | Accepted | 2026-09-27 |
+| [ADR-003](ADR-003-clean-architecture.md)           | Clean Architecture Pattern               | Accepted | 2026-09-27 |
+| [ADR-004](ADR-004-websocket-for-realtime.md)       | WebSocket for Real-time Communication    | Accepted | 2026-09-27 |
+| [ADR-005](ADR-005-ssl-pinning.md)                  | SSL Pinning for Network Security         | Accepted | 2026-09-27 |
+| [ADR-006](ADR-006-immer-middleware.md)             | Immer Middleware for Zustand             | Accepted | 2026-09-27 |
+| [ADR-007](ADR-007-service-locator-di.md)           | Service Locator for Dependency Injection | Accepted | 2026-09-27 |
+| [ADR-008](ADR-008-flashlist-migration.md)          | FlashList for Message Rendering          | Accepted | 2026-10-07 |
 
 ## Creating a New ADR
 
@@ -49,18 +50,21 @@ How does it address the issue?
 ## Consequences
 
 ### Positive
+
 - Benefit 1
 - Benefit 2
 
 ### Negative
+
 - Trade-off 1
 - Trade-off 2
 
 ### Neutral
+
 - Impact 1
 ```
 
 ---
 
 **Maintained by**: Architecture Team  
-**Last Updated**: 2026-09-27
+**Last Updated**: 2026-10-07

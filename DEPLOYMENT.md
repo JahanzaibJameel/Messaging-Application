@@ -1,8 +1,8 @@
 # Deployment Guide
 
-> **Version**: 3.0.0  
-> **Last Updated**: 2026-09-27  
-> **Status**: Production Ready ✅
+> **Version**: 3.0.1  
+> **Last Updated**: 2026-10-07  
+> **Status**: Active Development — not production ready
 
 ## Table of Contents
 
@@ -160,13 +160,14 @@ npm run validate:env
 - [ ] **TypeScript**: Zero type errors (`npm run type-check`)
 - [ ] **ESLint**: Zero warnings (`npm run lint`)
 - [ ] **Prettier**: Code formatted (`npm run format:check`)
-- [ ] **Tests**: 85%+ coverage (`npm run test:coverage`)
+- [ ] **Tests**: 61.2% coverage (target ≥85%) (`npm run test:coverage`)
+- [ ] **ESLint**: 22 warnings (target 0) (`npm run lint`)
 - [ ] **Console Logs**: No `console.log` in production code (`npm run check:console`)
 - [ ] **Bundle Size**: < 2MB (`npm run bundle:analyze`)
 
 ### ✅ Security
 
-- [ ] **Dependencies**: No high/critical vulnerabilities (`npm audit`)
+- [ ] **Dependencies**: 54 high vulnerabilities (toolchain advisories accepted as RA-004/RA-005) (`npm audit`)
 - [ ] **SSL Pinning**: Certificates configured and tested
 - [ ] **Keychain**: Sensitive data stored securely
 - [ ] **Input Validation**: All inputs validated with Zod

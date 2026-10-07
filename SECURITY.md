@@ -1,10 +1,8 @@
 # Security Documentation
 
-> **Version**: 3.0.0  
-> **Last Updated**: 2026-09-27  
-> **Status**: Production Ready ✅  
-> **Security Contact**: security@chatapp.com  
-> **PGP Key**: Available on request
+> **Version**: 3.0.1  
+> **Last Updated**: 2026-10-07  
+> **Status**: Active Development — not production ready
 
 ## Table of Contents
 
@@ -422,7 +420,9 @@ export async function verifyAppSignature(): Promise<boolean> {
 ### Current Status
 
 Measured with `npm audit --audit-level=high` on 2026-10-04:
-**70 vulnerabilities (52 high, 18 moderate), 0 critical.**
+**70 vulnerabilities (54 high, 18 moderate), 0 critical.**
+
+> **Note**: 54 high includes 50 toolchain advisories (Expo/Jest/Metro/lint-staged build toolchain, accepted as RA-004) and 2 `@sentry/react-native` runtime advisories (accepted as RA-005). Only 2 high advisories are in runtime `dependencies`.
 
 | Vulnerability                                | Package                                                                       | Severity      | Status               | Date       |
 | -------------------------------------------- | ----------------------------------------------------------------------------- | ------------- | -------------------- | ---------- |

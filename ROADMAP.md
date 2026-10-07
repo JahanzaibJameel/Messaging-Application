@@ -1,9 +1,9 @@
 # ChatApp 2026 — Roadmap
 
-> **Version**: 3.0.0  
-> **Last Updated**: 2026-09-27  
+> **Version**: 3.0.1  
+> **Last Updated**: 2026-10-07  
 > **Next Review**: 2026-10-27  
-> **Status**: Active Development
+> **Status**: Active Development — not production ready
 
 ## Table of Contents
 
@@ -24,7 +24,7 @@
 
 ChatApp 2026 is an **enterprise-grade messaging platform** built with Clean Architecture, offline-first sync, and premium UI/UX. This roadmap outlines our strategic direction for the next 12 months, focusing on production readiness, scalability, and enterprise features.
 
-**Current Maturity**: 8.5/10 — Strong technical foundation with clear path to production excellence
+**Current Maturity**: 5/10 — Active development, test coverage below target, security audit has high-severity findings
 
 **Key Themes**:
 
@@ -58,24 +58,30 @@ ChatApp 2026 is an **enterprise-grade messaging platform** built with Clean Arch
 - **Real-time**: WebSocket with typing indicators and read receipts
 - **Security Foundation**: SSL pinning, keychain storage, device security
 - **TypeScript**: Strict mode, comprehensive type coverage
-- **Testing**: 85% coverage, solid test infrastructure
+- **Testing**: 1610 tests, 63 suites, 61.2% coverage (below 85% target)
 
 ### Technical Debt ⚠️
 
-- **Implementation Gaps**: Some features scaffolded but incomplete
-- **Testing Coverage**: Need 95% for critical paths
+- **Test Coverage**: 61.2% overall (target ≥85%, sprint in progress)
+- **ESLint Warnings**: 22 (target 0)
+- **Security Audit**: 54 high vulnerabilities (toolchain advisories accepted as RA-004/RA-005)
+- **Bundle Size**: ~10MB (target <2MB)
+- **ChatScreen Tests**: 12 failing after FlashList migration
+- **LoginScreen Tests**: error haptic + focus/blur handlers blocked
 - **E2E Testing**: Detox/Maestro setup needed
-- **Performance**: Bundle optimization, memory profiling
 - **Documentation**: Align docs with actual implementation
 
 ### Known Issues 🔴
 
-| Issue                          | Severity | Status      | Owner       |
-| ------------------------------ | -------- | ----------- | ----------- |
-| Flaky chatStore test           | Medium   | In Progress | Engineering |
-| Missing E2E tests              | High     | Planned     | QA          |
-| Bundle size > 2MB              | Medium   | Planned     | Frontend    |
-| Voice message actual recording | Low      | Planned     | Mobile      |
+| Issue                                             | Severity | Status      | Owner       |
+| ------------------------------------------------- | -------- | ----------- | ----------- |
+| ChatScreen tests failing (FlashList mock)         | High     | In Progress | Engineering |
+| LoginScreen error haptic test (expo-haptics mock) | Medium   | In Progress | Engineering |
+| LoginScreen focus/blur handlers                   | Medium   | In Progress | Engineering |
+| Bundle size > 2MB (~10MB)                         | High     | Planned     | Frontend    |
+| ESLint warnings (22)                              | Medium   | Planned     | Engineering |
+| Security audit 54 high                            | High     | Accepted    | Security    |
+| Voice message actual recording                    | Low      | Planned     | Mobile      |
 
 ---
 

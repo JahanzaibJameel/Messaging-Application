@@ -1,10 +1,10 @@
 # Accessibility Documentation
 
-> **Version**: 3.0.0  
-> **Last Updated**: 2026-09-27  
-> **Status**: WCAG 2.1 AA Compliant ✅  
-**WCAG Level**: AA  
-**Tested Platforms**: iOS 17+, Android 14+, Web (Chrome, Safari, Firefox)
+> **Version**: 3.0.1  
+> **Last Updated**: 2026-10-07  
+> **Status**: Draft — WCAG 2.1 AA patterns documented, not verified in test suite  
+> **WCAG Level**: AA  
+> **Tested Platforms**: iOS 17+, Android 14+, Web (Chrome, Safari, Firefox)
 
 ## Table of Contents
 
@@ -31,16 +31,17 @@ ChatApp is designed to be **inclusive and accessible** to all users, including t
 
 ### Accessibility Principles
 
-| Principle | Description | Implementation |
-|-----------|-------------|----------------|
-| **Perceivable** | Information presented in ways users can perceive | Color contrast, text alternatives, adaptable content |
-| **Operable** | Interface components operable by all users | Keyboard navigation, touch targets, motion respect |
-| **Understandable** | Information and operation understandable | Clear labels, predictable behavior, error prevention |
-| **Robust** | Content works with current and future tools | Semantic markup, platform APIs, future-proofing |
+| Principle          | Description                                      | Implementation                                       |
+| ------------------ | ------------------------------------------------ | ---------------------------------------------------- |
+| **Perceivable**    | Information presented in ways users can perceive | Color contrast, text alternatives, adaptable content |
+| **Operable**       | Interface components operable by all users       | Keyboard navigation, touch targets, motion respect   |
+| **Understandable** | Information and operation understandable         | Clear labels, predictable behavior, error prevention |
+| **Robust**         | Content works with current and future tools      | Semantic markup, platform APIs, future-proofing      |
 
 ### Compliance Statement
 
 ChatApp 2026 conforms to **WCAG 2.1 Level AA** across all platforms:
+
 - ✅ All text meets 4.5:1 contrast ratio (normal text)
 - ✅ All interactive elements have 44×44pt minimum touch targets
 - ✅ Full screen reader support (VoiceOver/TalkBack)
@@ -221,20 +222,20 @@ const animationConfig = reduceMotion
 
 ### Color Contrast
 
-| Text Type | Minimum Ratio | Target | Current |
-|-----------|---------------|--------|---------|
-| **Normal text** | 4.5:1 | 7:1 | 15.2:1 ✅ |
-| **Large text** (≥18pt) | 3:1 | 4.5:1 | 7.1:1 ✅ |
-| **UI Components** | 3:1 | 4.5:1 | 4.6:1 ✅ |
+| Text Type              | Minimum Ratio | Target | Current   |
+| ---------------------- | ------------- | ------ | --------- |
+| **Normal text**        | 4.5:1         | 7:1    | 15.2:1 ✅ |
+| **Large text** (≥18pt) | 3:1           | 4.5:1  | 7.1:1 ✅  |
+| **UI Components**      | 3:1           | 4.5:1  | 4.6:1 ✅  |
 
 ### Typography
 
-| Property | Requirement | Implementation |
-|----------|-------------|----------------|
-| **Minimum size** | 12pt (14px) | All text ≥ 12px |
-| **Line height** | 1.5x font size | `lineHeight: fontSize * 1.5` |
-| **Letter spacing** | 0.12x font size | `letterSpacing: fontSize * 0.12` |
-| **Font scaling** | Support system settings | `allowFontScaling={true}` |
+| Property           | Requirement             | Implementation                   |
+| ------------------ | ----------------------- | -------------------------------- |
+| **Minimum size**   | 12pt (14px)             | All text ≥ 12px                  |
+| **Line height**    | 1.5x font size          | `lineHeight: fontSize * 1.5`     |
+| **Letter spacing** | 0.12x font size         | `letterSpacing: fontSize * 0.12` |
+| **Font scaling**   | Support system settings | `allowFontScaling={true}`        |
 
 ---
 
@@ -408,12 +409,14 @@ describe('ChatListScreen Accessibility', () => {
 #### Screen Reader Testing
 
 **iOS (VoiceOver)**:
+
 1. Enable VoiceOver: Settings → Accessibility → VoiceOver
 2. Navigate with swipe gestures
 3. Verify announcements are clear and concise
 4. Test focus order is logical
 
 **Android (TalkBack)**:
+
 1. Enable TalkBack: Settings → Accessibility → TalkBack
 2. Navigate with swipe gestures
 3. Verify announcements are clear and concise
@@ -446,23 +449,23 @@ describe('ChatListScreen Accessibility', () => {
 
 ### VoiceOver (iOS)
 
-| Element | Role | Label Pattern |
-|---------|------|---------------|
-| **Chat row** | `button` | `{name}, {lastMessage}, {unreadCount} unread` |
-| **Send button** | `button` | `Send message, button, Sends the typed message` |
-| **Message bubble** | `text` | `Message from {sender}: {text}` |
-| **Input field** | `text` | `Message input, double tap to edit` |
-| **Back button** | `button` | `Back, button, Returns to previous screen` |
+| Element            | Role     | Label Pattern                                   |
+| ------------------ | -------- | ----------------------------------------------- |
+| **Chat row**       | `button` | `{name}, {lastMessage}, {unreadCount} unread`   |
+| **Send button**    | `button` | `Send message, button, Sends the typed message` |
+| **Message bubble** | `text`   | `Message from {sender}: {text}`                 |
+| **Input field**    | `text`   | `Message input, double tap to edit`             |
+| **Back button**    | `button` | `Back, button, Returns to previous screen`      |
 
 ### TalkBack (Android)
 
-| Element | Role | Label Pattern |
-|---------|------|---------------|
-| **Chat row** | `button` | `{name}, Chat, {unreadCount} unread messages` |
-| **Send button** | `button` | `Send message` |
-| **Message bubble** | `text` | `{sender}: {text}` |
-| **Input field** | `text` | `Message input` |
-| **Back button** | `button` | `Navigate back` |
+| Element            | Role     | Label Pattern                                 |
+| ------------------ | -------- | --------------------------------------------- |
+| **Chat row**       | `button` | `{name}, Chat, {unreadCount} unread messages` |
+| **Send button**    | `button` | `Send message`                                |
+| **Message bubble** | `text`   | `{sender}: {text}`                            |
+| **Input field**    | `text`   | `Message input`                               |
+| **Back button**    | `button` | `Navigate back`                               |
 
 ---
 
@@ -470,13 +473,13 @@ describe('ChatListScreen Accessibility', () => {
 
 ### Web Keyboard Shortcuts
 
-| Shortcut | Action | Platform |
-|----------|--------|----------|
-| `Tab` | Next focusable element | Web |
-| `Shift + Tab` | Previous focusable element | Web |
-| `Enter` / `Space` | Activate button/control | Web |
-| `Escape` | Close modal/dialog | Web |
-| `Arrow keys` | Navigate lists | Web |
+| Shortcut          | Action                     | Platform |
+| ----------------- | -------------------------- | -------- |
+| `Tab`             | Next focusable element     | Web      |
+| `Shift + Tab`     | Previous focusable element | Web      |
+| `Enter` / `Space` | Activate button/control    | Web      |
+| `Escape`          | Close modal/dialog         | Web      |
+| `Arrow keys`      | Navigate lists             | Web      |
 
 ### Focus Management
 
@@ -494,13 +497,13 @@ const useFocusTrap = (isActive: boolean) => {
 
     // Trap focus within modal
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Tab') {
+      if (event.key === "Tab") {
         // Handle tab trapping
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isActive]);
 };
 ```
@@ -535,14 +538,14 @@ const animation = useAccessibleAnimation();
 
 ### Animation Guidelines
 
-| Animation | Standard Duration | Reduced Motion |
-|-----------|------------------|----------------|
-| **Button press** | 100ms | Disabled |
-| **Screen transition** | 300ms | Disabled |
-| **Fade in/out** | 200ms | Disabled |
-| **Slide up** | 300ms | Disabled |
-| **Typing indicator** | 1000ms loop | Disabled |
-| **Message send** | 200ms | Disabled |
+| Animation             | Standard Duration | Reduced Motion |
+| --------------------- | ----------------- | -------------- |
+| **Button press**      | 100ms             | Disabled       |
+| **Screen transition** | 300ms             | Disabled       |
+| **Fade in/out**       | 200ms             | Disabled       |
+| **Slide up**          | 300ms             | Disabled       |
+| **Typing indicator**  | 1000ms loop       | Disabled       |
+| **Message send**      | 200ms             | Disabled       |
 
 ---
 
@@ -563,18 +566,18 @@ export const getContrastRatio = (foreground: string, background: string): number
 };
 
 // Usage
-const ratio = getContrastRatio('#111B21', '#FFFFFF');
+const ratio = getContrastRatio("#111B21", "#FFFFFF");
 console.log(`Contrast ratio: ${ratio.toFixed(2)}:1`); // 15.2:1 ✅
 ```
 
 ### Color-Blind Friendly Palette
 
-| Status | Color | Icon | Pattern |
-|--------|-------|------|---------|
-| **Online** | Green | Circle | Solid |
-| **Away** | Yellow | Clock | Striped |
-| **Busy** | Red | Square | Dotted |
-| **Offline** | Gray | Circle | None |
+| Status      | Color  | Icon   | Pattern |
+| ----------- | ------ | ------ | ------- |
+| **Online**  | Green  | Circle | Solid   |
+| **Away**    | Yellow | Clock  | Striped |
+| **Busy**    | Red    | Square | Dotted  |
+| **Offline** | Gray   | Circle | None    |
 
 ---
 
@@ -582,11 +585,11 @@ console.log(`Contrast ratio: ${ratio.toFixed(2)}:1`); // 15.2:1 ✅
 
 ### Minimum Sizes
 
-| Platform | Minimum Size | Recommended |
-|----------|--------------|-------------|
-| **iOS** | 44×44pt | 48×48pt |
-| **Android** | 48×48dp | 52×52dp |
-| **Web** | 44×44px | 48×48px |
+| Platform    | Minimum Size | Recommended |
+| ----------- | ------------ | ----------- |
+| **iOS**     | 44×44pt      | 48×48pt     |
+| **Android** | 48×48dp      | 52×52dp     |
+| **Web**     | 44×44px      | 48×48px     |
 
 ### Spacing Guidelines
 
@@ -614,7 +617,7 @@ console.log(`Contrast ratio: ${ratio.toFixed(2)}:1`); // 15.2:1 ✅
 ### RTL Support
 
 ```typescript
-import { I18nManager } from 'react-native';
+import { I18nManager } from "react-native";
 
 // RTL-aware styles
 const rtlStyles = {
@@ -630,7 +633,7 @@ const rtlStyles = {
 
 // Message bubble alignment
 const MessageBubble = styled.View`
-  align-self: ${({ isOwn }) => (isOwn ? 'flex-end' : 'flex-start')};
+  align-self: ${({ isOwn }) => (isOwn ? "flex-end" : "flex-start")};
   ${({ isOwn }) => isOwn && rtlStyles.paddingHorizontal(16)}
 `;
 ```
@@ -641,11 +644,11 @@ const MessageBubble = styled.View`
 // Date formatting
 const formatDate = (date: Date, locale: string): string => {
   return new Intl.DateTimeFormat(locale, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   }).format(date);
 };
 
@@ -661,11 +664,11 @@ const formatNumber = (num: number, locale: string): string => {
 
 ### Platform Differences
 
-| Platform | Limitation | Workaround |
-|----------|-----------|------------|
-| **iOS** | VoiceOver sometimes announces status twice | Add `accessibilityLiveRegion="polite"` |
-| **Android** | TalkBack focus order differs from iOS | Test on both platforms |
-| **Web** | Screen reader behavior varies by browser | Test with NVDA, JAWS, VoiceOver |
+| Platform    | Limitation                                 | Workaround                             |
+| ----------- | ------------------------------------------ | -------------------------------------- |
+| **iOS**     | VoiceOver sometimes announces status twice | Add `accessibilityLiveRegion="polite"` |
+| **Android** | TalkBack focus order differs from iOS      | Test on both platforms                 |
+| **Web**     | Screen reader behavior varies by browser   | Test with NVDA, JAWS, VoiceOver        |
 
 ### Third-Party Components
 

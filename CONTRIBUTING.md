@@ -367,13 +367,13 @@ const sendMessage = async (content: string) => {
 
 ### Coverage Targets
 
-| Layer                                | Target  | Current |
-| ------------------------------------ | ------- | ------- |
-| **Domain (entities, use cases)**     | 95%     | 90%     |
-| **Data (repositories, mappers)**     | 90%     | 85%     |
-| **Core (sync, security, errors)**    | 90%     | 85%     |
-| **Presentation (components, hooks)** | 80%     | 75%     |
-| **Overall**                          | **85%** | **82%** |
+| Layer                                | Target  | Current   |
+| ------------------------------------ | ------- | --------- |
+| **Domain (entities, use cases)**     | 95%     | 90%       |
+| **Data (repositories, mappers)**     | 90%     | 85%       |
+| **Core (sync, security, errors)**    | 90%     | 85%       |
+| **Presentation (components, hooks)** | 80%     | 75%       |
+| **Overall**                          | **85%** | **61.2%** |
 
 ### Test Structure
 

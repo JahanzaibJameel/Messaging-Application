@@ -4,39 +4,31 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
 [![React Native](https://img.shields.io/badge/React%20Native-0.81.5-61DAFB)](https://reactnative.dev/)
 [![Expo](https://img.shields.io/badge/Expo-54-000020)](https://expo.dev/)
-[![Jest](https://img.shields.io/badge/Tests-1452%20passing-99424F)](https://jestjs.io/)
-[![Coverage](https://img.shields.io/badge/Coverage-51.1%25%20statements-orange)](coverage/lcov-report/index.html)
-[![CI](https://github.com/your-org/chatapp/workflows/CI/badge.svg)](https://github.com/your-org/chatapp/actions)
+[![Jest](https://img.shields.io/badge/Tests-1610%20passing-99424F)](https://jestjs.io/)
+[![Coverage](https://img.shields.io/badge/Coverage-61.2%25%20statements-orange)](coverage/lcov-report/index.html)
 
 ---
 
 ## 🎯 Overview
 
-**ChatApp 2026** is a WhatsApp-style messaging application built on **Clean
-Architecture** with **offline-first synchronization**. This repository is an
-active work in progress: core layers (domain, data, stores, security transport)
-are implemented and tested, while several capabilities are stubs, wired to
-mocked backends, or not yet integrated into the running app. Every status claim
-below is tied to a command you can run — see
-[Verifying these claims](#-verifying-these-claims).
+**ChatApp 2026** is a WhatsApp-style messaging application built on Clean Architecture with offline-first synchronization. This repository is an **active work in progress**: core layers (domain, data, stores, security transport) are implemented and tested, while several capabilities are stubs, wired to mocked backends, or not yet integrated into the running app. Every status claim below is tied to a command you can run — see [Verifying these claims](#-verifying-these-claims).
 
 ### ✨ Capability Status
 
-Coverage figures come from `npm run test:coverage` on the files listed in
-`jest.config.js` coverage collection.
+Coverage figures come from `npx jest --coverage --silent` on the files listed in `jest.config.js` coverage collection.
 
-| Capability               | Implementation                                         | Status                                                                                                                                       |
-| ------------------------ | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Real-time Chat**       | `ws` server + RN WebSocket client                      | Implemented; `useWebSocket.ts` untested (0%)                                                                                                 |
-| **Offline-First Sync**   | Zustand stores + MMKV persist                          | Store-level complete; `useWebSocket.ts` integration untested                                                                                 |
-| **Voice Messages**       | `VoiceRecorder` / `VoiceMessagePlayer`                 | **Not implemented** — stubs, `expo-av` not installed                                                                                         |
-| **Read Receipts**        | `ReadReceiptsManager` + WebSocket                      | Implemented, tested (100% of that file)                                                                                                      |
-| **Typing Indicators**    | Debounced via `TypingIndicator.tsx`                    | Component untested (0%)                                                                                                                      |
-| **Media Handling**       | `MediaUploader` + RN `FlatList`                        | Uploader implemented; **FlashList not wired in** (see Phase 5)                                                                               |
-| **Cross-Platform**       | iOS, Android, Web (Expo 54)                            | Web export verified; native builds not verified here                                                                                         |
-| **Security**             | SSL pinning (native-only), Keychain, encrypted storage | Implemented; keychain/secureStorage ~57–60% covered                                                                                          |
-| **Internationalization** | i18next 26 + react-i18next 17, `client/src/i18n`       | Implemented: `en` + `ar` bundles, device-language detection via `expo-localization`, provider mounted in `App.tsx`. Used by `ChatListScreen` |
-| **Accessibility**        | Labels                                                 | Guidelines documented; no automated a11y verification                                                                                        |
+| Capability               | Implementation                                         | Status                                                                                                       |
+| ------------------------ | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| **Real-time Chat**       | `ws` server + RN WebSocket client                      | Implemented; `useWebSocket.ts` untested (0%)                                                                 |
+| **Offline-First Sync**   | Zustand stores + MMKV persist                          | Store-level complete; `useWebSocket.ts` integration untested                                                 |
+| **Voice Messages**       | `VoiceRecorder` / `VoiceMessagePlayer`                 | Partially implemented — `expo-av` not installed; stub methods note this                                      |
+| **Read Receipts**        | `ReadReceiptsManager` + WebSocket                      | Implemented, tested (75% statements)                                                                         |
+| **Typing Indicators**    | `TypingIndicatorsManager` + debounced send             | Implemented, tested; `TypingIndicator.tsx` component deleted (dead code)                                     |
+| **Media Handling**       | `MediaUploader` + FlashList                            | Uploader implemented; FlashList wired in `OptimizedMessageList`                                              |
+| **Cross-Platform**       | iOS, Android, Web (Expo 54)                            | Web export verified; native builds not verified                                                              |
+| **Security**             | SSL pinning (native-only), Keychain, encrypted storage | Implemented; keychain (57%) / secureStorage (60%) covered                                                    |
+| **Internationalization** | i18next 26 + react-i18next 17, `client/src/i18n`       | Implemented: `en` + `ar` bundles, device-language detection, provider in `App.tsx`. Used by `ChatListScreen` |
+| **Accessibility**        | Labels                                                 | Guidelines documented; no automated a11y verification                                                        |
 
 ---
 
@@ -45,8 +37,8 @@ Coverage figures come from `npm run test:coverage` on the files listed in
 ```mermaid
 graph TB
     subgraph Presentation["🎨 Presentation Layer"]
-        Screens["Screens<br/>(ChatList, Chat, Settings)"]
-        Components["Components<br/>(MessageBubble, Avatar, InputBar)"]
+        Screens["Screens<br/>(ChatList, Chat, Settings, Login, OTP)"]
+        Components["Components<br/>(ChatBubble, MessageInput, OptimizedMessageList)"]
         Hooks["Hooks<br/>(useChat, useMessages, useAuth)"]
         Stores["Stores<br/>(Zustand + Immer + Persist)"]
     end
@@ -99,7 +91,7 @@ graph TB
   "language": "TypeScript 5.9 (strict mode)",
   "state": "Zustand 5 + TanStack Query 5 + MMKV",
   "navigation": "React Navigation 7 (Native Stack + Bottom Tabs)",
-  "ui": "React Native FlatList + Reanimated 4 + Gesture Handler 2 (FlashList installed but not yet wired in)",
+  "ui": "React Native FlashList (@shopify/flash-list 2.0.2) + Reanimated 4 + Gesture Handler 2",
   "forms": "React Hook Form NOT installed — no RHF usage in client/src",
   "i18n": "i18next 26 + react-i18next 17 — en + ar bundles in client/src/i18n",
   "security": "react-native-keychain 10 + react-native-ssl-pinning (native builds only) + MMKV encrypted storage",
@@ -108,7 +100,7 @@ graph TB
 }
 ```
 
-Packages listed in the README are only those that appear in `package.json`.
+Packages listed are those that appear in `package.json`.
 `react-hook-form`, `expo-av`, `expo-secure-store`, `fastify`, `helmet`,
 `argon2`, `redis`, `pg` and `detox` are **not** installed.
 
@@ -131,14 +123,14 @@ All data is lost on restart.
 
 ### Quality & Reliability
 
-| Tool               | Purpose                  | Configuration                                                                   |
-| ------------------ | ------------------------ | ------------------------------------------------------------------------------- |
-| **ESLint 9**       | Code quality             | `eslint.config.mjs` + `eslint-plugin-react-native`                              |
-| **Prettier 3**     | Code formatting          | `.prettierrc` + `plugin:prettier/recommended`                                   |
-| **TypeScript 5.9** | Static analysis          | `strict: true`, `noEmit: true`, `bundler` module resolution                     |
-| **Jest 29**        | Unit/Integration testing | `jest-expo` preset; thresholds set to 85% but **not met** (see Success Metrics) |
-| **Husky 8**        | Git hooks                | `pre-commit` + `commit-msg` validation                                          |
-| **GitHub Actions** | CI/CD                    | Multi-stage pipeline with quality gates                                         |
+| Tool               | Purpose                  | Configuration                                                               |
+| ------------------ | ------------------------ | --------------------------------------------------------------------------- |
+| **ESLint 9**       | Code quality             | `eslint.config.mjs` + `eslint-plugin-react-native` — 22 warnings (0 errors) |
+| **Prettier 3**     | Code formatting          | `.prettierrc` + `plugin:prettier/recommended`                               |
+| **TypeScript 5.9** | Static analysis          | `strict: true`, `noEmit: true`, `bundler` module resolution                 |
+| **Jest 29**        | Unit/Integration testing | `jest-expo` preset; thresholds set to 85% but **not met**                   |
+| **Husky 8**        | Git hooks                | `pre-commit` + `commit-msg` validation                                      |
+| **GitHub Actions** | CI/CD                    | Multi-stage pipeline with quality gates                                     |
 
 ---
 
@@ -167,7 +159,7 @@ messaging-application/            # single npm package (no workspaces)
 │   │   │   └── models/           # API response models
 │   │   ├── core/                 # Cross-cutting Concerns
 │   │   │   ├── sync/ errors/ di/ networking/ logger/
-│   │   │   ├── media/ readReceipts/
+│   │   │   ├── media/ readReceipts/ typingIndicators/
 │   │   ├── i18n/                 # i18next bootstrap, rtl.ts, dateHelper.ts, locales/
 │   │   ├── security/             # Flat modules: keychain.ts, secureStorage.ts,
 │   │   │                         # sslPinningConfig.ts, biometricAuth.ts,
@@ -423,7 +415,7 @@ We welcome contributions! Please review our [Contributing Guide](CONTRIBUTING.md
 
 - TypeScript **strict mode** — no `any`, explicit return types for public APIs
 - **Prettier** formatting — run `npm run format` before committing
-- **ESLint zero errors** — run `npm run lint` (19 pre-existing warnings are documented in Success Metrics)
+- **ESLint zero errors** — run `npm run lint` (22 pre-existing warnings documented)
 - **Accessibility** — follow [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md)
 - **Tests** — unit tests for logic, component tests for UI
 - **Do not document unimplemented behaviour as complete.** If a capability is a
@@ -438,16 +430,16 @@ Measured on this machine at commit-time. Reproduce with the commands in
 
 | Metric                         | Target      | Actual                                                                                                                                                                       |
 | ------------------------------ | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Test Coverage (statements)** | 85%         | **51.1%** — below target                                                                                                                                                     |
-| **Test Coverage (branches)**   | 85%         | **47.8%** — below target                                                                                                                                                     |
-| **Test Coverage (functions)**  | 85%         | **50.2%** — below target                                                                                                                                                     |
-| **Test Coverage (lines)**      | 85%         | **51.5%** — below target                                                                                                                                                     |
-| **Tests passing**              | all green   | 1452 / 1452 across 57 suites                                                                                                                                                 |
+| **Test Coverage (statements)** | 85%         | **61.2%** — below target                                                                                                                                                     |
+| **Test Coverage (branches)**   | 85%         | **57.1%** — below target                                                                                                                                                     |
+| **Test Coverage (functions)**  | 85%         | **60.5%** — below target                                                                                                                                                     |
+| **Test Coverage (lines)**      | 85%         | **61.5%** — below target                                                                                                                                                     |
+| **Tests passing**              | all green   | 1610 / 1610 across 63 suites                                                                                                                                                 |
 | **TypeScript errors**          | 0           | 0 (`tsconfig.json`, `tsconfig.app.json`, `tsconfig.test.json`)                                                                                                               |
-| **ESLint**                     | 0 errors    | 0 errors, **19 warnings** (pre-existing: `no-non-null-assertion`, `no-empty-function`)                                                                                       |
-| **Web bundle size**            | < 2 MB      | **3.35 MB** single JS file (`dist/`) — above target                                                                                                                          |
+| **ESLint**                     | 0 errors    | 0 errors, **22 warnings** (pre-existing)                                                                                                                                     |
+| **Web bundle size**            | < 2 MB      | **~10 MB** single JS file (`dist/`) — above target                                                                                                                           |
 | **Mobile bundle size**         | < 2 MB      | **Not measured** in this environment                                                                                                                                         |
-| **`npm audit` high/critical**  | 0           | **52 high**, 18 moderate — all in the build/test toolchain except `@sentry/react-native` (a runtime dependency). Every suggested fix is a semver-major bump and needs review |
+| **`npm audit` high/critical**  | 0           | **54 high**, 20 moderate — all in the build/test toolchain except `@sentry/react-native` (a runtime dependency). Every suggested fix is a semver-major bump and needs review |
 | **Accessibility conformance**  | WCAG 2.1 AA | **Not verified** — no automated checks                                                                                                                                       |
 | **WebSocket latency**          | < 100ms     | **Not measured**                                                                                                                                                             |
 
@@ -468,12 +460,11 @@ npx jest --coverage --silent
 # Dependency claims (installed vs. not installed)
 Select-String -Path package.json -Pattern '"fastify"|"helmet"|"argon2"|"redis"|"pg"|"react-hook-form"|"expo-av"|"expo-secure-store"|"detox"'
 
-# FlashList is not used by any production screen
-Get-ChildItem -Recurse -Include *.tsx -Path client\src | Select-String -Pattern "@shopify/flash-list"
-Get-ChildItem -Recurse -Include *.tsx -Path client\src | Select-String -Pattern "FlatList"
+# FlashList is wired in OptimizedMessageList
+Select-String -Path client/src -Pattern "@shopify/flash-list"
 
-# OptimizedMessageList is not imported by any screen
-Get-ChildItem -Recurse -Include *.tsx -Path client\src | Select-String -Pattern "OptimizedMessageList"
+# OptimizedMessageList is imported by ChatScreen
+Select-String -Path client/src -Pattern "OptimizedMessageList"
 
 # Server uses in-memory storage, not Postgres/Drizzle
 Select-String -Path server\storage.ts -Pattern "MemStorage"
@@ -548,7 +539,7 @@ See [LICENSE](LICENSE) for full text.
 
 <div align="center">
 
-**Built with ❤️ for modern mobile development**  
+**Built with ❤️ for modern mobile development**
 **Powered by Clean Architecture · TypeScript · React Native · Expo**
 
 [🔝 Back to Top](#chatapp-2026--messaging-application)

@@ -1,10 +1,11 @@
 # API Reference
 
-> **Version**: 3.0.0  
-> **Last Updated**: 2026-09-27  
+> **Version**: 3.0.1  
+> **Last Updated**: 2026-10-07  
 > **Base URL**: `https://api.chatapp.com/v1`  
 > **WebSocket URL**: `wss://ws.chatapp.com/ws`  
-**Authentication**: Bearer JWT (`Authorization: Bearer <token>`)
+> **Status**: Specification only — API not yet deployed  
+> **Authentication**: Bearer JWT (`Authorization: Bearer <token>`)
 
 ## Table of Contents
 
@@ -44,8 +45,8 @@ async function getValidToken(): Promise<string> {
   if (!isExpired(token)) return token;
 
   const refreshToken = await getStoredRefreshToken();
-  const response = await fetch('/auth/refresh', {
-    method: 'POST',
+  const response = await fetch("/auth/refresh", {
+    method: "POST",
     body: JSON.stringify({ refreshToken }),
   });
 
@@ -83,9 +84,11 @@ X-App-Version: 3.0.0
 ```http
 POST /auth/login
 ```
+
 Request OTP for phone number.
 
 **Request**:
+
 ```json
 {
   "phone": "+1234567890",
@@ -94,6 +97,7 @@ Request OTP for phone number.
 ```
 
 **Response** (200):
+
 ```json
 {
   "success": true,
@@ -107,9 +111,11 @@ Request OTP for phone number.
 ```http
 POST /auth/verify
 ```
+
 Verify OTP and get tokens.
 
 **Request**:
+
 ```json
 {
   "phone": "+1234567890",
@@ -119,6 +125,7 @@ Verify OTP and get tokens.
 ```
 
 **Response** (200):
+
 ```json
 {
   "success": true,
@@ -142,9 +149,11 @@ Verify OTP and get tokens.
 ```http
 POST /auth/refresh
 ```
+
 Refresh access token.
 
 **Request**:
+
 ```json
 {
   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -152,6 +161,7 @@ Refresh access token.
 ```
 
 **Response** (200):
+
 ```json
 {
   "success": true,
@@ -169,14 +179,17 @@ Refresh access token.
 ```http
 GET /chats
 ```
+
 Get user's chats.
 
 **Query Parameters**:
+
 - `limit` (optional): Number of chats to return (default: 50, max: 100)
 - `offset` (optional): Pagination offset (default: 0)
 - `sort` (optional): `lastActivity` | `createdAt` (default: `lastActivity`)
 
 **Response** (200):
+
 ```json
 {
   "success": true,
@@ -217,9 +230,11 @@ Get user's chats.
 ```http
 GET /chats/:id
 ```
+
 Get specific chat details.
 
 **Response** (200):
+
 ```json
 {
   "success": true,
@@ -227,7 +242,7 @@ Get specific chat details.
     "id": "chat_user-1_user-2",
     "type": "private",
     "participantIds": ["user-1", "user-2"],
-    "lastMessage": { /* ... */ },
+    "lastMessage": {/* ... */},
     "unreadCount": 2,
     "isPinned": false,
     "isMuted": false,
@@ -244,9 +259,11 @@ Get specific chat details.
 ```http
 POST /chats
 ```
+
 Create a new chat.
 
 **Request**:
+
 ```json
 {
   "type": "private",
@@ -255,6 +272,7 @@ Create a new chat.
 ```
 
 **Response** (201):
+
 ```json
 {
   "success": true,
@@ -280,14 +298,17 @@ Create a new chat.
 ```http
 GET /chats/:chatId/messages
 ```
+
 Get messages for a chat.
 
 **Query Parameters**:
+
 - `limit` (optional): Number of messages (default: 50, max: 100)
 - `before` (optional): Message ID to paginate before
 - `after` (optional): Message ID to paginate after
 
 **Response** (200):
+
 ```json
 {
   "success": true,
@@ -325,9 +346,11 @@ Get messages for a chat.
 ```http
 POST /chats/:chatId/messages
 ```
+
 Send a message.
 
 **Request**:
+
 ```json
 {
   "content": {
@@ -339,6 +362,7 @@ Send a message.
 ```
 
 **Response** (201):
+
 ```json
 {
   "success": true,
@@ -364,9 +388,11 @@ Send a message.
 ```http
 PUT /messages/:id
 ```
+
 Update a message (edit).
 
 **Request**:
+
 ```json
 {
   "content": {
@@ -377,6 +403,7 @@ Update a message (edit).
 ```
 
 **Response** (200):
+
 ```json
 {
   "success": true,
@@ -402,9 +429,11 @@ Update a message (edit).
 ```http
 DELETE /messages/:id
 ```
+
 Delete a message.
 
 **Response** (200):
+
 ```json
 {
   "success": true,
@@ -419,9 +448,11 @@ Delete a message.
 ```http
 GET /users/me
 ```
+
 Get current user profile.
 
 **Response** (200):
+
 ```json
 {
   "success": true,
@@ -443,9 +474,11 @@ Get current user profile.
 ```http
 PUT /users/me
 ```
+
 Update current user profile.
 
 **Request**:
+
 ```json
 {
   "name": "John Doe Updated",
@@ -454,6 +487,7 @@ Update current user profile.
 ```
 
 **Response** (200):
+
 ```json
 {
   "success": true,
@@ -476,43 +510,45 @@ Update current user profile.
 
 ```typescript
 // Connect to WebSocket
-const ws = new WebSocket('wss://ws.chatapp.com/ws');
+const ws = new WebSocket("wss://ws.chatapp.com/ws");
 
 // Authenticate
-ws.send(JSON.stringify({
-  type: 'auth',
-  payload: { token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' }
-}));
+ws.send(
+  JSON.stringify({
+    type: "auth",
+    payload: { token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." },
+  })
+);
 ```
 
 ### Client → Server Events
 
-| Event | Payload | Description |
-|-------|---------|-------------|
-| `auth` | `{ token }` | Authenticate connection |
-| `message:send` | `{ chatId, content, replyToId? }` | Send message |
-| `message:edit` | `{ messageId, content }` | Edit message |
-| `message:delete` | `{ messageId }` | Delete message |
-| `reaction:add` | `{ messageId, emoji }` | Add reaction |
-| `reaction:remove` | `{ messageId, emoji }` | Remove reaction |
-| `typing:start` | `{ chatId }` | Start typing indicator |
-| `typing:stop` | `{ chatId }` | Stop typing indicator |
-| `read:update` | `{ chatId, lastReadMessageId }` | Update read receipt |
+| Event             | Payload                           | Description             |
+| ----------------- | --------------------------------- | ----------------------- |
+| `auth`            | `{ token }`                       | Authenticate connection |
+| `message:send`    | `{ chatId, content, replyToId? }` | Send message            |
+| `message:edit`    | `{ messageId, content }`          | Edit message            |
+| `message:delete`  | `{ messageId }`                   | Delete message          |
+| `reaction:add`    | `{ messageId, emoji }`            | Add reaction            |
+| `reaction:remove` | `{ messageId, emoji }`            | Remove reaction         |
+| `typing:start`    | `{ chatId }`                      | Start typing indicator  |
+| `typing:stop`     | `{ chatId }`                      | Stop typing indicator   |
+| `read:update`     | `{ chatId, lastReadMessageId }`   | Update read receipt     |
 
 ### Server → Client Events
 
-| Event | Payload | Description |
-|-------|---------|-------------|
-| `message:new` | `{ message }` | New message received |
-| `message:updated` | `{ message }` | Message edited |
-| `message:deleted` | `{ messageId }` | Message deleted |
-| `reaction:added` | `{ messageId, reaction }` | Reaction added |
-| `reaction:removed` | `{ messageId, userId, emoji }` | Reaction removed |
-| `typing:started` | `{ chatId, userId }` | User started typing |
-| `typing:stopped` | `{ chatId, userId }` | User stopped typing |
-| `read:updated` | `{ chatId, userId, lastReadMessageId }` | Read receipt updated |
-| `chat:updated` | `{ chat }` | Chat updated |
-| `presence:update` | `{ userId, isOnline, lastSeen }` | User presence changed |
+| Event              | Payload                                 | Description           |
+| ------------------ | --------------------------------------- | --------------------- |
+| `message:new`      | `{ message }`                           | New message received  |
+| `message:updated`  | `{ message }`                           | Message edited        |
+| `message:deleted`  | `{ messageId }`                         | Message deleted       |
+| `reaction:added`   | `{ messageId, reaction }`               | Reaction added        |
+| `reaction:removed` | `{ messageId, userId, emoji }`          | Reaction removed      |
+| `typing:started`   | `{ chatId, userId }`                    | User started typing   |
+| `typing:stopped`   | `{ chatId, userId }`                    | User stopped typing   |
+| `read:updated`     | `{ chatId, userId, lastReadMessageId }` | Read receipt updated  |
+| `chat:updated`     | `{ chat }`                              | Chat updated          |
+| `presence:update`  | `{ userId, isOnline, lastSeen }`        | User presence changed |
 
 ### Example WebSocket Client
 
@@ -523,10 +559,10 @@ class ChatWebSocketClient {
   private maxReconnectAttempts = 10;
 
   connect(token: string): void {
-    this.ws = new WebSocket('wss://ws.chatapp.com/ws');
+    this.ws = new WebSocket("wss://ws.chatapp.com/ws");
 
     this.ws.onopen = () => {
-      this.send({ type: 'auth', payload: { token } });
+      this.send({ type: "auth", payload: { token } });
       this.reconnectAttempts = 0;
     };
 
@@ -542,7 +578,7 @@ class ChatWebSocketClient {
 
   private scheduleReconnect(token: string): void {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error('Max reconnection attempts reached');
+      console.error("Max reconnection attempts reached");
       return;
     }
 
@@ -565,19 +601,19 @@ class ChatWebSocketClient {
 
 ### HTTP Status Codes
 
-| Code | Meaning | Action |
-|------|---------|--------|
-| `200` | OK | Success |
-| `201` | Created | Resource created |
-| `400` | Bad Request | Invalid request body |
-| `401` | Unauthorized | Invalid/missing token |
-| `403` | Forbidden | Insufficient permissions |
-| `404` | Not Found | Resource not found |
-| `409` | Conflict | Resource conflict |
-| `422` | Validation Error | Invalid input |
-| `429` | Too Many Requests | Rate limited |
-| `500` | Internal Server Error | Server error |
-| `503` | Service Unavailable | Maintenance |
+| Code  | Meaning               | Action                   |
+| ----- | --------------------- | ------------------------ |
+| `200` | OK                    | Success                  |
+| `201` | Created               | Resource created         |
+| `400` | Bad Request           | Invalid request body     |
+| `401` | Unauthorized          | Invalid/missing token    |
+| `403` | Forbidden             | Insufficient permissions |
+| `404` | Not Found             | Resource not found       |
+| `409` | Conflict              | Resource conflict        |
+| `422` | Validation Error      | Invalid input            |
+| `429` | Too Many Requests     | Rate limited             |
+| `500` | Internal Server Error | Server error             |
+| `503` | Service Unavailable   | Maintenance              |
 
 ### Error Response Format
 
@@ -600,16 +636,16 @@ class ChatWebSocketClient {
 
 ### Error Codes
 
-| Code | Description |
-|------|-------------|
-| `VALIDATION_ERROR` | Invalid input data |
-| `AUTHENTICATION_ERROR` | Invalid or expired token |
-| `AUTHORIZATION_ERROR` | Insufficient permissions |
-| `NOT_FOUND` | Resource not found |
-| `CONFLICT` | Resource conflict |
-| `RATE_LIMIT_EXCEEDED` | Too many requests |
-| `INTERNAL_ERROR` | Server error |
-| `SERVICE_UNAVAILABLE` | Service temporarily unavailable |
+| Code                   | Description                     |
+| ---------------------- | ------------------------------- |
+| `VALIDATION_ERROR`     | Invalid input data              |
+| `AUTHENTICATION_ERROR` | Invalid or expired token        |
+| `AUTHORIZATION_ERROR`  | Insufficient permissions        |
+| `NOT_FOUND`            | Resource not found              |
+| `CONFLICT`             | Resource conflict               |
+| `RATE_LIMIT_EXCEEDED`  | Too many requests               |
+| `INTERNAL_ERROR`       | Server error                    |
+| `SERVICE_UNAVAILABLE`  | Service temporarily unavailable |
 
 ---
 
@@ -617,12 +653,12 @@ class ChatWebSocketClient {
 
 ### Limits
 
-| Endpoint Type | Limit | Window |
-|---------------|-------|--------|
-| **Authentication** | 5 requests | 15 minutes |
-| **Message Send** | 100 requests | 1 minute |
-| **General API** | 1000 requests | 1 hour |
-| **WebSocket** | 10 connections | 1 minute |
+| Endpoint Type      | Limit          | Window     |
+| ------------------ | -------------- | ---------- |
+| **Authentication** | 5 requests     | 15 minutes |
+| **Message Send**   | 100 requests   | 1 minute   |
+| **General API**    | 1000 requests  | 1 hour     |
+| **WebSocket**      | 10 connections | 1 minute   |
 
 ### Rate Limit Headers
 
@@ -636,7 +672,7 @@ X-RateLimit-Reset: 1632870000
 
 ```typescript
 if (response.status === 429) {
-  const retryAfter = response.headers.get('X-RateLimit-Reset');
+  const retryAfter = response.headers.get("X-RateLimit-Reset");
   const delay = retryAfter ? parseInt(retryAfter) * 1000 : 60000;
 
   await sleep(delay);
@@ -655,6 +691,7 @@ GET /chats?limit=20&offset=40
 ```
 
 **Response**:
+
 ```json
 {
   "data": [...],
@@ -674,6 +711,7 @@ GET /chats/:chatId/messages?limit=50&before=msg-123
 ```
 
 **Response**:
+
 ```json
 {
   "data": [...],
@@ -717,21 +755,21 @@ curl -X POST https://api.chatapp.com/v1/chats/chat-123/messages \
 
 ```typescript
 class ChatApiClient {
-  private baseUrl = 'https://api.chatapp.com/v1';
+  private baseUrl = "https://api.chatapp.com/v1";
   private token: string | null = null;
 
   async login(phone: string): Promise<void> {
     await fetch(`${this.baseUrl}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ phone, deviceId: await getDeviceId() }),
     });
   }
 
   async verifyOtp(phone: string, otp: string): Promise<User> {
     const response = await fetch(`${this.baseUrl}/auth/verify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ phone, otp, deviceId: await getDeviceId() }),
     });
 
@@ -741,29 +779,23 @@ class ChatApiClient {
   }
 
   async getChats(limit = 50, offset = 0): Promise<Chat[]> {
-    const response = await fetch(
-      `${this.baseUrl}/chats?limit=${limit}&offset=${offset}`,
-      {
-        headers: { Authorization: `Bearer ${this.token}` },
-      }
-    );
+    const response = await fetch(`${this.baseUrl}/chats?limit=${limit}&offset=${offset}`, {
+      headers: { Authorization: `Bearer ${this.token}` },
+    });
 
     const data = await response.json();
     return data.data;
   }
 
   async sendMessage(chatId: string, text: string): Promise<Message> {
-    const response = await fetch(
-      `${this.baseUrl}/chats/${chatId}/messages`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content: { type: 'text', text } }),
-      }
-    );
+    const response = await fetch(`${this.baseUrl}/chats/${chatId}/messages`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ content: { type: "text", text } }),
+    });
 
     const data = await response.json();
     return data.data;
@@ -777,11 +809,11 @@ class ChatApiClient {
 
 ### Official SDKs
 
-| Platform | SDK | Installation |
-|----------|-----|--------------|
+| Platform         | SDK                         | Installation                            |
+| ---------------- | --------------------------- | --------------------------------------- |
 | **React Native** | `@chatapp/sdk-react-native` | `npm install @chatapp/sdk-react-native` |
-| **Node.js** | `@chatapp/sdk-node` | `npm install @chatapp/sdk-node` |
-| **Python** | `chatapp-python` | `pip install chatapp-python` |
+| **Node.js**      | `@chatapp/sdk-node`         | `npm install @chatapp/sdk-node`         |
+| **Python**       | `chatapp-python`            | `pip install chatapp-python`            |
 
 ### Community SDKs
 

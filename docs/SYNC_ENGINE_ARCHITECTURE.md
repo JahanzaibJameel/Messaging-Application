@@ -1,8 +1,8 @@
 # Sync Engine Architecture
 
-> **Version**: 3.0.0  
-> **Last Updated**: 2026-09-27  
-> **Status**: Production Ready ✅
+> **Version**: 3.0.1  
+> **Last Updated**: 2026-10-07  
+> **Status**: Active Development
 
 ## Table of Contents
 
@@ -27,26 +27,26 @@ The ChatApp Sync Engine provides **offline-first messaging** with eventual consi
 
 ### Key Features
 
-| Feature | Implementation | Status |
-|---------|----------------|--------|
-| **Offline-First** | Local-first architecture with background sync | ✅ Complete |
-| **Optimistic UI** | Immediate local updates, background sync | ✅ Complete |
-| **Conflict Resolution** | Last-write-wins with vector clocks | ✅ Complete |
-| **Retry Logic** | Exponential backoff with jitter | ✅ Complete |
-| **Delta Sync** | Only sync changes since last sync | ✅ Complete |
-| **Queue Management** | Prioritized message queue | ✅ Complete |
+| Feature                 | Implementation                                | Status      |
+| ----------------------- | --------------------------------------------- | ----------- |
+| **Offline-First**       | Local-first architecture with background sync | ✅ Complete |
+| **Optimistic UI**       | Immediate local updates, background sync      | ✅ Complete |
+| **Conflict Resolution** | Last-write-wins with vector clocks            | ✅ Complete |
+| **Retry Logic**         | Exponential backoff with jitter               | ✅ Complete |
+| **Delta Sync**          | Only sync changes since last sync             | ✅ Complete |
+| **Queue Management**    | Prioritized message queue                     | ✅ Complete |
 
 ---
 
 ## Design Goals
 
-| Goal | Description | Implementation |
-|------|-------------|----------------|
-| **Reliability** | Messages never lost, eventually delivered | Persistent queue, retry logic |
-| **Performance** | UI never blocked by network | Async operations, optimistic updates |
-| **Consistency** | Data consistent across devices | Conflict resolution, vector clocks |
-| **Battery Efficiency** | Minimal background activity | Batch operations, smart scheduling |
-| **Scalability** | Handle 100K+ concurrent users | Horizontal scaling, Redis cache |
+| Goal                   | Description                               | Implementation                       |
+| ---------------------- | ----------------------------------------- | ------------------------------------ |
+| **Reliability**        | Messages never lost, eventually delivered | Persistent queue, retry logic        |
+| **Performance**        | UI never blocked by network               | Async operations, optimistic updates |
+| **Consistency**        | Data consistent across devices            | Conflict resolution, vector clocks   |
+| **Battery Efficiency** | Minimal background activity               | Batch operations, smart scheduling   |
+| **Scalability**        | Handle 100K+ concurrent users             | Horizontal scaling, Redis cache      |
 
 ---
 
@@ -126,7 +126,7 @@ export class SyncEngine {
     await this.updateLocalState(message);
 
     // 3. Add to persistent queue
-    await this.messageQueue.enqueue(message, { priority: 'high' });
+    await this.messageQueue.enqueue(message, { priority: "high" });
 
     // 4. Attempt immediate send if online
     if (this.networkMonitor.isConnected) {
@@ -165,7 +165,7 @@ export class SyncEngine {
       await this.messageQueue.scheduleRetry(message.id, delay);
     } else {
       await this.messageQueue.markAsFailed(message.id, error);
-      await this.notifyUser(message.id, 'Failed to send message');
+      await this.notifyUser(message.id, "Failed to send message");
     }
   }
 }
@@ -178,7 +178,7 @@ export class SyncEngine {
 interface QueuedMessage {
   id: string;
   message: Message;
-  priority: 'high' | 'normal' | 'low';
+  priority: "high" | "normal" | "low";
   retryCount: number;
   scheduledAt: Date;
   lastAttemptAt?: Date;
@@ -193,7 +193,7 @@ export class MessageQueue {
     const queuedMessage: QueuedMessage = {
       id: message.id,
       message,
-      priority: options.priority || 'normal',
+      priority: options.priority || "normal",
       retryCount: 0,
       scheduledAt: new Date(),
     };
@@ -205,7 +205,7 @@ export class MessageQueue {
   async getPending(): Promise<QueuedMessage[]> {
     const now = new Date();
     return this.queue
-      .filter(item => item.scheduledAt <= now)
+      .filter((item) => item.scheduledAt <= now)
       .sort((a, b) => b.priority - a.priority);
   }
 }
@@ -235,7 +235,7 @@ export class ConflictResolver {
   }
 
   detectConflicts(local: Message[], remote: Message[]): Conflict[] {
-    const localMap = new Map(local.map(m => [m.id, m]));
+    const localMap = new Map(local.map((m) => [m.id, m]));
     const conflicts: Conflict[] = [];
 
     for (const remoteMessage of remote) {
@@ -366,12 +366,12 @@ function resolveConflict(local: Message, remote: Message): Message {
 
 ### Conflict Types
 
-| Type | Description | Resolution |
-|------|-------------|------------|
-| **Update Conflict** | Same message edited on two devices | Last-write-wins |
-| **Delete vs Update** | Deleted on one device, edited on another | Delete wins |
-| **Read Receipt Conflict** | Different read states | Most advanced status wins |
-| **Reaction Conflict** | Different reactions | Merge both reactions |
+| Type                      | Description                              | Resolution                |
+| ------------------------- | ---------------------------------------- | ------------------------- |
+| **Update Conflict**       | Same message edited on two devices       | Last-write-wins           |
+| **Delete vs Update**      | Deleted on one device, edited on another | Delete wins               |
+| **Read Receipt Conflict** | Different read states                    | Most advanced status wins |
+| **Reaction Conflict**     | Different reactions                      | Merge both reactions      |
 
 ---
 
@@ -436,7 +436,7 @@ async function deltaSync(): Promise<SyncResult> {
 
   const changes = await api.getChanges({
     since: lastSync,
-    types: ['messages', 'reactions', 'statuses'],
+    types: ["messages", "reactions", "statuses"],
   });
 
   await applyChanges(changes);
@@ -517,12 +517,12 @@ async function encryptMessage(
 
 ```typescript
 export enum SyncErrorType {
-  NETWORK_ERROR = 'NETWORK_ERROR',
-  AUTH_ERROR = 'AUTH_ERROR',
-  CONFLICT_ERROR = 'CONFLICT_ERROR',
-  STORAGE_ERROR = 'STORAGE_ERROR',
-  VALIDATION_ERROR = 'VALIDATION_ERROR',
-  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
+  NETWORK_ERROR = "NETWORK_ERROR",
+  AUTH_ERROR = "AUTH_ERROR",
+  CONFLICT_ERROR = "CONFLICT_ERROR",
+  STORAGE_ERROR = "STORAGE_ERROR",
+  VALIDATION_ERROR = "VALIDATION_ERROR",
+  UNKNOWN_ERROR = "UNKNOWN_ERROR",
 }
 
 export class SyncError extends AppError {
@@ -539,13 +539,13 @@ export class SyncError extends AppError {
 
 ### Recovery Strategies
 
-| Error Type | Recovery Strategy | Retry |
-|------------|-------------------|-------|
-| **Network Error** | Exponential backoff | Yes (5 attempts) |
-| **Auth Error** | Re-authenticate, then retry | Yes (3 attempts) |
-| **Conflict Error** | Apply conflict resolution | No |
-| **Storage Error** | Clear corrupted data, re-sync | No |
-| **Validation Error** | Log and discard | No |
+| Error Type           | Recovery Strategy             | Retry            |
+| -------------------- | ----------------------------- | ---------------- |
+| **Network Error**    | Exponential backoff           | Yes (5 attempts) |
+| **Auth Error**       | Re-authenticate, then retry   | Yes (3 attempts) |
+| **Conflict Error**   | Apply conflict resolution     | No               |
+| **Storage Error**    | Clear corrupted data, re-sync | No               |
+| **Validation Error** | Log and discard               | No               |
 
 ---
 
@@ -553,14 +553,14 @@ export class SyncError extends AppError {
 
 ### Metrics to Track
 
-| Metric | Description | Alert Threshold |
-|--------|-------------|-----------------|
-| **Sync Latency** | Time to sync messages | > 5s |
-| **Queue Depth** | Pending messages | > 100 |
-| **Retry Rate** | Failed sends / total sends | > 5% |
-| **Conflict Rate** | Conflicts / syncs | > 10% |
-| **Storage Usage** | Bytes used | > 50MB |
-| **Error Rate** | Errors / operations | > 1% |
+| Metric            | Description                | Alert Threshold |
+| ----------------- | -------------------------- | --------------- |
+| **Sync Latency**  | Time to sync messages      | > 5s            |
+| **Queue Depth**   | Pending messages           | > 100           |
+| **Retry Rate**    | Failed sends / total sends | > 5%            |
+| **Conflict Rate** | Conflicts / syncs          | > 10%           |
+| **Storage Usage** | Bytes used                 | > 50MB          |
+| **Error Rate**    | Errors / operations        | > 1%            |
 
 ### Debug Mode
 
@@ -574,14 +574,14 @@ function logSync(event: string, data?: unknown): void {
 }
 
 // Usage
-logSync('message_queued', { messageId: '123', chatId: '456' });
-logSync('sync_completed', { duration: 2345, messagesSynced: 15 });
+logSync("message_queued", { messageId: "123", chatId: "456" });
+logSync("sync_completed", { duration: 2345, messagesSynced: 15 });
 ```
 
 ### Sentry Integration
 
 ```typescript
-Sentry.captureMessage('Sync failed', {
+Sentry.captureMessage("Sync failed", {
   tags: { sync_error: error.type },
   extra: {
     messageId: message.id,

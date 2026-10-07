@@ -1,8 +1,8 @@
 # Architecture Documentation
 
-> **Last Updated**: 2026-09-27  
-> **Version**: 3.0.0  
-> **Status**: Production Ready ✅
+> **Last Updated**: 2026-10-07  
+> **Version**: 3.0.1  
+> **Status**: Active Development — not production ready
 
 ## Table of Contents
 
@@ -516,7 +516,7 @@ export class ChatService {
 ### List Rendering
 
 ```typescript
-// FlashList with proper configuration
+// FlashList with proper configuration (migrated from FlatList)
 <FlashList
   data={messages}
   renderItem={renderItem}
@@ -530,6 +530,8 @@ export class ChatService {
   updateCellsBatchingPeriod={50}
 />
 ```
+
+> **Migration note**: `OptimizedMessageList.tsx` switched from `FlatList` to `FlashList` (`@shopify/flash-list`). The `inverted` prop was removed. 12 ChatScreen tests fail due to FlashList mock issues — see `client/src/screens/__tests__/ChatScreen.test.tsx`.
 
 ### Animation Performance
 
@@ -577,13 +579,15 @@ const animatedStyle = useAnimatedStyle(() => ({
 
 ### Coverage Targets
 
-| Layer                            | Target  | Current |
-| -------------------------------- | ------- | ------- |
-| Domain (entities, use cases)     | 95%     | 90%     |
-| Data (repositories, mappers)     | 90%     | 85%     |
-| Core (sync, security, errors)    | 90%     | 85%     |
-| Presentation (components, hooks) | 80%     | 75%     |
-| **Overall**                      | **85%** | **82%** |
+| Layer                            | Target  | Current   |
+| -------------------------------- | ------- | --------- |
+| Domain (entities, use cases)     | 95%     | 90%       |
+| Data (repositories, mappers)     | 90%     | 85%       |
+| Core (sync, security, errors)    | 90%     | 85%       |
+| Presentation (components, hooks) | 80%     | 75%       |
+| **Overall**                      | **85%** | **61.2%** |
+
+> **Note**: Overall coverage is below target due to LoginScreen (78.26% stmts) and ChatScreen (FlashList mock issues). Sprint in progress to reach ≥90%.
 
 ---
 
@@ -724,14 +728,14 @@ graph LR
 
 ### Quality Gates
 
-| Gate                  | Threshold       | Enforcement |
-| --------------------- | --------------- | ----------- |
-| **TypeScript Errors** | 0               | Hard fail   |
-| **ESLint Warnings**   | 0               | Hard fail   |
-| **Test Coverage**     | ≥85%            | Hard fail   |
-| **Bundle Size**       | <2MB            | Warning     |
-| **Security Audit**    | 0 high/critical | Hard fail   |
-| **Console Logs**      | 0 in production | Hard fail   |
+| Gate                  | Threshold                  | Enforcement |
+| --------------------- | -------------------------- | ----------- |
+| **TypeScript Errors** | 0                          | Hard fail   |
+| **ESLint Warnings**   | 0 (currently 22)           | Hard fail   |
+| **Test Coverage**     | ≥85% (currently 61.2%)     | Hard fail   |
+| **Bundle Size**       | <2MB (~10MB current)       | Warning     |
+| **Security Audit**    | 0 high (currently 54 high) | Hard fail   |
+| **Console Logs**      | 0 in production            | Hard fail   |
 
 ---
 
