@@ -22,14 +22,14 @@ export const useUIStore = create<UIStore>()(
     ...initialState,
 
     showToast: (toast: Omit<Toast, "id">) => {
-      const id = `toast_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const id = `toast_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
 
       set((state) => {
         state.toasts.push({ ...toast, id });
       });
 
-      // Auto-hide toast after duration
-      const duration = toast.duration || 3000;
+      // Auto-hide toast after duration (an explicit duration of 0 is honoured)
+      const duration = toast.duration ?? 3000;
       setTimeout(() => {
         get().hideToast(id);
       }, duration);
@@ -76,6 +76,14 @@ export const useUIStore = create<UIStore>()(
           state.typingIndicators = {};
         }
         state.typingIndicators[chatId] = indicators;
+      });
+    },
+
+    clearTypingIndicators: (chatId: string) => {
+      set((state) => {
+        if (state.typingIndicators) {
+          delete state.typingIndicators[chatId];
+        }
       });
     },
   }))
