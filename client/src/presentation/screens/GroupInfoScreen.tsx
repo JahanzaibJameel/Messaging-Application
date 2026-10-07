@@ -15,7 +15,8 @@ import { ThemedText } from "@/components/ThemedText";
 import { SettingsItem } from "@/components/SettingsItem";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { useChatStore, useAuthStore } from "@/presentation/stores";
+import { useChatStore } from "@/presentation/stores";
+import { isCurrentUser } from "@/presentation/stores/currentUser";
 import type { GroupChat } from "@/domain/entities/Chat";
 import type { GroupInfoNavProp, GroupInfoRouteProp } from "@/navigation/types";
 
@@ -29,7 +30,6 @@ export default function GroupInfoScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const { theme } = useTheme();
-  const { currentUser } = useAuthStore();
   const { getChatById, muteChat, unmuteChat, removeChat } = useChatStore();
 
   const chat = getChatById(groupId);
@@ -37,7 +37,6 @@ export default function GroupInfoScreen({ navigation, route }: Props) {
   if (!chat || chat.type !== "group") return null;
 
   const group = chat as GroupChat;
-  const currentUserId = currentUser?.id ?? "currentUser";
   const handleMuteToggle = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (group.isMuted) {
@@ -104,9 +103,9 @@ export default function GroupInfoScreen({ navigation, route }: Props) {
         </ThemedText>
         <View style={[styles.sectionContent, { backgroundColor: theme.surface }]}>
           {group.participantIds.map((userId, index) => {
-            const isCurrentUser = userId === currentUserId;
+            const isCurrentUserParticipant = isCurrentUser(userId);
             const isUserAdmin = group.adminIds.includes(userId);
-            const displayName = isCurrentUser ? "You" : userId;
+            const displayName = isCurrentUserParticipant ? "You" : userId;
 
             return (
               <React.Fragment key={userId}>
