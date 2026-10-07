@@ -1,9 +1,10 @@
 const originalEnv = process.env;
 const originalDev = (global as any).__DEV__;
 
-function loadModule(development: boolean, certificateHashes?: string) {
+function loadModule(development: boolean, certificateHashes?: string, platformOS = "ios") {
   jest.resetModules();
   (global as any).__DEV__ = development;
+  (require("react-native").Platform as { OS: string }).OS = platformOS;
   process.env = { ...originalEnv };
   process.env.EXPO_PUBLIC_BACKEND_DOMAIN = "api.chatapp.com";
   process.env.EXPO_PUBLIC_BACKEND_WS_DOMAIN = "ws.chatapp.com";
@@ -51,6 +52,18 @@ describe("SSLPinningConfig", () => {
       expect(() => mod.validateSSLPinningConfig()).toThrow(
         "SSL certificate pinning hashes not configured. Set EXPO_PUBLIC_CERT_HASHES environment variable in production."
       );
+    });
+
+    it("treats the documented .env.example placeholder as unconfigured", () => {
+      const mod = loadModule(false, "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=");
+      expect(() => mod.getSSLPinningConfig()).toThrow(
+        "SSL certificate pinning hashes not configured."
+      );
+    });
+
+    it("ignores blank entries and surrounding whitespace", () => {
+      const mod = loadModule(false, " hash-one , ,hash-two,");
+      expect(mod.getSSLPinningConfig().certificateHashes).toEqual(["hash-one", "hash-two"]);
     });
 
     it("returns secure backend configuration and validates it", () => {
@@ -110,6 +123,34 @@ describe("SSLPinningConfig", () => {
         allowInsecureConnections: false,
         timeout: 15000,
       });
+    });
+  });
+
+  describe("web production configuration", () => {
+    it("does not require certificate hashes and reports pinning as unavailable", () => {
+      const mod = loadModule(false, undefined, "web");
+      expect(mod.getSSLPinningConfig()).toEqual({
+        domain: "api.chatapp.com",
+        wsDomain: "ws.chatapp.com",
+        enabled: false,
+        certificateHashes: [],
+        allowInsecureConnections: false,
+        timeout: 15000,
+      });
+      expect(mod.validateSSLPinningConfig()).toBe(true);
+    });
+
+    it("ignores configured hashes because the browser owns TLS", () => {
+      const mod = loadModule(false, "hash-one", "web");
+      expect(mod.getSSLPinningConfig().certificateHashes).toEqual([]);
+      expect(mod.shouldUseSSLPinning("api.chatapp.com/messages")).toBe(false);
+      expect(mod.getCertificateHashForDomain("api.chatapp.com")).toEqual([]);
+    });
+
+    it("keeps forcing HTTPS and WSS", () => {
+      const mod = loadModule(false, undefined, "web");
+      expect(mod.getSecureUrl("/messages")).toBe("https://api.chatapp.com/messages");
+      expect(mod.getSecureUrl("/socket", true)).toBe("wss://ws.chatapp.com/socket");
     });
   });
 
