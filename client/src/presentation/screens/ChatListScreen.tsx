@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from "react";
-import { View, StyleSheet, FlatList, TextInput, Pressable, RefreshControl } from "react-native";
+import React, { useCallback } from "react";
+import { View, StyleSheet, FlatList, TextInput, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -14,6 +14,7 @@ import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { useChatStore, useUIStore } from "@/presentation/stores";
+import { getOtherParticipantId } from "@/presentation/stores/currentUser";
 import type { Chat, GroupChat } from "@/domain/entities/Chat";
 import type { NavigationProp } from "@/navigation/types";
 
@@ -21,8 +22,15 @@ function isGroupChat(chat: Chat | GroupChat): chat is GroupChat {
   return chat.type === "group";
 }
 
+// Time is rendered relative to "now" using the device locale and timezone.
+//
+// Clock skew note: a future-dated timestamp (a device with a wrong clock, or a
+// server timestamp ahead of it) produces a negative `diff`, which is always less
+// than oneDayMs, so it falls into the <1day branch and renders as a clock time
+// rather than being flagged. Left as-is deliberately — clamping or labelling
+// future timestamps is a product decision, not a formatting one.
 function formatTime(date: Date | undefined): string {
-  if (!date) return "";
+  if (!date) return ""; // defensive only; caller guards at :129
   const now = new Date();
   const diff = now.getTime() - date.getTime();
   const oneDayMs = 24 * 60 * 60 * 1000;
@@ -34,6 +42,11 @@ function formatTime(date: Date | undefined): string {
     return date.toLocaleDateString([], { weekday: "short" });
   }
   return date.toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
+/** The label a chat row shows. Also the text the search box matches against. */
+function chatLabel(chat: Chat | GroupChat): string {
+  return isGroupChat(chat) ? chat.name : "Private Chat";
 }
 
 interface Props {
@@ -50,31 +63,25 @@ export default function ChatListScreen({ navigation }: Props) {
   const { getSortedChats, isLoading } = useChatStore();
   const { searchQuery, showSearch, setSearchQuery } = useUIStore();
 
-  const [refreshing, setRefreshing] = useState(false);
-
   const allChats = getSortedChats();
 
-  const filteredChats = allChats.filter((chat) => {
-    if (!searchQuery.trim()) return true;
-    if (isGroupChat(chat)) {
-      return chat.name.toLowerCase().includes(searchQuery.toLowerCase());
-    }
-    return true;
-  });
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
+  // The filter applies to the same label the row renders, for groups and private
+  // chats alike. It previously short-circuited to `true` for private chats, so a
+  // query only ever narrowed groups with no feedback for private rows.
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredChats = normalizedQuery
+    ? allChats.filter((chat) => chatLabel(chat).toLowerCase().includes(normalizedQuery))
+    : allChats;
 
   const handleChatPress = useCallback(
     (chat: Chat | GroupChat) => {
       if (isGroupChat(chat)) {
         navigation.navigate("Chat", { chatId: chat.id, participantId: "", isGroup: true });
       } else {
-        const other =
-          chat.participantIds.find((id) => id !== "currentUser") ?? chat.participantIds[0] ?? "";
-        navigation.navigate("Chat", { chatId: chat.id, participantId: other });
+        navigation.navigate("Chat", {
+          chatId: chat.id,
+          participantId: getOtherParticipantId(chat.participantIds),
+        });
       }
     },
     [navigation]
@@ -82,7 +89,7 @@ export default function ChatListScreen({ navigation }: Props) {
 
   const renderItem = useCallback(
     ({ item, index }: { item: Chat | GroupChat; index: number }) => {
-      const chatName = isGroupChat(item) ? item.name : "Private Chat";
+      const name = chatLabel(item);
       const lastMessageText =
         item.lastMessage?.text || (item.lastMessage?.attachment ? "Media" : t("chatList.empty"));
       const timestamp = item.lastMessage?.timestamp;
@@ -93,7 +100,7 @@ export default function ChatListScreen({ navigation }: Props) {
             onPress={() => handleChatPress(item)}
             style={styles.chatItem}
             accessibilityRole="button"
-            accessibilityLabel={chatName}
+            accessibilityLabel={name}
           >
             <Avatar size="medium" />
             <View style={styles.chatContent}>
@@ -108,7 +115,7 @@ export default function ChatListScreen({ navigation }: Props) {
                     />
                   ) : null}
                   <ThemedText style={styles.chatName} numberOfLines={1}>
-                    {chatName}
+                    {name}
                   </ThemedText>
                   {item.isMuted ? (
                     <Feather
@@ -210,14 +217,6 @@ export default function ChatListScreen({ navigation }: Props) {
             image={require("../../../../assets/images/empty-chats.png")}
             title="No chats yet"
             message="Start a conversation with your friends and family"
-          />
-        }
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={theme.primary}
-            progressViewOffset={headerHeight}
           />
         }
         showsVerticalScrollIndicator={false}
