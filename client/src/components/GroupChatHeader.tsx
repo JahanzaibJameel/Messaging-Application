@@ -5,7 +5,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing } from "@/constants/theme";
 import { GroupChat } from "@/domain/entities/Chat";
-import { useAuthStore } from "@/presentation/stores";
+import { isCurrentUser } from "@/presentation/stores/currentUser";
 
 interface GroupChatHeaderProps {
   group: GroupChat;
@@ -14,12 +14,11 @@ interface GroupChatHeaderProps {
 
 export function GroupChatHeader({ group, onPress }: GroupChatHeaderProps) {
   const { theme } = useTheme();
-  const currentUserId = useAuthStore((state) => state.currentUser?.id ?? "currentUser");
 
   const participantNames = (group.participantIds || [])
     .slice(0, 3)
     .map((id) => {
-      if (id === "currentUser" || id === currentUserId) return "You";
+      if (isCurrentUser(id)) return "You";
       return id || "Unknown";
     })
     .join(", ");
