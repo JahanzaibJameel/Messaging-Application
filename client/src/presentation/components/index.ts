@@ -2,4 +2,4 @@
  * Presentation components exports
  */
 
-export { default as LoadingSpinner } from "./LoadingSpinner";
+export { OptimizedMessageList } from "./OptimizedMessageList";
