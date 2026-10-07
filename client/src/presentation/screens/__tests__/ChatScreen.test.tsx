@@ -112,6 +112,11 @@ jest.mock("react-native-keyboard-controller", () => {
   };
 });
 
+jest.mock("@shopify/flash-list", () => {
+  const { FlatList } = require("react-native");
+  return { FlashList: FlatList };
+});
+
 jest.mock("@/components/ThemedText", () => {
   const { Text } = require("react-native");
   return { ThemedText: ({ children }: { children?: React.ReactNode }) => <Text>{children}</Text> };

@@ -73,7 +73,6 @@ export const OptimizedMessageList = React.memo(function OptimizedMessageList({
       showsVerticalScrollIndicator={false}
       keyboardDismissMode="interactive"
       keyboardShouldPersistTaps="handled"
-      estimatedItemSize={80}
       horizontal={false}
     />
   );
