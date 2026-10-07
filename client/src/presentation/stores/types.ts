@@ -135,7 +135,8 @@ export interface UIState {
 }
 
 export interface UIActions {
-  showToast: (toast: Omit<Toast, "id">) => void;
+  /** Returns the generated toast id so callers can dismiss it early via `hideToast`. */
+  showToast: (toast: Omit<Toast, "id">) => string;
   hideToast: (toastId: string) => void;
   setOnline: (value: boolean) => void;
   setSyncing: (value: boolean) => void;
@@ -145,6 +146,7 @@ export interface UIActions {
     chatId: string,
     indicators: { users: unknown[]; text: string; isAnyoneTyping: boolean }
   ) => void;
+  clearTypingIndicators: (chatId: string) => void;
 }
 
 // Sync Store
