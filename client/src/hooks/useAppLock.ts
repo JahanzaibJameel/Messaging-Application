@@ -36,11 +36,29 @@ export function useAppLock(monitorAppState = true, lockOnInitialize = true): App
   const previousAppStateRef = useRef<AppStateStatus | null>(AppState.currentState);
 
   const refresh = useCallback(async (lockWhenEnabled = true) => {
-    const [nextEnabled, nextAvailable, nextBiometryType] = await Promise.all([
-      getAppLockEnabled(),
-      isAppLockAvailable(),
-      getAppLockType(),
-    ]);
+    let nextEnabled: boolean;
+    let nextAvailable: boolean;
+    let nextBiometryType: string | null;
+
+    try {
+      [nextEnabled, nextAvailable, nextBiometryType] = await Promise.all([
+        getAppLockEnabled(),
+        isAppLockAvailable(),
+        getAppLockType(),
+      ]);
+    } catch {
+      // The preference could not be read, so its state is unknown. Fail closed:
+      // lock the app rather than treating an unreadable preference as "off".
+      setEnabledState(false);
+      setAvailable(false);
+      setBiometryType(null);
+      setLocked(true);
+      setChecking(false);
+      isCheckingRef.current = false;
+      isEnabledRef.current = true;
+      setError("Could not verify the app lock setting. Unlock to continue.");
+      return;
+    }
 
     setEnabledState(nextEnabled);
     setAvailable(nextAvailable);
