@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
-import { View, StyleSheet, FlatList, Pressable } from "react-native";
+import { View, StyleSheet, Pressable } from "react-native";
 import Clipboard from "@react-native-clipboard/clipboard";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
@@ -8,7 +8,7 @@ import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 
 import { useChatService } from "@/services/websocket";
-import { ChatBubble } from "@/components/ChatBubble";
+import { OptimizedMessageList } from "@/presentation/components/OptimizedMessageList";
 import { MessageInput } from "@/components/MessageInput";
 import { MessageActionSheet } from "@/components/MessageActionSheet";
 import { EmptyState } from "@/components/EmptyState";
@@ -48,6 +48,14 @@ export default function ChatScreen({ navigation, route }: Props) {
   const group = isGroup && chat?.type === "group" ? (chat as GroupChat) : null;
 
   const reversedMessages = useMemo(() => [...messages].reverse(), [messages]);
+
+  const replyToMap = useMemo(() => {
+    const map: Record<string, Message> = {};
+    for (const m of messages) {
+      map[m.id] = m;
+    }
+    return map;
+  }, [messages]);
 
   useEffect(() => {
     markChatAsRead(chatId);
@@ -105,13 +113,21 @@ export default function ChatScreen({ navigation, route }: Props) {
 
   const handleSend = useCallback(
     (text: string) => {
-      if (!currentUser) return;
+      if (!currentUser) {
+        showToast({ type: "error", message: "Please sign in to send messages" });
+        return;
+      }
 
       sendMessage(text, replyingTo?.id);
 
+      // Clear the reply context. MessageInput clears its own text after sending
+      // but never calls onCancelReply, so without this every later message would
+      // be threaded onto the same parent.
+      setReplyingTo(null);
+
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     },
-    [currentUser, replyingTo, sendMessage]
+    [currentUser, replyingTo, sendMessage, setReplyingTo, showToast]
   );
 
   const handleLongPress = useCallback((message: Message) => {
@@ -119,10 +135,17 @@ export default function ChatScreen({ navigation, route }: Props) {
     setShowActionSheet(true);
   }, []);
 
+  // Every path out of the sheet clears the selection, otherwise a stale message
+  // would be reused by the next action.
+  const closeActionSheet = useCallback(() => {
+    setShowActionSheet(false);
+    setSelectedMessage(null);
+  }, []);
+
   const handleReply = useCallback(() => {
     if (selectedMessage) setReplyingTo(selectedMessage);
-    setShowActionSheet(false);
-  }, [selectedMessage, setReplyingTo]);
+    closeActionSheet();
+  }, [selectedMessage, setReplyingTo, closeActionSheet]);
 
   const handleCopy = useCallback(() => {
     if (selectedMessage?.text) {
@@ -130,39 +153,27 @@ export default function ChatScreen({ navigation, route }: Props) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       showToast({ type: "success", message: "Copied to clipboard", duration: 1500 });
     }
-    setShowActionSheet(false);
-  }, [selectedMessage, showToast]);
+    closeActionSheet();
+  }, [selectedMessage, showToast, closeActionSheet]);
 
   const handleDelete = useCallback(() => {
     if (selectedMessage) {
       deleteMessage(selectedMessage.id);
     }
-    setShowActionSheet(false);
-  }, [selectedMessage, deleteMessage]);
+    closeActionSheet();
+  }, [selectedMessage, deleteMessage, closeActionSheet]);
 
-  const getReplyToMessage = useCallback(
-    (replyToId?: string) => {
-      if (!replyToId) return undefined;
-      return messages.find((m) => m.id === replyToId);
-    },
-    [messages]
-  );
-
-  const renderItem = useCallback(
-    ({ item }: { item: Message }) => {
-      const isOwn = item.senderId === currentUser?.id;
-      return (
-        <ChatBubble
-          message={item}
-          isOwn={isOwn}
-          onLongPress={() => handleLongPress(item)}
-          replyToMessage={getReplyToMessage(item.replyTo)}
-        />
-      );
-    },
-    [handleLongPress, getReplyToMessage, currentUser?.id]
-  );
-
+  // `inverted` below is deliberately tied to list length instead of being constant.
+  // While the list is empty it stays false so ListEmptyComponent renders
+  // right-way-up; once messages exist the list flips to inverted, and the empty
+  // wrapper (styles.emptyContainer) counter-mirrors with scaleY:-1 so the two
+  // states share one visual orientation.
+  //
+  // Known trade-off, left as-is on purpose: flipping `inverted` re-lays-out the
+  // list and loses scroll position at the moment the first message arrives, and
+  // the mirroring only works because the empty state is un-mirrored by hand. Do
+  // not "simplify" by making `inverted` constant, and do not drop the scaleY:-1
+  // hack without first fixing the toggle.
   return (
     <KeyboardAvoidingView
       testID="chat-screen"
@@ -170,11 +181,11 @@ export default function ChatScreen({ navigation, route }: Props) {
       behavior="padding"
       keyboardVerticalOffset={0}
     >
-      <FlatList
-        data={reversedMessages}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        inverted={reversedMessages.length > 0}
+      <OptimizedMessageList
+        messages={reversedMessages}
+        currentUserId={currentUser?.id}
+        replyToMap={replyToMap}
+        onLongPress={handleLongPress}
         contentContainerStyle={[
           styles.listContent,
           { paddingTop: headerHeight + Spacing.md },
@@ -189,14 +200,12 @@ export default function ChatScreen({ navigation, route }: Props) {
             />
           </View>
         }
-        showsVerticalScrollIndicator={false}
-        keyboardDismissMode="interactive"
-        keyboardShouldPersistTaps="handled"
       />
 
       <View style={{ paddingBottom: insets.bottom }}>
         <MessageInput
           onSend={handleSend}
+          disabled={!currentUser}
           replyingTo={
             replyingTo
               ? { text: replyingTo.text ?? "Media", onCancelReply: () => setReplyingTo(null) }
@@ -207,7 +216,7 @@ export default function ChatScreen({ navigation, route }: Props) {
 
       <MessageActionSheet
         visible={showActionSheet}
-        onClose={() => setShowActionSheet(false)}
+        onClose={closeActionSheet}
         onReply={handleReply}
         onCopy={handleCopy}
         onDelete={handleDelete}
