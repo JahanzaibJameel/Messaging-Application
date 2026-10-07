@@ -52,14 +52,14 @@ export default function SplashScreen({ navigation }: Props) {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
-      <Animated.View style={[styles.logoContainer, logoStyle]}>
+      <Animated.View style={[styles.logoContainer, logoStyle]} testID="logo">
         <Image
           source={require("../../../../assets/images/icon.png")}
           style={styles.logo}
           resizeMode="contain"
         />
       </Animated.View>
-      <Animated.View style={textStyle}>
+      <Animated.View style={textStyle} testID="app-name">
         <ThemedText style={[styles.appName, { color: theme.primary }]}>ChatApp</ThemedText>
       </Animated.View>
     </View>
