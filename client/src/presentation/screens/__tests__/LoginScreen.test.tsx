@@ -10,6 +10,7 @@ import { Pressable as MockPressable } from "react-native";
 import { render, fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 import LoginScreen from "../LoginScreen";
+import * as Haptics from "expo-haptics";
 
 const mockLogin = jest.fn();
 
@@ -71,9 +72,15 @@ jest.mock("../../../components/ThemedText", () => {
   };
 });
 
+let BUTTON_DISABLE_PROP_OVERRIDE: boolean | null = null;
+
 function MockButton({ children, onPress, disabled }: any) {
   return (
-    <MockPressable onPress={onPress} disabled={disabled} testID="button-continue">
+    <MockPressable
+      onPress={onPress}
+      disabled={BUTTON_DISABLE_PROP_OVERRIDE ?? disabled}
+      testID="button-continue"
+    >
       {children}
     </MockPressable>
   );
@@ -101,14 +108,14 @@ jest.mock("react-native-reanimated", () => {
   return {
     __esModule: true,
     default: {
-      useAnimatedStyle: () => ({}),
+      useAnimatedStyle: (cb: any) => cb(),
       useSharedValue: (v: any) => ({ value: v }),
       withSpring: (v: any) => v,
       withSequence: (...args: any[]) => args,
       FadeIn: createChainable(),
       View: RN.View,
     },
-    useAnimatedStyle: () => ({}),
+    useAnimatedStyle: (cb: any) => cb(),
     useSharedValue: (v: any) => ({ value: v }),
     withSpring: (v: any) => v,
     withSequence: (...args: any[]) => args,
@@ -116,13 +123,6 @@ jest.mock("react-native-reanimated", () => {
     View: RN.View,
   };
 });
-
-jest.mock("expo-haptics", () => ({
-  impactAsync: jest.fn(),
-  notificationAsync: jest.fn(),
-  ImpactFeedbackStyle: { Light: "light", Medium: "medium", Heavy: "heavy" },
-  NotificationFeedbackType: { Success: "success", Warning: "warning", Error: "error" },
-}));
 
 jest.mock("../../../assets/images/empty-chats.png", () => "empty-chats.png");
 
@@ -147,6 +147,11 @@ describe("LoginScreen", () => {
     jest.clearAllMocks();
     mockLogin.mockClear();
     mockNavigation.navigate.mockClear();
+    BUTTON_DISABLE_PROP_OVERRIDE = null;
+  });
+
+  afterEach(() => {
+    BUTTON_DISABLE_PROP_OVERRIDE = null;
   });
 
   describe("Initial Render", () => {
@@ -214,6 +219,22 @@ describe("LoginScreen", () => {
     });
   });
 
+  describe("Input Focus/Blur", () => {
+    it("calls handleFocus on focus", () => {
+      render(<LoginScreen navigation={mockNavigation as any} />);
+
+      const input = screen.getByTestId("input-phone");
+      fireEvent(input, "focus");
+    });
+
+    it("calls handleBlur on blur", () => {
+      render(<LoginScreen navigation={mockNavigation as any} />);
+
+      const input = screen.getByTestId("input-phone");
+      fireEvent(input, "blur");
+    });
+  });
+
   describe("Continue Button", () => {
     it("disables button when phone number is too short (< 10 chars)", () => {
       render(<LoginScreen navigation={mockNavigation as any} />);
@@ -249,6 +270,21 @@ describe("LoginScreen", () => {
       fireEvent.press(screen.getByTestId("button-continue"));
 
       expect(mockLogin).not.toHaveBeenCalled();
+    });
+
+    it("calls notificationAsync with Error when phone number is too short", () => {
+      BUTTON_DISABLE_PROP_OVERRIDE = false;
+      render(<LoginScreen navigation={mockNavigation as any} />);
+
+      const input = screen.getByTestId("input-phone");
+      const button = screen.getByTestId("button-continue");
+
+      fireEvent.changeText(input, "123");
+      fireEvent.press(button);
+
+      expect(Haptics.notificationAsync).toHaveBeenCalledWith(
+        Haptics.NotificationFeedbackType.Error
+      );
     });
 
     it("navigates to OTP screen after successful login", async () => {
