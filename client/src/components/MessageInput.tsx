@@ -24,11 +24,13 @@ import { Spacing, BorderRadius, Shadows } from "@/constants/theme";
 interface MessageInputProps {
   onSend: (text: string) => void;
   replyingTo?: { text: string; onCancelReply: () => void };
+  /** Blocks sending entirely (e.g. the viewer is not signed in). */
+  disabled?: boolean;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export function MessageInput({ onSend, replyingTo }: MessageInputProps) {
+export function MessageInput({ onSend, replyingTo, disabled = false }: MessageInputProps) {
   const { theme } = useTheme();
   const [text, setText] = useState("");
   const sendButtonScale = useSharedValue(0);
@@ -59,7 +61,7 @@ export function MessageInput({ onSend, replyingTo }: MessageInputProps) {
   }));
 
   const handleSend = () => {
-    if (!hasText) return;
+    if (!hasText || disabled) return;
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     sendButtonRotation.value = 0;
@@ -108,11 +110,17 @@ export function MessageInput({ onSend, replyingTo }: MessageInputProps) {
         {hasText ? (
           <AnimatedPressable
             onPress={handleSend}
+            disabled={disabled}
+            testID="send-button"
+            accessibilityRole="button"
+            accessibilityLabel="Send message"
+            accessibilityState={{ disabled }}
             style={[
               styles.sendButton,
               { backgroundColor: theme.primary },
               Shadows.fab,
               sendButtonStyle,
+              disabled && styles.sendButtonDisabled,
             ]}
           >
             <Feather name="send" size={20} color="#FFFFFF" />
@@ -193,5 +201,8 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
+  },
+  sendButtonDisabled: {
+    opacity: 0.4,
   },
 });
