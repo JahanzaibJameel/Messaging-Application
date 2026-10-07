@@ -13,7 +13,6 @@ export type RootStackParamList = {
   Main: undefined;
   Chat: { chatId: string; participantId: string; isGroup?: boolean };
   GroupInfo: { groupId: string };
-  DeveloperMenu: undefined;
 };
 
 export type MainTabParamList = {
