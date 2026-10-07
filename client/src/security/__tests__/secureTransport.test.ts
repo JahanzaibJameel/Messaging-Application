@@ -224,6 +224,63 @@ describe("configuration loading and SSL pinning", () => {
       expect(configGetter).not.toHaveBeenCalled();
     });
   });
+
+  describe("web", () => {
+    beforeEach(() => {
+      // sslPinningConfig reports enabled: false on web (Platform.OS === "web").
+      config.enabled = false;
+      nativeFetch.mockRejectedValue(new Error("RNSslPinning is not available on web"));
+    });
+
+    it("uses the browser fetch instead of the native pinning module", async () => {
+      await expect(secureFetch({ url, method: "POST", body: '{"a":1}' })).resolves.toEqual({
+        status: 200,
+        statusText: "OK",
+        headers: { "content-type": "application/json" },
+        data: '{"ok":true}',
+      });
+      expect(plainFetch).toHaveBeenCalledWith(url, {
+        method: "POST",
+        body: '{"a":1}',
+        headers: { "Content-Type": "application/json" },
+        signal: expect.anything(),
+      });
+      expect(nativeFetch).not.toHaveBeenCalled();
+    });
+
+    it("aborts the browser request after the configured timeout", async () => {
+      await expect(secureFetch({ url, timeout: 5000 })).resolves.toMatchObject({ status: 200 });
+
+      const [, requestInit] = plainFetch.mock.calls[0];
+      const signal = requestInit?.signal as AbortSignal | undefined;
+      expect(signal).toBeDefined();
+      expect(signal?.aborted).toBe(false);
+      expect(jest.getTimerCount()).toBe(0);
+      // Only the pinning decision reads the config; the explicit timeout skips the lookup.
+      expect(configGetter).toHaveBeenCalledTimes(1);
+    });
+
+    it("aborts a hung browser request at the deadline", async () => {
+      jest.useFakeTimers();
+      plainFetch.mockImplementation(
+        (_url: RequestInfo | URL, options?: RequestInit) =>
+          new Promise((_resolve, reject) => {
+            options?.signal?.addEventListener("abort", () => reject(new Error("Request aborted")));
+          })
+      );
+
+      const request = secureFetch({ url, timeout: 25 });
+      const assertion = expect(request).rejects.toThrow("Request aborted");
+      await jest.advanceTimersByTimeAsync(26);
+      await assertion;
+      expect(nativeFetch).not.toHaveBeenCalled();
+    });
+
+    it("keeps loading the configured timeout", async () => {
+      await expect(secureFetch({ url })).resolves.toMatchObject({ status: 200 });
+      expect(configGetter).toHaveBeenCalledTimes(2);
+    });
+  });
 });
 
 describe.each([false, true])("secureFetch with __DEV__=%s", (development) => {
@@ -251,7 +308,10 @@ describe.each([false, true])("secureFetch with __DEV__=%s", (development) => {
         headers: { "Content-Type": "application/json", ...headers },
       };
       if (development) {
-        expect(plainFetch).toHaveBeenCalledWith(target, expected);
+        expect(plainFetch).toHaveBeenCalledWith(target, {
+          ...expected,
+          signal: expect.anything(),
+        });
       } else {
         expect(nativeFetch).toHaveBeenCalledWith(target, {
           ...expected,
